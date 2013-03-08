@@ -74,9 +74,16 @@ bool mjstr_cats(mjstr sa, char *s)
     return mjstr_catb(sa, s, strlen(s));
 }
 
-int mjstr_consume(mjstr x, unsigned int len)
+/*
+=================================================
+mjstr_consume
+    consume len string
+=================================================
+*/
+int mjstr_consume( mjstr x, unsigned int len )
 {
-    if (len <= 0) return 0;
+    // sanity check
+    if ( len <= 0 ) return 0;
 
     int ret;
     if (len >= x->length) {
@@ -88,6 +95,21 @@ int mjstr_consume(mjstr x, unsigned int len)
     memmove(x->str, x->str + len, x->length - len);
     x->length -= len;
     x->str[x->length] = 0;
+    return len;
+}
+
+int mjstr_rconsume( mjstr x, unsigned int len )
+{
+    // sanity check
+    if ( len <= 0 ) return 0;
+    // adjust length
+    if ( x->length < len ) {
+        x->length = 0;
+    } else {
+        x->length -= len;
+    }
+    x->str[x->length] = 0;
+
     return len;
 }
 

@@ -145,13 +145,27 @@ bool mjOpt_ParseConf( const char* fileName )
         if ( line->str[0] == '[' && 
             line->str[line->length-1] == ']' ) {
             mjstr_consume( line, 1 );
-            line->length--;
-            line->str[line->length] = 0;
+            mjstr_rconsume( line, 1 );
             mjstr_strim( line );
             strcpy( section, line->str );
             continue;
         }
-        printf("%s\n", section );
+        // split key and value
+        mjStrList strList = mjStrList_New();
+        mjstr_split( line, "=", strList );
+        if ( strList->length != 2 ) {
+            MJLOG_ERR( "conf error" );
+            mjStrList_Delete( strList );
+            break;
+        }
+        mjstr keyStr = mjStrList_Get( strList, 0 );
+        mjstr valueStr = mjStrList_Get( strList, 1 );
+        mjstr_strim( keyStr );
+        mjstr_strim( valueStr );
+        strcpy( key, keyStr->str );
+        strcpy( value, valueStr->str );
+
+        mjOpt_SetValue( section, key, value );
     }
 
     mjstr_delete( line );

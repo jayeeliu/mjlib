@@ -27,6 +27,7 @@ extern bool     mjstr_cat( mjstr sato, mjstr safrom );
 extern bool     mjstr_cats( mjstr sa, char *s );
 extern bool     mjstr_catb( mjstr sa, char *s, unsigned int n );
 extern int      mjstr_consume( mjstr x, unsigned int len );
+extern int      mjstr_rconsume( mjstr x, unsigned int len );
 extern int      mjstr_search( mjstr x, const char *split );
 extern int      mjstr_cmp( mjstr str1, mjstr str2 );
 extern bool     mjstr_split( mjstr x, const char* split, mjStrList strList );
