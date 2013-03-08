@@ -137,8 +137,11 @@ bool mjOpt_ParseCmd( int argc, char* argv[] )
                 if ( !strcmp( entry->cmdKey, "" ) ) continue;
                 // match cmd
                 if ( !strcmp( entry->cmdKey, tmp ) ) {
-                  //  if ( entry->cmdKeyValue == 0 &&  
-                    mjOpt_Set( entry, tmp );    
+                    if ( entry->cmdKeyValue == 1 ) {  
+                        tmp = argv[i + 1];
+                        mjOpt_Set( entry, tmp );    
+                        i++;
+                    }
                 }
             }
         }
