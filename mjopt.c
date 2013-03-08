@@ -120,31 +120,56 @@ bool mjOpt_ParseConf( const char* fileName )
     return true;
 }
 
+static mjOpt mjOpt_GetEntry( char* key )
+{
+    mjOpt entry = NULL;
+    list_for_each_entry( entry, &options, node ) {
+        if ( !strcmp( entry->cmdKey, "" ) ) continue;
+        if ( !strcmp( entry->cmdKey, key ) ) return entry;
+    }
+    return NULL;
+}
+
 bool mjOpt_ParseCmd( int argc, char* argv[] )
 {
-    for( int i = 1; i < argc; i++ ) {
+    int i = 1;
+    
+    while( i < argc ) {
+        // test cmd
         char* tmp = argv[i];
-        if ( tmp[0] == '-' ) {
-            tmp++;
-            if ( strlen( tmp ) == 0 ) {
-                printf( "arg false\n" );
-                return false; 
-            }
-
-            mjOpt entry = NULL;
-            list_for_each_entry( entry, &options, node ) {
-                // no need cmd, continue
-                if ( !strcmp( entry->cmdKey, "" ) ) continue;
-                // match cmd
-                if ( !strcmp( entry->cmdKey, tmp ) ) {
-                    if ( entry->cmdKeyValue == 1 ) {  
-                        tmp = argv[i + 1];
-                        mjOpt_Set( entry, tmp );    
-                        i++;
-                    }
-                }
-            }
+        if ( tmp[0] != '-' ) {
+            MJLOG_ERR( "ParseCmd error" );
+            return false;
         }
+        // get cmd
+        tmp++;
+        if ( strlen( tmp ) == 0 ) {
+            MJLOG_ERR( "cmd is null" );
+            return false; 
+        }
+        // get entry from option list
+        mjOpt entry = mjOpt_GetEntry( tmp );
+        if ( !entry ) {
+            MJLOG_ERR( "no match entry" );
+            return false;
+        }
+       
+        if ( entry->cmdKeyValue == 0 ) {
+            if ( entry->type != MJOPT_INT ) {
+                MJLOG_ERR( "type error" );
+                return false;
+            }
+            mjOpt_Set( entry, "1" );
+        } else {
+            i++;
+            if ( i > argc ) {
+                MJLOG_ERR( "no enough parameter" );
+                return false;
+            }
+            tmp = argv[i];
+            mjOpt_Set( entry, tmp );
+        }
+        i++;
     }
     return true;
 }

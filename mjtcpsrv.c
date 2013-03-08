@@ -139,6 +139,7 @@ static bool mjTcpSrv_EnableAccept( mjTcpSrv srv )
     return true;
 }
 
+/*
 static bool mjTcpSrv_DisableAccept( mjTcpSrv srv )
 {
     int ret = mjEV_Del( srv->ev, srv->sfd, MJEV_READABLE );
@@ -148,6 +149,7 @@ static bool mjTcpSrv_DisableAccept( mjTcpSrv srv )
     }
     return true;
 }
+*/
 
 /*
 =========================================
