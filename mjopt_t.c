@@ -31,5 +31,7 @@ int main(int argc, char* argv[])
     printf("%s\n", s.strval1);
     printf("%s\n", s.strval2);
 
+    mjOpt_ParseConf( "test.ini" );
+
     return 0;
 }

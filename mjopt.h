@@ -27,6 +27,7 @@ typedef struct mjOpt* mjOpt;
 
 extern bool mjOpt_Define( char* section, char* key, int type, void* value, 
                 char* defaultValue, char* cmdKey, int cmdKeyValue, char* helpString );
+extern bool mjOpt_ParseConf( const char* fileName );
 extern bool mjOpt_ParseCmd( int argc, char* argv[] );
 extern bool mjOpt_SetValue( char* section, char* key, char* value );
 extern void mjOpt_HelpString();

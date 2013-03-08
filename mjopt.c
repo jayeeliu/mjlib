@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include "mjopt.h"
 #include "mjlog.h"
 
@@ -117,9 +119,20 @@ bool mjOpt_SetValue( char* section, char* key, char* value )
 
 bool mjOpt_ParseConf( const char* fileName )
 {
+    int fd = open( fileName, O_RDONLY );
+    if ( fd < 0 ) {
+        MJLOG_ERR( "file open error" );
+        return false;
+    }
     return true;
 }
 
+/*
+=================================================
+mjOpt_GetEntry
+    get options entry
+=================================================
+*/
 static mjOpt mjOpt_GetEntry( char* key )
 {
     mjOpt entry = NULL;
