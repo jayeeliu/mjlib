@@ -6,6 +6,7 @@
 
 #define MAX_SECTION_LEN 64
 #define MAX_KEY_LEN     64
+#define MAX_VALUE_LEN   64
 #define MAX_CMDKEY_LEN  64
 
 #define MJOPT_NONE      0

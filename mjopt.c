@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include "mjopt.h"
 #include "mjlog.h"
+#include "mjio.h"
 
 static LIST_HEAD(options);
 
@@ -119,11 +120,29 @@ bool mjOpt_SetValue( char* section, char* key, char* value )
 
 bool mjOpt_ParseConf( const char* fileName )
 {
-    int fd = open( fileName, O_RDONLY );
-    if ( fd < 0 ) {
-        MJLOG_ERR( "file open error" );
+    char section[MAX_SECTION_LEN];
+    char key[MAX_KEY_LEN];
+    char value[MAX_VALUE_LEN];
+
+    mjIO io = mjIO_New( fileName );
+    if ( !io ) {
+        MJLOG_ERR( "mjio alloc error" );
         return false;
     }
+    mjstr line = mjstr_new();
+    if ( !line ) {
+        MJLOG_ERR( "mjstr_new error" );
+        return false;
+    }
+
+    while ( 1 ) {
+        int ret = mjIO_ReadLine( io, line );
+        if ( ret <= 0 ) break;
+        printf( "%s\n", line );
+    }
+
+    mjstr_delete( line );
+    mjIO_Delete( io );
     return true;
 }
 
