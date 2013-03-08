@@ -30,6 +30,9 @@ extern int      mjstr_consume( mjstr x, unsigned int len );
 extern int      mjstr_search( mjstr x, const char *split );
 extern int      mjstr_cmp( mjstr str1, mjstr str2 );
 extern bool     mjstr_split( mjstr x, const char* split, mjStrList strList );
+extern void     mjstr_strim( mjstr x );
+extern void     mjstr_lstrim( mjstr x );
+extern void     mjstr_rstrim( mjstr x );
 
 extern mjstr    mjstr_new();
 extern void     mjstr_delete( mjstr x );

@@ -102,6 +102,38 @@ int mjstr_search(mjstr x, const char *split)
     return point - x->str;
 }
 
+void mjstr_ltrim( mjstr x )
+{
+    if ( !x ) return;
+    
+    int pos;
+    for( pos = 0; pos < x->length; pos++ ) {
+        if ( x->str[pos] == '\t' || x->str[pos] == ' ' ||
+            x->str[pos] == '\r' || x->str[pos] == '\n' ) continue;
+        break;
+    }
+    mjstr_consume( x, pos );
+}
+
+void mjstr_rtrim( mjstr x )
+{
+    if ( !x ) return;
+    int pos;
+    for( pos = x->length - 1; pos >= 0; pos-- ) {
+        if ( x->str[pos] == '\t' || x->str[pos] == ' ' ||
+            x->str[pos] == '\r' || x->str[pos] == '\n' ) continue;
+        break;
+    }
+    x->length = pos + 1;
+    x->str[x->length] = 0;
+}
+
+void mjstr_strim( mjstr x )
+{
+    mjstr_ltrim( x );
+    mjstr_rtrim( x );
+}
+
 /*
 ==================================================================
 mjstr_split

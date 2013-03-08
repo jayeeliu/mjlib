@@ -135,10 +135,23 @@ bool mjOpt_ParseConf( const char* fileName )
         return false;
     }
 
+    strcpy( section, "global" );
     while ( 1 ) {
         int ret = mjIO_ReadLine( io, line );
         if ( ret <= 0 ) break;
-        printf( "%s\n", line );
+        mjstr_strim( line );
+        if ( line->length == 0 ) continue;
+        if ( line->str[0] == '#' ) continue;
+        if ( line->str[0] == '[' && 
+            line->str[line->length-1] == ']' ) {
+            mjstr_consume( line, 1 );
+            line->length--;
+            line->str[line->length] = 0;
+            mjstr_strim( line );
+            strcpy( section, line->str );
+            continue;
+        }
+        printf("%s\n", section );
     }
 
     mjstr_delete( line );
