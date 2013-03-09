@@ -118,6 +118,12 @@ bool mjOpt_SetValue( char* section, char* key, char* value )
     return false;
 }
 
+/*
+===============================================
+mjOpt_ParseConf
+    parse conf file
+===============================================
+*/
 bool mjOpt_ParseConf( const char* fileName )
 {
     char section[MAX_SECTION_LEN];
@@ -134,14 +140,18 @@ bool mjOpt_ParseConf( const char* fileName )
         MJLOG_ERR( "mjstr_new error" );
         return false;
     }
-
+    // set default section
     strcpy( section, "global" );
     while ( 1 ) {
+        // get one line from file
         int ret = mjIO_ReadLine( io, line );
         if ( ret <= 0 ) break;
         mjstr_strim( line );
+        // ignore empty line
         if ( line->length == 0 ) continue;
+        // ignore comment line
         if ( line->str[0] == '#' ) continue;
+        // section line, get section
         if ( line->str[0] == '[' && 
             line->str[line->length-1] == ']' ) {
             mjstr_consume( line, 1 );
@@ -164,7 +174,8 @@ bool mjOpt_ParseConf( const char* fileName )
         mjstr_strim( valueStr );
         strcpy( key, keyStr->str );
         strcpy( value, valueStr->str );
-
+        mjStrList_Delete( strList );
+        // set option value
         mjOpt_SetValue( section, key, value );
     }
 

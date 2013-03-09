@@ -21,7 +21,7 @@ typedef struct mjHttpData* mjHttpData;
 // url redirect struct
 struct mjHttpUrl {
     char*   url;
-    void    (*fun)(void* data);
+    void    ( *fun )( void* data );
     mjReg   reg;
 };
 

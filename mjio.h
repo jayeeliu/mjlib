@@ -10,8 +10,8 @@ struct mjIO {
 };
 typedef struct mjIO* mjIO;
 
-extern int mjIO_Read( mjIO io, mjstr data, int len );
-extern int mjIO_ReadLine( mjIO io, mjstr data );
+extern int  mjIO_Read( mjIO io, mjstr data, int len );
+extern int  mjIO_ReadLine( mjIO io, mjstr data );
 extern mjIO mjIO_New( const char* fileName );
 extern bool mjIO_Delete( mjIO io );
 

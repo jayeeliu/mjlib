@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     mjOpt_SetValue( NULL, "strval", "test3" );
     mjOpt_SetValue( NULL, "value1", "a101a" );
 
-    mjOpt_ParseCmd( argc, argv );
+    mjOpt_ParseConf( "test.ini" );
 
     printf("%d\n", s.value1);
     printf("%d\n", s.value2);
@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
     printf("%s\n", s.strval1);
     printf("%s\n", s.strval2);
 
-    mjOpt_ParseConf( "test.ini" );
 
     return 0;
 }

@@ -46,6 +46,12 @@ int mjIO_ReadLine( mjIO io, mjstr data )
     return ret;
 }
 
+/*
+==========================================================
+mjIO_New
+    creat mjIO struct
+==========================================================
+*/
 mjIO mjIO_New( const char* fileName)
 {
     mjIO io = ( mjIO )calloc( 1, sizeof( struct mjIO ) );
@@ -64,11 +70,13 @@ mjIO mjIO_New( const char* fileName)
     io->buffer = mjstr_new();
     if ( !io->buffer ) {
         MJLOG_ERR( "mjstr_New error" );
-        goto failout2;
+        goto failout3;
     }
 
     return io;
 
+failout3:
+    close( io->fd );
 failout2:
     free( io );
 failout1:

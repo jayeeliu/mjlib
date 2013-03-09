@@ -58,7 +58,7 @@ extern bool mjConn_BufWriteS( mjconn conn, char* buf );
 extern bool mjConn_BufWrite( mjconn conn, mjstr buf );
 extern bool mjConn_Flush( mjconn conn, mjproc* Proc );
 // thread func
-extern bool mjConn_RunAsync( mjconn conn, mjthread* routine, mjproc* Proc );
+extern bool mjConn_RunAsync( mjconn conn, mjthread* Routine, mjproc* Proc );
 // thread func
 extern bool mjConn_Connect( mjconn conn, const char* ipaddr, int port, mjproc* proc );
 
