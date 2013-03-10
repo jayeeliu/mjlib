@@ -54,7 +54,7 @@ int main()
         return 1;
     }
 
-//    ProcessSpawn( 2 );
+    ProcessSpawn( 4 );
     mjTcpSrvM server = mjTcpSrvM_New(sfd); 
     if (!server) {
         printf("Error create tcpserver\n");

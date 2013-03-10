@@ -34,10 +34,10 @@ void on_write2(void *data)
 void on_write1(void *data)
 {
     mjconn conn = (mjconn)data;
-    int x = 6;
-    for(int i = 0; i < 100000; ++i) {
-        x = x * 13;
-    }
+//    int x = 6;
+//    for(int i = 0; i < 100000; ++i) {
+//        x = x * 13;
+//    }
     mjConn_WriteS(conn, "OK, TCPSERVER READY!!!\n", on_close);
 }
 void myhandler(void *data)

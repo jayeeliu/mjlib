@@ -201,11 +201,11 @@ mjitem mjmap_GetNext( mjmap map, mjitem item )
 
 /*
 ===============================================================
-mjmap_new
+mjMap_New
     create new mjmap
 ===============================================================
 */
-mjmap mjmap_new( int mapsize )
+mjmap mjMap_New( int mapsize )
 {
     /* create map struct */
     mjmap map = ( mjmap ) calloc( 1, sizeof( struct mjmap ) + 

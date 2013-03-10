@@ -3,7 +3,7 @@
 
 int main()
 {
-    mjmap map = mjmap_new(10241);
+    mjmap map = mjMap_New(10241);
 
     mjstr str = mjstr_new();
     mjstr_copys(str, "value1");

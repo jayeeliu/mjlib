@@ -3,6 +3,6 @@
 
 typedef void workproc( void* arg );
 
-extern int WorkerRun( int minProcs, int maxProcs, int sfd, workproc* proc);
+extern int WorkerRun( int minProcs, int maxProcs, int sfd, workproc* proc );
 
 #endif

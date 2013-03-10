@@ -152,12 +152,12 @@ static void WorkerChild( int sig )
 }
 
 /*
-================================================
+===================================================
 WorkerSpawn
     fork procs workers.
     parent never return
     child return 
-================================================
+===================================================
 */
 static void WorkerSpawn( int minProcs, int maxProcs ) 
 {
@@ -174,7 +174,7 @@ static void WorkerSpawn( int minProcs, int maxProcs )
         free(worker);
         goto out;
     }
-
+    // handle signal
     signal( SIGCHLD, WorkerChild );
    
     int procNum = minProcs;

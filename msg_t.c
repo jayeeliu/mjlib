@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "mjtcpsrv.h"
 #include "mjsock.h"
 #include "mjopt.h"

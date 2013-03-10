@@ -27,7 +27,7 @@ extern int      mjmap_del( mjmap map, const char* key );
 extern mjstr    mjmap_get( mjmap map, const char* key );
 extern mjitem   mjmap_GetNext( mjmap map, mjitem item );
 
-extern mjmap    mjmap_new( int mapsize );
+extern mjmap    mjMap_New( int mapsize );
 extern void     mjmap_delete( mjmap map );
 
 #endif

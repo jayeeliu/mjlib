@@ -58,9 +58,9 @@ mjHttpRsp mjHttpRsp_New()
         return NULL;
     }
 
-    rsp->rspheader = mjmap_new( 128 );
+    rsp->rspheader = mjMap_New( 128 );
     if ( !rsp->rspheader ) {
-        MJLOG_ERR( "mjmap_new error" );
+        MJLOG_ERR( "mjMap_New error" );
         free( rsp );
         return NULL;
     }

@@ -59,7 +59,7 @@ mjHttpReq mjHttpReq_New( mjstr data )
     mjstr_copy( request->location, field->data[1] );
     mjStrList_Clean( field );
     // parse other header
-    request->reqHeader = mjmap_new(128);
+    request->reqHeader = mjMap_New(128);
     for ( int i = 1; i < header->length; i++ ) {
         if ( !header->data[i] ) break;
         mjstr_split( header->data[i], ":", field );
