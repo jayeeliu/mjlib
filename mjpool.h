@@ -3,17 +3,17 @@
 
 #include <stdbool.h>
 
-struct mjpool {
-    int total;              /* the length of memory pool */
-    int length;             /* <length has been used */
-    void **pool;            /* pool item */
+struct mjPool {
+    unsigned int    length;             // used length
+    unsigned int    total;              // total length
+    void**          data;               // point to resource
 };
-typedef struct mjpool*  mjpool;
+typedef struct mjPool*  mjPool;
 
-extern void* mjpool_alloc(mjpool p);
-extern bool mjpool_free(mjpool p, void *e);
+extern void*    mjPool_Alloc( mjPool pool );
+extern bool     mjPool_Free( mjPool pool, void* elem );
 
-extern mjpool mjpool_new();             /* create a new mjpool */
-extern void mjpool_delete(mjpool p);   /* destory mjpool */
+extern mjPool   mjPool_New();                   // create a new mjpool
+extern bool     mjPool_Delete( mjPool pool );   // destory mjpool
 
 #endif

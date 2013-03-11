@@ -46,7 +46,7 @@ mjHttpReq mjHttpReq_New( mjStr data )
         goto failout3;
     }
     // get method type
-    const char* method = field->data[0]->str;
+    const char* method = field->data[0]->data;
     if ( !strcasecmp( method, "GET" ) ) { 
         request->methodType = GET_METHOD;
     } else if ( !strcasecmp( method, "POST" ) ) {
@@ -64,7 +64,7 @@ mjHttpReq mjHttpReq_New( mjStr data )
         if ( !header->data[i] ) break;
         mjStr_Split( header->data[i], ":", field );
         if ( !field || field->length < 2 ) continue;
-        mjmap_add( request->reqHeader, field->data[0]->str, field->data[1] );
+        mjMap_Add( request->reqHeader, field->data[0]->data, field->data[1] );
         mjStrList_Clean( field );
     }
     // clean strlist
@@ -87,13 +87,14 @@ mjHttpReq_Delete
     delete mjHttpReq struct
 ================================================
 */
-void mjHttpReq_Delete( mjHttpReq request )
+bool mjHttpReq_Delete( mjHttpReq request )
 {
     // sanity check
-    if ( !request ) return;
+    if ( !request ) return false;
     // free struct
     mjStr_Delete( request->location );
-    mjmap_delete( request->reqHeader );
+    mjMap_Delete( request->parameter );
+    mjMap_Delete( request->reqHeader );
     free( request );
-    return;
+    return true;
 }

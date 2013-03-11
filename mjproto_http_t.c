@@ -48,7 +48,7 @@ static void main2(void *arg)
 
     char buf[1024] = { 0 };
     char buflen[128] = { 0 };
-    sprintf(buf, "这是一个测试，程序输出: %s", strtmp->str );
+    sprintf(buf, "这是一个测试，程序输出: %s", strtmp->data );
     sprintf(buflen, "%d", (int)strlen(buf));
 
     mjHttpRsp response = HTTP_GETRSP( conn );

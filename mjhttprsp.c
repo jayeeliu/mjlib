@@ -20,7 +20,7 @@ bool mjHttpRsp_AddHeader( mjHttpRsp rsp, char* name, char* value )
     }
 
     mjStr_CopyS( tmp, value );
-    mjmap_add( rsp->rspheader, name, tmp );
+    mjMap_Add( rsp->rspheader, name, tmp );
     mjStr_Delete( tmp );
     return true;
 }
@@ -72,7 +72,7 @@ bool mjHttpRsp_Delete( mjHttpRsp rsp )
     if ( !rsp ) return false;
     
     if ( rsp->rspheader ) {
-        mjmap_delete( rsp ->rspheader );
+        mjMap_Delete( rsp ->rspheader );
     }
     free( rsp );
     return true;

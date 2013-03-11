@@ -39,20 +39,20 @@ static int mjConnB_ReadToBuf( mjConnB conn, mjStr data )
         // buffer has enough data, copy and return
         if ( conn->readtype == MJCONNB_READBYTES ) {
             if ( conn->rbytes <= conn->rbuf->length ) { 
-                mjStr_CopyB(data, conn->rbuf->str, conn->rbytes);
+                mjStr_CopyB(data, conn->rbuf->data, conn->rbytes);
                 mjStr_Consume(conn->rbuf, conn->rbytes);
                 return data->length;
             }
         } else if ( conn->readtype == MJCONNB_READUNTIL ) {
             int pos = mjStr_Search( conn->rbuf, conn->delim );
             if ( pos != -1 ) {
-                mjStr_CopyB( data, conn->rbuf->str, pos );
+                mjStr_CopyB( data, conn->rbuf->data, pos );
                 mjStr_Consume( conn->rbuf, pos + strlen( conn->delim ) );
                 return data->length;
             }
         } else if ( conn->readtype == MJCONNB_READ ) {
             if ( conn->rbuf && conn->rbuf->length > 0 ) {
-                mjStr_CopyB( data, conn->rbuf->str, conn->rbuf->length );
+                mjStr_CopyB( data, conn->rbuf->data, conn->rbuf->length );
                 mjStr_Consume( conn->rbuf, conn->rbuf->length );
                 return data->length;
             }
@@ -135,7 +135,7 @@ int mjConnB_Write( mjConnB conn, mjStr data )
         MJLOG_ERR( "sanity check error" );
         return -1;
     }
-    return mjConnB_WriteB( conn, data->str, data->length );
+    return mjConnB_WriteB( conn, data->data, data->length );
 }
 
 int mjConnB_WriteB( mjConnB conn, char* buf , int length )

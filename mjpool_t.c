@@ -4,18 +4,21 @@
 
 int main()
 {
-    mjpool pool = mjpool_new();
+    mjPool pool = mjPool_New();
 
 
-    for (int i = 0; i < 100000000; ++i) {
-        void *e = mjpool_alloc(pool);
-        if (!e) {
-            e = malloc(100);
+    for (int i = 0; i < 10000000; ++i) {
+        void *elem = mjPool_Alloc( pool );
+        if ( !elem ) {
+            elem = malloc( 100 );
         }
-        mjpool_free(pool, e);
+        
+        if ( !mjPool_Free( pool, elem ) ) {
+            free( elem );
+        }
     }
     
-    mjpool_delete(pool);
+    mjPool_Delete( pool );
     
     return 0;
 }

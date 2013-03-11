@@ -12,10 +12,10 @@ int main()
 
     mjStr data = mjStr_New();
     mjIO_ReadLine( io, data );
-    printf( "%s\n", data->str );
+    printf( "%s\n", data->data );
     mjIO_ReadLine( io, data );
-    printf( "%s\n", data->str );
+    printf( "%s\n", data->data );
     mjIO_ReadLine( io, data );
-    printf( "%s\n", data->str );
+    printf( "%s\n", data->data );
     return 0;
 }

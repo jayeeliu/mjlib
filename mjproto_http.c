@@ -38,13 +38,13 @@ static void on_header( void* arg )
     mjHttpRsp_AddHeader( httpData->response, "Server", "SFQ-0.01" );
     // call function
     mjStr location = httpData->request->location;
-    if ( location->str[location->length - 1] != '/' ) {
+    if ( location->data[location->length - 1] != '/' ) {
         mjStr_CatS( location, "/" );
     }
     // check string match
     int i;
     for ( i = 0; urls[i].url != NULL; i++ ) {
-        if ( mjReg_Search( urls[i].reg, location->str, httpData->param ) ) {
+        if ( mjReg_Search( urls[i].reg, location->data, httpData->param ) ) {
             urls[i].fun( conn );
             return;
         }

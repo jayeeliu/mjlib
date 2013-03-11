@@ -16,7 +16,7 @@ int main()
     for (int i = 0; i < 10; i++) {
         mjStr str = mjStrList_Get( result, i);
         if ( str ) {
-            printf("%d, %s\n", i, str->str);
+            printf("%d, %s\n", i, str->data);
         }
     }
 

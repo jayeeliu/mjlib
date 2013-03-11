@@ -150,14 +150,14 @@ bool mjOpt_ParseConf( const char* fileName )
         // ignore empty line
         if ( line->length == 0 ) continue;
         // ignore comment line
-        if ( line->str[0] == '#' ) continue;
+        if ( line->data[0] == '#' ) continue;
         // section line, get section
-        if ( line->str[0] == '[' && 
-            line->str[line->length-1] == ']' ) {
+        if ( line->data[0] == '[' && 
+            line->data[line->length-1] == ']' ) {
             mjStr_Consume( line, 1 );
             mjStr_RConsume( line, 1 );
             mjStr_Strim( line );
-            strcpy( section, line->str );
+            strcpy( section, line->data );
             continue;
         }
         // split key and value
@@ -172,8 +172,8 @@ bool mjOpt_ParseConf( const char* fileName )
         mjStr valueStr = mjStrList_Get( strList, 1 );
         mjStr_Strim( keyStr );
         mjStr_Strim( valueStr );
-        strcpy( key, keyStr->str );
-        strcpy( value, valueStr->str );
+        strcpy( key, keyStr->data );
+        strcpy( value, valueStr->data );
         mjStrList_Delete( strList );
         // set option value
         mjOpt_SetValue( section, key, value );

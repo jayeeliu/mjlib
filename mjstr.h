@@ -7,7 +7,7 @@
 struct mjStr {
     unsigned int    length;         // used length 
     unsigned int    total;          // total length
-    char*           str;            // point to the string
+    char*           data;           // point to the string
 };
 typedef struct mjStr* mjStr;
 
@@ -34,6 +34,7 @@ extern bool     mjStr_Split( mjStr x, const char* split, mjStrList strList );
 extern void     mjStr_Strim( mjStr x );
 extern void     mjStr_LStrim( mjStr x );
 extern void     mjStr_RStrim( mjStr x );
+extern bool     mjStr_Capitablize( mjStr str );
 
 extern mjStr    mjStr_New();
 extern void     mjStr_Delete( mjStr x );

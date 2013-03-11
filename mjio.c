@@ -23,7 +23,7 @@ int mjIO_ReadLine( mjIO io, mjStr data )
     while ( 1 ) {
         int pos = mjStr_Search( io->buffer, "\n" );
         if ( pos != -1 ) {
-            mjStr_CopyB( data, io->buffer->str, pos + 1 );
+            mjStr_CopyB( data, io->buffer->data, pos + 1 );
             mjStr_Consume( io->buffer, pos + 1 );
             return data->length;
         }

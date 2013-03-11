@@ -1,86 +1,96 @@
 #include <stdlib.h>
 #include <string.h>
+#include "mjlog.h"
 #include "mjpool.h"
 
-#define MJPOOL_INIT_SIZE 1024
-#define MJPOOL_MAX_SIZE 4096
+#define MJPOOL_INIT_SIZE    1024
+#define MJPOOL_MAX_SIZE     4096
 
-/* alloc new element from mjpool */
-void* mjpool_alloc(mjpool p)
+static bool mjPool_Ready( mjPool pool, unsigned int n )
 {
-    /* santy check */
-    if (!p || !p->pool) return NULL;
-   
-    /* alloc memory from pool */
-    void *e = NULL;
-    if (p->length > 0) e = p->pool[--p->length];
+    if ( !pool ) return false;
+    
+    unsigned int i = pool->total;
+    if ( n <= i ) return true;
 
-    return e;
+    pool->total = 30 + n + ( n >> 3 );
+
+    void** tmp = realloc( pool->data,
+                pool->total * sizeof( void* ) );
+    if ( !tmp ) {
+        MJLOG_ERR( "realloc error" );
+        pool->total = i;
+        return false;
+    }
+    pool->data = tmp;
+
+    for( int i = pool->length; i < pool->total; i++ ) {
+        pool->data[i] = 0;
+    }
+    return true;
 }
 
-/**
- * put element to mjpool 
- * return: success--true, fail--false 
- */
-bool mjpool_free(mjpool p, void *e) 
+static bool mjPool_ReadyPlus( mjPool pool, unsigned int n )
 {
+    return mjPool_Ready( pool, pool->length + 1 );
+}
 
-    /* santy check */
-    if (!p || !p->pool || !e) return false;
+void* mjPool_Alloc( mjPool pool )
+{
+    // santy check
+    if ( !pool || !pool->data ) return NULL;
+    // alloc memory from pool
+    void* elem = NULL;
+    if ( pool->length > 0 ) elem = pool->data[--pool->length];
 
-    if (p->length >=  p->total) {
-        /* too large can't alloc */
-        if (p->total >= MJPOOL_MAX_SIZE) {
-            return false;
-        }
+    return elem;
+}
 
-        /* 列表空间不足够，重新分配 */
-        int newsize = p->total * 2;
-        if (newsize > MJPOOL_MAX_SIZE) newsize = MJPOOL_MAX_SIZE;
+bool mjPool_Free( mjPool pool, void* elem ) 
+{
+    // santy check
+    if ( !pool || !pool->data || !elem ) return false;
 
-        /* 重新分配空间 */ 
-        void *new_pool = realloc(p->pool, newsize * sizeof(void*));
-        if (!new_pool) return false;
-        
-        /* 重置列表的各项 */
-        p->total = newsize;
-        p->pool = new_pool;
+    if ( !mjPool_ReadyPlus( pool, 1 ) ) {
+        MJLOG_ERR( "mjPool_ReadyPlus Error" );
+        return false;
     }
-    p->pool[p->length++] = e;
+
+    pool->data[pool->length++] = elem;
 
     return true;
 }
 
-/* create a new memory pool */
-mjpool mjpool_new()
-{
-    /* alloc memory pool struct */
-    mjpool p = (mjpool) calloc(1, sizeof(struct mjpool));
-    if (!p) return NULL;
 
-    /* alloc item size */
-    p->pool = calloc(1, MJPOOL_INIT_SIZE * sizeof(void*));
-    if (!p->pool) {
-        free(p);
+mjPool mjPool_New()
+{
+    // alloc resource pool struct
+    mjPool pool = ( mjPool ) calloc ( 1, sizeof( struct mjPool ));
+    if ( !pool ) {
+        MJLOG_ERR( "mjpool alloc error" );
         return NULL;
     }
+    // alloc element
+    pool->data = calloc( 1, MJPOOL_INIT_SIZE * sizeof( void* ) );
+    if ( !pool->data ) {
+        MJLOG_ERR( "mjpool element alloc error" );
+        free( pool );
+        return NULL;
+    }
+    // set initial value
+    pool->total     = MJPOOL_INIT_SIZE;
+    pool->length    = 0;
 
-    /* set initial value */
-    p->total = MJPOOL_INIT_SIZE;
-    p->length = 0;
-
-    return p;
+    return pool;
 }
 
-/* delete a memory pool */
-void mjpool_delete(mjpool p)
+bool mjPool_Delete( mjPool pool )
 {
-    /* santy check */
-    if (!p) return;
-
-    /* free item */
-    free(p->pool);
-
-    /* free struct */
-    free(p);
+    // santy check
+    if ( !pool ) return false;
+    // free item
+    free( pool->data );
+    // free struct
+    free( pool );
+    return true;
 }

@@ -26,9 +26,9 @@ void on_read( void* arg )
     mjStr_Split( conn->data, " ", strList );
     
     mjStr comm = mjStrList_Get( strList, 0 );    
-    if ( !strcmp( comm->str, "get" ))  {
+    if ( !strcmp( comm->data, "get" ))  {
         mjConn_WriteS( conn, "get command run\n", on_close );
-    } else if ( !strcmp( comm->str, "put" ) ) {
+    } else if ( !strcmp( comm->data, "put" ) ) {
         mjConn_WriteS( conn, "put command run\n", on_close );
     } else {
         mjConn_WriteS( conn, "other command run\n", on_close );

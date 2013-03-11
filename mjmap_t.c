@@ -7,29 +7,29 @@ int main()
 
     mjStr str = mjStr_New();
     mjStr_CopyS(str, "value1");
-    mjmap_add(map, "key1", str);
+    mjMap_Add(map, "key1", str);
    
     mjStr_CopyS(str, "value2");
-    mjmap_add(map, "key2", str);
+    mjMap_Add(map, "key2", str);
 
     mjStr_CopyS(str, "value3");
-    mjmap_add(map, "key3", str);
+    mjMap_Add(map, "key3", str);
 
     mjStr_CopyS(str, "value4");
-    mjmap_add(map, "key4", str );
+    mjMap_Add(map, "key4", str );
 
-    mjmap_del( map, "key4" );
-    mjmap_del( map, "key2" );
-    mjmap_del( map, "key1" );
+    mjMap_Del( map, "key4" );
+    mjMap_Del( map, "key2" );
+    mjMap_Del( map, "key1" );
 
     mjitem item = mjmap_GetNext( map, NULL );
     while ( item ) {
-        printf( "key: %s, value: %s\n", item->key->str, item->value->str );
+        printf( "key: %s, value: %s\n", item->key->data, item->value->data );
         item = mjmap_GetNext( map, item );
     }
 
     mjStr_Delete(str);
-    mjmap_delete(map);
+    mjMap_Delete(map);
 
     return 0;
 }

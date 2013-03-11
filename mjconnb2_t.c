@@ -15,7 +15,7 @@ int main()
     mjConnB_Write( conn, data );
     mjConnB_Read( conn, data );
     
-    printf( "%s", data->str );
+    printf( "%s", data->data );
 
     mjStr_Delete( data );
     mjConnB_Delete( conn );

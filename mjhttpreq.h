@@ -9,13 +9,14 @@
 #define UNKNOWN_METHOD  5
 
 struct mjHttpReq {
-    int     methodType;        // method type
-    mjStr   location;
+    int     methodType;     // method type
+    mjStr   location;       // request location
+    mjmap   parameter;      // request parameter
     mjmap   reqHeader;
 };
 typedef struct mjHttpReq* mjHttpReq;
 
 extern mjHttpReq    mjHttpReq_New( mjStr data );
-extern void         mjHttpReq_Delete( mjHttpReq request );
+extern bool         mjHttpReq_Delete( mjHttpReq request );
 
 #endif

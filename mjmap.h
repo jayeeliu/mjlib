@@ -22,12 +22,12 @@ struct mjmap {
 };
 typedef struct mjmap* mjmap;
 
-extern int      mjmap_add( mjmap map, const char* key, mjStr value );
-extern int      mjmap_del( mjmap map, const char* key );
-extern mjStr    mjmap_get( mjmap map, const char* key );
+extern int      mjMap_Add( mjmap map, const char* key, mjStr value );
+extern int      mjMap_Del( mjmap map, const char* key );
+extern mjStr    mjMap_Get( mjmap map, const char* key );
 extern mjitem   mjmap_GetNext( mjmap map, mjitem item );
 
 extern mjmap    mjMap_New( int mapsize );
-extern void     mjmap_delete( mjmap map );
+extern void     mjMap_Delete( mjmap map );
 
 #endif
