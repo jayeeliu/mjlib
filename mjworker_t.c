@@ -12,7 +12,7 @@
 void myproc( void* arg )
 {
     mjConnB conn = ( mjConnB )arg;
-    mjstr data = mjstr_new();
+    mjStr data = mjStr_New();
 
     mjConnB_ReadUntil( conn, "\r\n\r\n", data );
 
@@ -24,10 +24,10 @@ void myproc( void* arg )
    // mjsql_free_result( result );
    // mjsql_delete( handle );
 
-   // mjstr_copys( data, "OK\n" ); 
+   // mjStr_copys( data, "OK\n" ); 
     mjConnB_WriteS( conn, "TCP FORK SERVER READY!" );
 
-    mjstr_delete(data);
+    mjStr_Delete(data);
 }
 
 int main()

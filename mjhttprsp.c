@@ -13,31 +13,31 @@ bool mjHttpRsp_AddHeader( mjHttpRsp rsp, char* name, char* value )
 {
     if ( !rsp ) return false;
 
-    mjstr tmp = mjstr_new();
+    mjStr tmp = mjStr_New();
     if ( !tmp ) {
-        MJLOG_ERR( "mjstr_new error" );
+        MJLOG_ERR( "mjStr_New error" );
         return false;
     }
 
-    mjstr_copys( tmp, value );
+    mjStr_CopyS( tmp, value );
     mjmap_add( rsp->rspheader, name, tmp );
-    mjstr_delete( tmp );
+    mjStr_Delete( tmp );
     return true;
 }
 
-mjstr mjHttpRsp_HeaderToStr( mjHttpRsp rsp )
+mjStr mjHttpRsp_HeaderToStr( mjHttpRsp rsp )
 {
-    mjstr str = mjstr_new();
+    mjStr str = mjStr_New();
     if ( !str ) {
-        MJLOG_ERR( "mjstr_new error" );
+        MJLOG_ERR( "mjStr_New error" );
         return NULL;
     }
     mjitem item = mjmap_GetNext( rsp->rspheader, NULL );
     while ( item ) {
-        mjstr_cat( str, item->key );
-        mjstr_cats( str, ": " );
-        mjstr_cat( str, item->value ); 
-        mjstr_cats( str, "\r\n" );
+        mjStr_Cat( str, item->key );
+        mjStr_CatS( str, ": " );
+        mjStr_Cat( str, item->value ); 
+        mjStr_CatS( str, "\r\n" );
     
         item = mjmap_GetNext( rsp->rspheader, item );
     }

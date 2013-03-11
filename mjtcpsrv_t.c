@@ -21,7 +21,7 @@ void on_write3(void *data)
 void *threadroutine(void *data)
 {
     mjconn conn = (mjconn) data;
-    mjstr_cats(conn->wbuf, "data from thread\n");
+    mjStr_CatS(conn->wbuf, "data from thread\n");
     return NULL;
 }
 

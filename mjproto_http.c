@@ -37,9 +37,9 @@ static void on_header( void* arg )
                     "text/html; charset=UTF-8" );
     mjHttpRsp_AddHeader( httpData->response, "Server", "SFQ-0.01" );
     // call function
-    mjstr location = httpData->request->location;
+    mjStr location = httpData->request->location;
     if ( location->str[location->length - 1] != '/' ) {
-        mjstr_cats( location, "/" );
+        mjStr_CatS( location, "/" );
     }
     // check string match
     int i;
@@ -148,21 +148,21 @@ void http_ExitSrv( void* arg )
 /*
 ===========================================
 FileToStr
-    read file and store data into mjstr
+    read file and store data into mjStr
 ===========================================
 */
-mjstr FileToStr( const char* fileName )
+mjStr FileToStr( const char* fileName )
 {
-    mjstr out = mjstr_new();
+    mjStr out = mjStr_New();
     if ( !out ) {
-        MJLOG_ERR( "mjstr alloc error" );
+        MJLOG_ERR( "mjStr alloc error" );
         return NULL;
     }
 
     int fd = open( fileName, O_RDONLY );
     if ( fd < 0 ) {
         MJLOG_ERR( "open file error" );
-        mjstr_delete( out );
+        mjStr_Delete( out );
         return NULL;
     }
 
@@ -170,7 +170,7 @@ mjstr FileToStr( const char* fileName )
     while ( 1 ) {
         int ret = read( fd, buf, sizeof( buf ) );
         if ( ret <= 0 ) break;
-        mjstr_catb( out, buf, ret );
+        mjStr_CatB( out, buf, ret );
     }
     close( fd );
 

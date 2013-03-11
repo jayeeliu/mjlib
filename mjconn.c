@@ -84,29 +84,29 @@ static void mjConn_ReadEventCallBack( void* arg )
             break;
         }
         // we read some data, put it to rbuf
-        mjstr_catb( conn->rbuf, buf, ret );
+        mjStr_CatB( conn->rbuf, buf, ret );
         break;
     }
 
     if ( conn->readType == MJCONN_READBYTES ) { // read type is readbytes
         if ( conn->rbytes <= conn->rbuf->length ) { 
-            mjstr_copyb( conn->data, conn->rbuf->str, conn->rbytes );
-            mjstr_consume( conn->rbuf, conn->rbytes );
+            mjStr_CopyB( conn->data, conn->rbuf->str, conn->rbytes );
+            mjStr_Consume( conn->rbuf, conn->rbytes );
             mjConn_DelReadEvent( conn );
             return;
         }
     } else if ( conn->readType == MJCONN_READUNTIL ) { // read type is readuntil
-        int pos = mjstr_search( conn->rbuf, conn->delim );
+        int pos = mjStr_Search( conn->rbuf, conn->delim );
         if ( pos != -1 ) {
-            mjstr_copyb( conn->data, conn->rbuf->str, pos );
-            mjstr_consume( conn->rbuf, pos + strlen( conn->delim ) );
+            mjStr_CopyB( conn->data, conn->rbuf->str, pos );
+            mjStr_Consume( conn->rbuf, pos + strlen( conn->delim ) );
             mjConn_DelReadEvent( conn );
             return;
         }
     } else if ( conn->readType == MJCONN_READ ) { // read type is normal read
         if ( conn->rbuf && conn->rbuf->length > 0 ) {
-            mjstr_copyb( conn->data, conn->rbuf->str, conn->rbuf->length );
-            mjstr_consume( conn->rbuf, conn->rbuf->length );
+            mjStr_CopyB( conn->data, conn->rbuf->str, conn->rbuf->length );
+            mjStr_Consume( conn->rbuf, conn->rbuf->length );
             mjConn_DelReadEvent( conn );
             return;
         }
@@ -180,8 +180,8 @@ bool mjConn_ReadBytes( mjconn conn, int len, mjproc* proc )
     // check rbuf
     if ( conn->rbytes <= conn->rbuf->length ) { 
         // copy rbytes to data
-        mjstr_copyb( conn->data, conn->rbuf->str, conn->rbytes );
-        mjstr_consume( conn->rbuf, conn->rbytes );
+        mjStr_CopyB( conn->data, conn->rbuf->str, conn->rbytes );
+        mjStr_Consume( conn->rbuf, conn->rbytes );
         // read finish
         conn->readType = MJCONN_NONE;
         // run callback
@@ -216,11 +216,11 @@ bool mjConn_ReadUntil( mjconn conn, char* delim, mjproc* Proc )
     conn->delim         = delim;
     conn->ReadCallBack  = Proc;
     // found data in rbuf, call proc and return 
-    int pos = mjstr_search( conn->rbuf, conn->delim );
+    int pos = mjStr_Search( conn->rbuf, conn->delim );
     if ( pos != -1 ) {
         // copy data to rbuf, not include delim
-        mjstr_copyb( conn->data, conn->rbuf->str, pos );
-        mjstr_consume( conn->rbuf, pos + strlen( conn->delim ) );
+        mjStr_CopyB( conn->data, conn->rbuf->str, pos );
+        mjStr_Consume( conn->rbuf, pos + strlen( conn->delim ) );
         // read finish set readType to NONE, run callback
         conn->readType = MJCONN_NONE;
         // callback must be the last statement, callback maybe run another read or write
@@ -254,8 +254,8 @@ bool mjConn_Read( mjconn conn, mjproc* proc )
     conn->ReadCallBack  = proc;
     // found data in rbuf
     if ( conn->rbuf && conn->rbuf->length > 0 ) {
-        mjstr_copyb( conn->data, conn->rbuf->str, conn->rbuf->length );
-        mjstr_consume( conn->rbuf, conn->rbuf->length );
+        mjStr_CopyB( conn->data, conn->rbuf->str, conn->rbuf->length );
+        mjStr_Consume( conn->rbuf, conn->rbuf->length );
         conn->readType  = MJCONN_NONE;
         if ( conn->ReadCallBack ) conn->ReadCallBack( conn );
         return 0;
@@ -299,7 +299,7 @@ static void mjConn_WriteEventCallback( void* arg)
         mjConn_Delete( conn );
         return;
     }
-    mjstr_consume( conn->wbuf, ret );
+    mjStr_Consume( conn->wbuf, ret );
     // no data to write call DelWriteEvent
     if ( conn->wbuf->length == 0 ) {
         mjConn_DelWriteEvent(conn);
@@ -355,17 +355,17 @@ bool mjConn_BufWriteS( mjconn conn, char* buf)
         MJLOG_ERR( "conn or buf is null" );
         return false;
     }
-    mjstr_cats( conn->wbuf, buf );
+    mjStr_CatS( conn->wbuf, buf );
     return true;
 }
 
 /*
 ==============================================
 mjConn_BufWrite
-    copy mjstr to wbuf
+    copy mjStr to wbuf
 ==============================================
 */
-bool mjConn_BufWrite( mjconn conn, mjstr buf )
+bool mjConn_BufWrite( mjconn conn, mjStr buf )
 {
     if ( !conn || !buf ) {
         MJLOG_ERR( "conn or buf is null" );
@@ -415,10 +415,10 @@ bool mjConn_WriteS( mjconn conn, char* buf, mjproc* Proc )
 /*
 ==========================================================
 mjConn_Write
-    write mjstr
+    write mjStr
 ==========================================================
 */
-bool mjConn_Write( mjconn conn, mjstr buf, mjproc* Proc )
+bool mjConn_Write( mjconn conn, mjStr buf, mjproc* Proc )
 {
     if ( !conn || !buf ) {
         MJLOG_ERR( "conn or buf is null" );
@@ -727,14 +727,14 @@ mjconn mjConn_New( void* server, mjev ev, int fd )
     conn->readTimeoutEvent      = NULL;
     conn->writeTimeoutEvent     = NULL;
     // create buffer
-    conn->rbuf = mjstr_new();
-    conn->wbuf = mjstr_new();
-    conn->data = mjstr_new();
+    conn->rbuf = mjStr_New();
+    conn->wbuf = mjStr_New();
+    conn->data = mjStr_New();
     if ( !conn->rbuf || !conn->wbuf || !conn->data ) {
-        MJLOG_ERR( "alloc mjstr error" );
-        mjstr_delete( conn->rbuf );
-        mjstr_delete( conn->wbuf );
-        mjstr_delete( conn->data );
+        MJLOG_ERR( "alloc mjStr error" );
+        mjStr_Delete( conn->rbuf );
+        mjStr_Delete( conn->wbuf );
+        mjStr_Delete( conn->data );
         free( conn );
         return NULL;
     }
@@ -806,8 +806,8 @@ void mjConn_Delete( mjconn conn )
     mjEV_Del( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE );
     mjsock_close( conn->fd );
 
-    mjstr_delete( conn->rbuf );
-    mjstr_delete( conn->wbuf );
-    mjstr_delete( conn->data );
+    mjStr_Delete( conn->rbuf );
+    mjStr_Delete( conn->wbuf );
+    mjStr_Delete( conn->data );
     free( conn );
 }

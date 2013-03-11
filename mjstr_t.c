@@ -3,22 +3,22 @@
 
 int main()
 {
-    mjstr str = mjstr_new();
-    mjstr_copys(str, "this is a test");
-    mjstr_cats(str, "test2");
+    mjStr str = mjStr_New();
+    mjStr_CopyS(str, "this is a test");
+    mjStr_CatS(str, "test2");
 
     mjStrList strList = mjStrList_New();
     if ( !strList ) {
-        printf( "mjstr_split2 error" );
+        printf( "mjStr_Split2 error" );
         return 1;
     }
-    mjstr_split( str, "te", strList );
+    mjStr_Split( str, "te", strList );
     
     for (int i = 0; i < strList->length; i++) {
         printf("%s\n", strList->data[i]->str);
     }
 
-    mjstr_delete(str);
+    mjStr_Delete(str);
     mjStrList_Delete(strList);
     return 0;
 }

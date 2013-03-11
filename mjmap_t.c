@@ -5,17 +5,17 @@ int main()
 {
     mjmap map = mjMap_New(10241);
 
-    mjstr str = mjstr_new();
-    mjstr_copys(str, "value1");
+    mjStr str = mjStr_New();
+    mjStr_CopyS(str, "value1");
     mjmap_add(map, "key1", str);
    
-    mjstr_copys(str, "value2");
+    mjStr_CopyS(str, "value2");
     mjmap_add(map, "key2", str);
 
-    mjstr_copys(str, "value3");
+    mjStr_CopyS(str, "value3");
     mjmap_add(map, "key3", str);
 
-    mjstr_copys(str, "value4");
+    mjStr_CopyS(str, "value4");
     mjmap_add(map, "key4", str );
 
     mjmap_del( map, "key4" );
@@ -28,7 +28,7 @@ int main()
         item = mjmap_GetNext( map, item );
     }
 
-    mjstr_delete(str);
+    mjStr_Delete(str);
     mjmap_delete(map);
 
     return 0;

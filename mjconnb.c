@@ -30,7 +30,7 @@ mjConnB_ReadToBuf
             other --- get data
 ==========================================================
 */
-static int mjConnB_ReadToBuf( mjConnB conn, mjstr data )
+static int mjConnB_ReadToBuf( mjConnB conn, mjStr data )
 {
     int ret = -3;
     char buf[BUF_SIZE];
@@ -39,21 +39,21 @@ static int mjConnB_ReadToBuf( mjConnB conn, mjstr data )
         // buffer has enough data, copy and return
         if ( conn->readtype == MJCONNB_READBYTES ) {
             if ( conn->rbytes <= conn->rbuf->length ) { 
-                mjstr_copyb(data, conn->rbuf->str, conn->rbytes);
-                mjstr_consume(conn->rbuf, conn->rbytes);
+                mjStr_CopyB(data, conn->rbuf->str, conn->rbytes);
+                mjStr_Consume(conn->rbuf, conn->rbytes);
                 return data->length;
             }
         } else if ( conn->readtype == MJCONNB_READUNTIL ) {
-            int pos = mjstr_search( conn->rbuf, conn->delim );
+            int pos = mjStr_Search( conn->rbuf, conn->delim );
             if ( pos != -1 ) {
-                mjstr_copyb( data, conn->rbuf->str, pos );
-                mjstr_consume( conn->rbuf, pos + strlen( conn->delim ) );
+                mjStr_CopyB( data, conn->rbuf->str, pos );
+                mjStr_Consume( conn->rbuf, pos + strlen( conn->delim ) );
                 return data->length;
             }
         } else if ( conn->readtype == MJCONNB_READ ) {
             if ( conn->rbuf && conn->rbuf->length > 0 ) {
-                mjstr_copyb( data, conn->rbuf->str, conn->rbuf->length );
-                mjstr_consume( conn->rbuf, conn->rbuf->length );
+                mjStr_CopyB( data, conn->rbuf->str, conn->rbuf->length );
+                mjStr_Consume( conn->rbuf, conn->rbuf->length );
                 return data->length;
             }
         }
@@ -69,16 +69,16 @@ static int mjConnB_ReadToBuf( mjConnB conn, mjstr data )
         }
         if ( ret == 0 )  break;     //read close, break, copy data to rbuf
         // read ok put data to rbuf, try again
-        mjstr_catb( conn->rbuf, buf, ret );
+        mjStr_CatB( conn->rbuf, buf, ret );
     }
     // read error or read close, copy data
-    mjstr_copy( data, conn->rbuf );
-    mjstr_consume( conn->rbuf, conn->rbuf->length );
+    mjStr_Copy( data, conn->rbuf );
+    mjStr_Consume( conn->rbuf, conn->rbuf->length );
 
     return ret;
 }
 
-int mjConnB_Read( mjConnB conn, mjstr data )
+int mjConnB_Read( mjConnB conn, mjStr data )
 {
     // sanity check
     if ( !conn || !data ) {
@@ -95,7 +95,7 @@ mjConnB_ReadBytes
     read len size bytes 
 ===========================================================
 */
-int mjConnB_ReadBytes( mjConnB conn, mjstr data, int len )
+int mjConnB_ReadBytes( mjConnB conn, mjStr data, int len )
 {
     if ( !conn || !data || len <= 0 ) {
         MJLOG_ERR( "sanity check error" );
@@ -112,7 +112,7 @@ mjConnB_ReadUntil
     read data until delim 
 ====================================================================
 */
-int mjConnB_ReadUntil( mjConnB conn, const char* delim, mjstr data )
+int mjConnB_ReadUntil( mjConnB conn, const char* delim, mjStr data )
 {
     if ( !conn || !data || !delim ) {
         MJLOG_ERR( "sanity check error" );
@@ -129,7 +129,7 @@ mjConnB_Write
     write data to conn
 ==========================================================
 */
-int mjConnB_Write( mjConnB conn, mjstr data )
+int mjConnB_Write( mjConnB conn, mjStr data )
 {
     if ( !conn || !data || !data->length ) {
         MJLOG_ERR( "sanity check error" );
@@ -258,9 +258,9 @@ mjConnB mjConnB_New( int fd )
     // create rbuf
     if ( !conn->rbuf ) {
         // create read buffer
-        conn->rbuf = mjstr_new();
+        conn->rbuf = mjStr_New();
         if ( !conn->rbuf ) {
-            MJLOG_ERR( "mjstr create error" );
+            MJLOG_ERR( "mjStr create error" );
             close( fd );
             return NULL;
         }

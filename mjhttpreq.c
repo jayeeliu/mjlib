@@ -13,7 +13,7 @@ mjHttpReq_New
     create new mjHttpReq struct
 =================================================================
 */
-mjHttpReq mjHttpReq_New( mjstr data )
+mjHttpReq mjHttpReq_New( mjStr data )
 {
     // sanity check
     if ( !data ) {
@@ -32,14 +32,14 @@ mjHttpReq mjHttpReq_New( mjstr data )
         MJLOG_ERR( "mjStrList_New error" );
         goto failout1;
     }
-    mjstr_split( data, "\r\n", header );
+    mjStr_Split( data, "\r\n", header );
     // get filed from the first len 
     mjStrList field = mjStrList_New();
     if ( !field ) {
         MJLOG_ERR( "mjStrList_New error" );
         goto failout2;
     }
-    mjstr_split( header->data[0], " ", field );
+    mjStr_Split( header->data[0], " ", field );
     // check cmd length
     if ( field->length < 2 ) {
         MJLOG_ERR( "parse header error" );
@@ -55,14 +55,14 @@ mjHttpReq mjHttpReq_New( mjstr data )
         request->methodType = UNKNOWN_METHOD;
     }
     // get access location
-    request->location = mjstr_new();
-    mjstr_copy( request->location, field->data[1] );
+    request->location = mjStr_New();
+    mjStr_Copy( request->location, field->data[1] );
     mjStrList_Clean( field );
     // parse other header
     request->reqHeader = mjMap_New(128);
     for ( int i = 1; i < header->length; i++ ) {
         if ( !header->data[i] ) break;
-        mjstr_split( header->data[i], ":", field );
+        mjStr_Split( header->data[i], ":", field );
         if ( !field || field->length < 2 ) continue;
         mjmap_add( request->reqHeader, field->data[0]->str, field->data[1] );
         mjStrList_Clean( field );
@@ -92,7 +92,7 @@ void mjHttpReq_Delete( mjHttpReq request )
     // sanity check
     if ( !request ) return;
     // free struct
-    mjstr_delete( request->location );
+    mjStr_Delete( request->location );
     mjmap_delete( request->reqHeader );
     free( request );
     return;

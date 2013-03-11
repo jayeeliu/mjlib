@@ -10,7 +10,7 @@ int main()
         return 1;
     }
 
-    mjstr data = mjstr_new();
+    mjStr data = mjStr_New();
     mjIO_ReadLine( io, data );
     printf( "%s\n", data->str );
     mjIO_ReadLine( io, data );

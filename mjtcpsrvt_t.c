@@ -9,7 +9,7 @@ void* myworker(void* arg)
     mjConnB conn = ( mjConnB )arg;
     mjConnB_SetTimeout( conn, 2000, 0 );
 
-    mjstr data = mjstr_new();
+    mjStr data = mjStr_New();
     
     int ret = mjConnB_ReadUntil( conn, "\r\n\r\n", data );
     if ( ret <= 0 ) goto out;
@@ -21,7 +21,7 @@ void* myworker(void* arg)
     mjConnB_WriteS( conn, "HERE" );
 
 out:
-    mjstr_delete( data );
+    mjStr_Delete( data );
     mjConnB_Delete( conn );
     return NULL;
 }

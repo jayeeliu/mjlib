@@ -44,7 +44,7 @@ static void main2(void *arg)
     gettimeofday( &tv1, NULL );
 
     mjStrList strList = HTTP_GETPARAM( conn );
-    mjstr strtmp = mjStrList_Get( strList , 1 );
+    mjStr strtmp = mjStrList_Get( strList , 1 );
 
     char buf[1024] = { 0 };
     char buflen[128] = { 0 };
@@ -55,18 +55,18 @@ static void main2(void *arg)
     mjHttpRsp_AddHeader( response, "Content-Length", buflen );
 
     mjConn_BufWriteS( conn , "HTTP/1.1 200 OK\r\n" );
-    mjstr str = mjHttpRsp_HeaderToStr( response );
+    mjStr str = mjHttpRsp_HeaderToStr( response );
     mjConn_BufWrite( conn, str );
     mjConn_BufWriteS( conn, "\r\n" );
     mjConn_WriteS(conn, buf, on_finish);
-    mjstr_delete( str );
+    mjStr_Delete( str );
 }
 
 static void main3(void *arg)
 {
     mjconn conn = (mjconn)arg;
 
-    mjstr out = FileToStr("test.html");
+    mjStr out = FileToStr("test.html");
 
     char buf[1024] = { 0 };
     sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n", out->length);
@@ -75,7 +75,7 @@ static void main3(void *arg)
     mjConn_BufWrite( conn, out );
     mjConn_Flush(conn, on_finish);
 
-    mjstr_delete(out);
+    mjStr_Delete(out);
 }
 
 struct mjHttpUrl urls[] = {

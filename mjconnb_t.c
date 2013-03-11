@@ -46,13 +46,13 @@ int main()
             printf("can't create mjConnB struct\n");
             break;
         }
-        mjstr data = mjstr_new();
+        mjStr data = mjStr_New();
         mjConnB_ReadUntil(conn, "\r\n\r\n", data); 
 
-        mjstr_copys(data, "END");
+        mjStr_CopyS(data, "END");
         mjConnB_Write(conn, data);
    
-        mjstr_delete(data);
+        mjStr_Delete(data);
         mjConnB_Delete(conn);
   
         break;

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include "mjtcpsrv.h"
 #include "mjsock.h"
@@ -22,10 +23,16 @@ void on_read( void* arg )
 {
     mjconn conn = ( mjconn )arg;
     mjStrList strList = mjStrList_New();
-    mjstr_split( conn->data, " ", strList );
+    mjStr_Split( conn->data, " ", strList );
     
-    
-    mjConn_Write( conn, mjStrList_Get( strList, 0 ), on_close );
+    mjStr comm = mjStrList_Get( strList, 0 );    
+    if ( !strcmp( comm->str, "get" ))  {
+        mjConn_WriteS( conn, "get command run\n", on_close );
+    } else if ( !strcmp( comm->str, "put" ) ) {
+        mjConn_WriteS( conn, "put command run\n", on_close );
+    } else {
+        mjConn_WriteS( conn, "other command run\n", on_close );
+    }
 
     mjStrList_Delete( strList );
 }

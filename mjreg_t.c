@@ -14,7 +14,7 @@ int main()
     mjReg_Search(reg, "abc-123, def-234", result);
 
     for (int i = 0; i < 10; i++) {
-        mjstr str = mjStrList_Get( result, i);
+        mjStr str = mjStrList_Get( result, i);
         if ( str ) {
             printf("%d, %s\n", i, str->str);
         }

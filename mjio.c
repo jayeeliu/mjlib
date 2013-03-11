@@ -15,16 +15,16 @@ mjIO_ReadLine
            -3 -- can't be this
 ==========================================
 */
-int mjIO_ReadLine( mjIO io, mjstr data )
+int mjIO_ReadLine( mjIO io, mjStr data )
 {  
     int ret = -3;
     char buf[BUF_LEN];
 
     while ( 1 ) {
-        int pos = mjstr_search( io->buffer, "\n" );
+        int pos = mjStr_Search( io->buffer, "\n" );
         if ( pos != -1 ) {
-            mjstr_copyb( data, io->buffer->str, pos + 1 );
-            mjstr_consume( io->buffer, pos + 1 );
+            mjStr_CopyB( data, io->buffer->str, pos + 1 );
+            mjStr_Consume( io->buffer, pos + 1 );
             return data->length;
         }
         // get data from file
@@ -39,10 +39,10 @@ int mjIO_ReadLine( mjIO io, mjstr data )
             MJLOG_ERR( "file close" );
             break;
         }
-        mjstr_catb( io->buffer, buf, ret );
+        mjStr_CatB( io->buffer, buf, ret );
     }
-    mjstr_copy( data, io->buffer );
-    mjstr_consume( io->buffer, io->buffer->length );
+    mjStr_Copy( data, io->buffer );
+    mjStr_Consume( io->buffer, io->buffer->length );
     return ret;
 }
 
@@ -67,9 +67,9 @@ mjIO mjIO_New( const char* fileName)
         goto failout2;
     }
 
-    io->buffer = mjstr_new();
+    io->buffer = mjStr_New();
     if ( !io->buffer ) {
-        MJLOG_ERR( "mjstr_New error" );
+        MJLOG_ERR( "mjStr_New error" );
         goto failout3;
     }
 
@@ -90,6 +90,6 @@ bool mjIO_Delete( mjIO io )
         return false;
     }
     close( io->fd );
-    mjstr_delete( io->buffer );
+    mjStr_Delete( io->buffer );
     return true;
 }

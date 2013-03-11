@@ -28,6 +28,6 @@ struct mjHttpUrl {
 extern void     http_Worker( void* arg );
 extern void     http_InitSrv( void* arg );
 extern void     http_ExitSrv( void* arg );
-extern mjstr    FileToStr( const char* fileName );
+extern mjStr    FileToStr( const char* fileName );
 
 #endif

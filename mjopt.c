@@ -135,9 +135,9 @@ bool mjOpt_ParseConf( const char* fileName )
         MJLOG_ERR( "mjio alloc error" );
         return false;
     }
-    mjstr line = mjstr_new();
+    mjStr line = mjStr_New();
     if ( !line ) {
-        MJLOG_ERR( "mjstr_new error" );
+        MJLOG_ERR( "mjStr_New error" );
         return false;
     }
     // set default section
@@ -146,7 +146,7 @@ bool mjOpt_ParseConf( const char* fileName )
         // get one line from file
         int ret = mjIO_ReadLine( io, line );
         if ( ret <= 0 ) break;
-        mjstr_strim( line );
+        mjStr_Strim( line );
         // ignore empty line
         if ( line->length == 0 ) continue;
         // ignore comment line
@@ -154,24 +154,24 @@ bool mjOpt_ParseConf( const char* fileName )
         // section line, get section
         if ( line->str[0] == '[' && 
             line->str[line->length-1] == ']' ) {
-            mjstr_consume( line, 1 );
-            mjstr_rconsume( line, 1 );
-            mjstr_strim( line );
+            mjStr_Consume( line, 1 );
+            mjStr_RConsume( line, 1 );
+            mjStr_Strim( line );
             strcpy( section, line->str );
             continue;
         }
         // split key and value
         mjStrList strList = mjStrList_New();
-        mjstr_split( line, "=", strList );
+        mjStr_Split( line, "=", strList );
         if ( strList->length != 2 ) {
             MJLOG_ERR( "conf error" );
             mjStrList_Delete( strList );
             break;
         }
-        mjstr keyStr = mjStrList_Get( strList, 0 );
-        mjstr valueStr = mjStrList_Get( strList, 1 );
-        mjstr_strim( keyStr );
-        mjstr_strim( valueStr );
+        mjStr keyStr = mjStrList_Get( strList, 0 );
+        mjStr valueStr = mjStrList_Get( strList, 1 );
+        mjStr_Strim( keyStr );
+        mjStr_Strim( valueStr );
         strcpy( key, keyStr->str );
         strcpy( value, valueStr->str );
         mjStrList_Delete( strList );
@@ -179,7 +179,7 @@ bool mjOpt_ParseConf( const char* fileName )
         mjOpt_SetValue( section, key, value );
     }
 
-    mjstr_delete( line );
+    mjStr_Delete( line );
     mjIO_Delete( io );
     return true;
 }

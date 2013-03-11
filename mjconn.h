@@ -18,9 +18,9 @@ struct mjconn {
     mjtevent*       readTimeoutEvent;       // read timeout event 
     mjtevent*       writeTimeoutEvent;      // write timeout event 
 
-    mjstr rbuf;                             // read buffer 
-    mjstr wbuf;                             // write buffer
-    mjstr data;                             // data get from rbuf
+    mjStr rbuf;                             // read buffer 
+    mjStr wbuf;                             // write buffer
+    mjStr data;                             // data get from rbuf
 
     int     connectType;                    // connect type
     mjproc* ConnectCallback;                // ConnectCallback
@@ -53,9 +53,9 @@ extern bool mjConn_ReadUntil( mjconn conn, char* delim, mjproc* Proc );
 extern bool mjConn_Read( mjconn conn, mjproc* Proc );
 // write func
 extern bool mjConn_WriteS( mjconn conn, char* buf, mjproc* Proc );
-extern bool mjConn_Write( mjconn conn, mjstr buf, mjproc* Proc );
+extern bool mjConn_Write( mjconn conn, mjStr buf, mjproc* Proc );
 extern bool mjConn_BufWriteS( mjconn conn, char* buf );
-extern bool mjConn_BufWrite( mjconn conn, mjstr buf );
+extern bool mjConn_BufWrite( mjconn conn, mjStr buf );
 extern bool mjConn_Flush( mjconn conn, mjproc* Proc );
 // thread func
 extern bool mjConn_RunAsync( mjconn conn, mjthread* Routine, mjproc* Proc );

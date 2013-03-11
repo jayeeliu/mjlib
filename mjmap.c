@@ -6,7 +6,7 @@
 #include "mjmap.h"
 #include "mjstr.h"
 
-static mjitem mjitem_new(const char *key, mjstr value)
+static mjitem mjitem_new(const char *key, mjStr value)
 {
     mjitem item = ( mjitem ) calloc( 1, sizeof( struct mjitem ) );
     if ( !item ) {
@@ -15,17 +15,17 @@ static mjitem mjitem_new(const char *key, mjstr value)
     }
 
     /* set key and value */ 
-    item->key   = mjstr_new();
-    item->value = mjstr_new();
+    item->key   = mjStr_New();
+    item->value = mjStr_New();
     if ( !item->key || !item->value ) {
-        MJLOG_ERR("mjstr new error");
-        mjstr_delete( item->key );
-        mjstr_delete( item->value );
+        MJLOG_ERR("mjStr new error");
+        mjStr_Delete( item->key );
+        mjStr_Delete( item->value );
         free( item );
         return NULL;
     }
-    mjstr_copys( item->key, ( char* )key );
-    mjstr_copy( item->value, value );
+    mjStr_CopyS( item->key, ( char* )key );
+    mjStr_Copy( item->value, value );
    
     /* init list */ 
     INIT_HLIST_NODE( &item->map_node );
@@ -42,8 +42,8 @@ static void mjitem_delete( mjitem item )
     }
 
     /* free key */
-    mjstr_delete( item->key );
-    mjstr_delete( item->value );
+    mjStr_Delete( item->key );
+    mjStr_Delete( item->value );
     if ( item->prev ) {
         item->prev->next    = item->next;
     }
@@ -117,7 +117,7 @@ static mjitem mjmap_search( mjmap map, const char* key )
     return NULL;
 }
 
-int mjmap_add( mjmap map, const char* key, mjstr value )
+int mjmap_add( mjmap map, const char* key, mjStr value )
 {
     unsigned int hashvalue = genhashvalue( ( void* )key, strlen( key ) );
     unsigned int index = hashvalue % map->len;
@@ -167,10 +167,10 @@ int mjmap_del( mjmap map, const char* key )
 /*
 ===============================================
 mjmap_get
-    get mjstr from key
+    get mjStr from key
 ===============================================
 */
-mjstr mjmap_get( mjmap map, const char* key )
+mjStr mjmap_get( mjmap map, const char* key )
 {
     if ( !map || !key ) return NULL;
     
