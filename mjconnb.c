@@ -250,7 +250,7 @@ mjConnB mjConnB_New( int fd )
         return NULL;
     }
     // set fd to block
-    mjsock_SetBlocking( fd, 1 );
+    mjSock_SetBlocking( fd, 1 );
     // get mjConnB struct
     mjConnB conn    = &_conn[fd];
     conn->fd        = fd;            
@@ -341,7 +341,7 @@ mjConnB mjConnB_NewClient( const char* addr, int port, unsigned int timeout )
             continue;
         }
         // set to nonblock
-        mjsock_SetBlocking( fd, 0 );
+        mjSock_SetBlocking( fd, 0 );
         if ( connect( fd, p->ai_addr, p->ai_addrlen ) == -1 ) {
             if ( errno == EHOSTUNREACH ) {
                 close( fd );
@@ -382,5 +382,5 @@ void mjConnB_Delete( mjConnB conn )
     if ( conn->private && conn->FreePrivate ) {
         conn->FreePrivate( conn->private );
     }
-    mjsock_close( conn->fd );
+    mjSock_Close( conn->fd );
 }

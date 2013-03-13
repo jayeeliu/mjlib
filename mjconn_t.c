@@ -8,7 +8,7 @@
 
 void on_close(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     mjConn_Delete(conn);
 }
 
@@ -20,13 +20,13 @@ void* thread_run(void *arg)
 
 void thread_finish(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     mjConn_WriteS(conn, "thread finish", on_close);
 }
 
 void finish_write(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     mjConn_RunAsync(conn, thread_run, thread_finish);
 }
 
@@ -34,19 +34,19 @@ extern void handle_stream(void *arg);
 
 void handle_request(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     mjConn_Write(conn, conn->data, handle_stream); 
 }
 
 void handle_stream(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     mjConn_Read(conn, handle_request); 
 }
 
 int main()
 {
-    int sfd = mjsock_tcpserver(7879);
+    int sfd = mjSock_TcpServer(7879);
     if (sfd < 0) {
         printf("Error to create socket");
         return 1;

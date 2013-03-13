@@ -28,13 +28,13 @@ out:
 
 int main()
 {
-    int sfd = mjsock_tcpserver( 7879 );
+    int sfd = mjSock_TcpServer( 7879 );
     if ( sfd < 0 ) {
         printf( "create socket error\n" );
         return 1;
     }
 
-    mjTcpSrvT server = mjTcpSrvT_New( sfd, 100 );
+    mjTcpSrvT server = mjTcpSrvT_New( sfd, 0 );
     if ( !server ) {
         printf( "create server error\n" );
         return 1;

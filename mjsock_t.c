@@ -3,9 +3,9 @@
 
 int main()
 {
-    int sfd = mjsock_tcpserver(7879);
+    int sfd = mjSock_TcpServer(7879);
 
-    mjsock_close(sfd);
+    mjSock_Close(sfd);
 
     return 0;
 }

@@ -32,7 +32,7 @@ void myproc( void* arg )
 
 int main()
 {
-    int sfd = mjsock_tcpserver( 7879 );
+    int sfd = mjSock_TcpServer( 7879 );
     if ( sfd < 0 ) {
         MJLOG_ERR( "create socket error" );
         return 1;

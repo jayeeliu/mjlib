@@ -20,22 +20,22 @@ static void mjTcpSrvT_AcceptHandler( void *arg )
     mjTcpSrvT srv = ( mjTcpSrvT )arg;
 
     // accept, create new client socket
-    int cfd = mjsock_accept( srv->sfd );
+    int cfd = mjSock_Accept( srv->sfd );
     if ( cfd < 0 ) {
-        MJLOG_ERR( "mjsock_accept error: %d", errno );
+        MJLOG_ERR( "mjSock_Accept error: %d", errno );
         return;
     }
     // no server handler, exit 
     if ( !srv->Handler ) {
         MJLOG_WARNING( "no server handler found" );
-        mjsock_close( cfd );
+        mjSock_Close( cfd );
         return;
     }
     // create new connection
     mjConnB conn = mjConnB_New( cfd );
     if ( !conn ) {
         MJLOG_ERR( "mjtcpconn create error" );
-        mjsock_close( cfd );
+        mjSock_Close( cfd );
         return;
     }
     mjConnB_SetServer( conn, srv );
@@ -160,7 +160,7 @@ mjTcpSrvT mjTcpSrvT_New( int sfd, int threadNum )
     }
     srv->sfd         = sfd;          //  set server socket 
     srv->stop        = 0;            //  not stop 
-    mjsock_SetBlocking( srv->sfd, 0 );
+    mjSock_SetBlocking( srv->sfd, 0 );
     // init server loop
     srv->ev = mjEV_New(); 
     if ( !srv->ev ) {
@@ -198,7 +198,7 @@ failout3:
 failout2:
     free( srv );
 failout1:
-    mjsock_close( sfd );
+    mjSock_Close( sfd );
     return NULL;
 }
 
@@ -228,7 +228,7 @@ bool mjTcpSrvT_Delete( mjTcpSrvT srv )
     }
 
     mjEV_Delete( srv->ev );
-    mjsock_close( srv->sfd );
+    mjSock_Close( srv->sfd );
     free( srv );
     return true;
 }

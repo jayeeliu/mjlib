@@ -17,7 +17,7 @@
 /**
  * create noblock tcpserver 
  */
-int mjsock_tcpserver(int port)
+int mjSock_TcpServer(int port)
 {
     int sfd, ret;
     int flags;
@@ -76,7 +76,7 @@ int mjsock_tcpserver(int port)
 }
 
 /* listen socket accept */
-int mjsock_accept(int sfd)
+int mjSock_Accept(int sfd)
 {
     struct sockaddr_in caddr;
     socklen_t caddr_len = 0;
@@ -88,12 +88,12 @@ int mjsock_accept(int sfd)
 
 /*
 ======================================================
-mjsock_SetBlocking
+mjSock_SetBlocking
     set socket to blocing
     return -1 -- failed, 0 -- success
 ======================================================
 */
-int mjsock_SetBlocking( int fd, int blocking )
+int mjSock_SetBlocking( int fd, int blocking )
 {
     int flags;
     if ( ( flags = fcntl( fd, F_GETFL, 0 ) ) < 0 ) {
@@ -116,7 +116,7 @@ int mjsock_SetBlocking( int fd, int blocking )
 }
 
 
-int mjsock_close(int sfd)
+int mjSock_Close(int sfd)
 {
     return close(sfd);
 }

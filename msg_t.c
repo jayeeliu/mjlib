@@ -15,13 +15,13 @@ void Option_Init()
 
 void on_close( void* arg )
 {
-    mjconn conn = ( mjconn )arg;
+    mjConn conn = ( mjConn )arg;
     mjConn_Delete( conn );
 }
 
 void on_read( void* arg )
 {
-    mjconn conn = ( mjconn )arg;
+    mjConn conn = ( mjConn )arg;
     mjStrList strList = mjStrList_New();
     mjStr_Split( conn->data, " ", strList );
     
@@ -39,7 +39,7 @@ void on_read( void* arg )
 
 void Msg_Handler( void* arg )
 {
-    mjconn conn = ( mjconn )arg;
+    mjConn conn = ( mjConn )arg;
     mjConn_ReadUntil( conn, "\r\n", on_read );
 }
 
@@ -48,7 +48,7 @@ int main( int argc, char* argv[] )
     Option_Init();
 
     mjOpt_ParseCmd( argc, argv );
-    int sfd = mjsock_tcpserver( port );
+    int sfd = mjSock_TcpServer( port );
     if ( sfd < 0 ) {
         printf( "socket create error" );
         return 1;

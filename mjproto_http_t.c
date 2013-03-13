@@ -15,7 +15,7 @@ struct timeval tv1, tv2;
 
 static void on_finish(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     //if ( count >= 99999 ) mjTcpSrv_SetStop( conn->server, 1);
     mjConn_Delete(conn);
     
@@ -26,20 +26,20 @@ static void on_finish(void *arg)
 
 static void main0(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     mjConn_WriteS(conn, "main0 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
 }
 
 static void main1(void *arg)
 {
     gettimeofday( &tv1, NULL );
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
     mjConn_WriteS(conn, "main1 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
 }
 
 static void main2(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
 
     gettimeofday( &tv1, NULL );
 
@@ -64,7 +64,7 @@ static void main2(void *arg)
 
 static void main3(void *arg)
 {
-    mjconn conn = (mjconn)arg;
+    mjConn conn = (mjConn)arg;
 
     mjStr out = FileToStr("test.html");
 
@@ -88,7 +88,7 @@ struct mjHttpUrl urls[] = {
 
 int main()
 {
-    int sfd = mjsock_tcpserver( 7879 );
+    int sfd = mjSock_TcpServer( 7879 );
     if ( sfd < 0 ) {
         printf( "Error create server socket\n" );
         return 1;

@@ -8,32 +8,32 @@
 
 void on_close(void *data)
 {
-    mjconn conn = (mjconn)data;
+    mjConn conn = (mjConn)data;
     mjConn_Delete(conn);
 }
 
 void on_write3(void *data)
 {
-    mjconn conn = (mjconn)data;
+    mjConn conn = (mjConn)data;
     mjConn_Flush(conn, on_close);
 }
 
 void *threadroutine(void *data)
 {
-    mjconn conn = (mjconn) data;
+    mjConn conn = (mjConn) data;
     mjStr_CatS(conn->wbuf, "data from thread\n");
     return NULL;
 }
 
 void on_write2(void *data)
 {
-    mjconn conn = (mjconn) data;
+    mjConn conn = (mjConn) data;
     mjConn_RunAsync(conn, threadroutine, on_write3);
 }
 
 void on_write1(void *data)
 {
-    mjconn conn = (mjconn)data;
+    mjConn conn = (mjConn)data;
  //   int x = 6;
  //   for(int i = 0; i < 100000; ++i) {
  //       x = x * 13;
@@ -42,13 +42,13 @@ void on_write1(void *data)
 }
 void myhandler(void *data)
 {
-    mjconn conn = (mjconn)data;
+    mjConn conn = (mjConn)data;
     mjConn_ReadUntil(conn, "\r\n\r\n", on_write1);
 }
 
 int main()
 {
-    int sfd = mjsock_tcpserver(7879);
+    int sfd = mjSock_TcpServer(7879);
     if (sfd < 0) {
         printf("Error create server socket\n");
         return 1;

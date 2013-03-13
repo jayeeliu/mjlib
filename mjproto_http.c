@@ -8,7 +8,7 @@
 
 static void on_header( void* arg )
 {
-    mjconn conn = ( mjconn )arg;
+    mjConn conn = ( mjConn )arg;
     mjHttpData httpData = ( mjHttpData )conn->private;
     mjTcpSrv server = ( mjTcpSrv )conn->server;
     struct mjHttpUrl* urls = ( struct mjHttpUrl* ) server->private;
@@ -84,7 +84,7 @@ http_worker
 */
 void http_Worker( void* arg )
 {
-    mjconn conn = ( mjconn )arg;
+    mjConn conn = ( mjConn )arg;
     void* httpData = calloc( 1, sizeof( struct mjHttpData ) );
     if ( !httpData ) {
         MJLOG_ERR( "httpData alloc error" );

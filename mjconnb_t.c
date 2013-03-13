@@ -19,14 +19,14 @@ int main()
 {
     signal(SIGCHLD, wait_child);
 
-    int sfd = mjsock_tcpserver( 7879 );
+    int sfd = mjSock_TcpServer( 7879 );
     if ( sfd < 0 ) {
         printf( "Error to create socket" );
         return 1;
     }
 
     for ( ;; ) {
-        int cfd = mjsock_accept( sfd );
+        int cfd = mjSock_Accept( sfd );
         if ( cfd < 0 ) {
             printf("Some Error Happened\n");
             break;
