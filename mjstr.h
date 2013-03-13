@@ -34,7 +34,8 @@ extern bool     mjStr_Split( mjStr x, const char* split, mjStrList strList );
 extern void     mjStr_Strim( mjStr x );
 extern void     mjStr_LStrim( mjStr x );
 extern void     mjStr_RStrim( mjStr x );
-extern bool     mjStr_Capitablize( mjStr str );
+extern bool     mjStr_ToLower( mjStr str );
+extern bool     mjStr_ToUpper( mjStr str );
 
 extern mjStr    mjStr_New();
 extern void     mjStr_Delete( mjStr x );

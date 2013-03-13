@@ -10,7 +10,7 @@ int main()
     int ret = mjStr_Search( str, "is" );
     printf( "found in %d\n", ret );
 
-    mjStr_Capitablize( str );
+    mjStr_ToUpper( str );
     printf("%s\n", str->data );
 
     mjStrList strList = mjStrList_New();

@@ -14,10 +14,19 @@
 
 #define DEFAULT_BACKLOG	4096
 
-/**
- * create noblock tcpserver 
- */
-int mjSock_TcpServer(int port)
+
+int mjSock_TcpSocket()
+{
+    int fd = socket( AF_INET, SOCK_STREAM, 0 );
+    return fd;
+}
+/*
+======================================
+mjSock_TcpServer
+    create tcpserver 
+======================================
+*/
+int mjSock_TcpServer( int port )
 {
     int sfd, ret;
     int flags;

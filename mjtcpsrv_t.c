@@ -5,6 +5,7 @@
 #include "mjconn.h"
 #include "mjtcpsrv.h"
 #include "mjcomm.h"
+#include "mjlog.h"
 
 void on_close(void *data)
 {
@@ -46,6 +47,42 @@ void myhandler(void *data)
     mjConn_ReadUntil(conn, "\r\n\r\n", on_write1);
 }
 
+void On_ReadResponse( void* args )
+{
+    mjConn clientConn = ( mjConn ) args;
+    printf("%s\n", clientConn->data->data);
+    MJLOG_ERR( " OK RESPONSE " );
+    mjConn_Delete( clientConn->private );    
+}
+
+void On_WriteHeader( void* args )
+{
+    mjConn clientConn = ( mjConn ) args;
+    mjConn_ReadUntil( clientConn, "\r\n", On_ReadResponse );
+}
+
+void On_Connect( void* args )
+{
+    mjConn clientConn = ( mjConn ) args;
+    mjConn_WriteS( clientConn, "GET / HTTP/1.1\r\n\r\n", On_WriteHeader );
+}
+
+void FreeClient( void* args )
+{
+    mjConn clientConn = ( mjConn ) args;
+    mjConn_Delete( clientConn );
+}
+
+void proxyhandler( void* args ) 
+{
+    mjConn conn = ( mjConn ) args;
+    int cfd = mjSock_TcpSocket();
+    mjConn clientConn = mjConn_New( NULL, conn->ev, cfd );
+    clientConn->private = conn;
+    mjConn_SetPrivate( conn, clientConn, FreeClient );
+    mjConn_Connect( clientConn, "202.108.33.60", 80, On_Connect ); 
+}
+
 int main()
 {
     int sfd = mjSock_TcpServer(7879);
@@ -54,13 +91,13 @@ int main()
         return 1;
     }
 
-//    ProcessSpawn( 2 );
     mjTcpSrv server = mjTcpSrv_New(sfd); 
-    if (!server) {
+    if ( !server ) {
         printf("Error create tcpserver\n");
         return 1;
     }
-    mjTcpSrv_SetHandler(server, myhandler);
+
+    mjTcpSrv_SetHandler(server, proxyhandler);
     mjTcpSrv_Run(server);
 
     mjTcpSrv_Delete(server); 

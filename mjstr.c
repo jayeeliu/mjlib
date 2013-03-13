@@ -219,13 +219,28 @@ int mjStr_Cmp(mjStr str1, mjStr str2)
     }
 }
 
+bool mjStr_ToLower( mjStr str )
+{
+    if ( !str ) {
+        MJLOG_ERR( "str is null" );
+        return false;
+    }
+
+    for( int i = 0; i < str->length; i++) {
+        if ( str->data[i] >='A' && str->data[i] <= 'Z' ) {
+            str->data[i] += 32;
+        }
+    }
+    return true;
+}
+
 /*
 =========================================================
 mjStr_Capitablize
     change mjstr to capitable
 =========================================================
 */
-bool mjStr_Capitablize( mjStr str )
+bool mjStr_ToUpper( mjStr str )
 {
     if ( !str ) {
         MJLOG_ERR( "str is Null" );
