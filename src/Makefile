@@ -12,4 +12,3 @@ all:$(OBJS)
 
 clean:
 	rm -rf $(OBJS)
-	rm -rf $(BUILD)/libmj.a $(BUILD)/libmj.so

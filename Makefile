@@ -3,6 +3,7 @@ BASE=$(PWD)
 .PHONY: all clean install test
 
 all:
+	mkdir -p build
 	cd src;	make
 test:
 	cd test; make
@@ -11,3 +12,4 @@ install:
 clean:
 	cd src; make clean
 	cd test; make clean
+	rm -rf build
