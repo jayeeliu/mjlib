@@ -279,13 +279,13 @@ mjConnB mjConnB_New( int fd )
 
 /*
 ===============================================================
-mjConnB_ClientReady
+mjConnB_ConnectReady
     Used by mjConnB_Connect for connect timeout
     return  0 -- connect timeout or poll failed
             1 -- connect ok
 ===============================================================
 */
-static int mjConnB_ClientReady( int fd, unsigned int timeout )
+static int mjConnB_ConnectReady( int fd, unsigned int timeout )
 {
     struct pollfd wfd[1];
     wfd[0].fd       = fd; 
@@ -351,7 +351,7 @@ mjConnB mjConnB_Connect( const char* addr, int port, unsigned int timeout )
                 continue;
             }
             // errno == EINPROGRESS
-            if ( !mjConnB_ClientReady( fd, timeout ) ) {
+            if ( !mjConnB_ConnectReady( fd, timeout ) ) {
                 MJLOG_ERR( "conn timeout" );
                 close( fd );
                 continue;

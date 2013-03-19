@@ -696,16 +696,10 @@ bool mjConn_Connect( mjConn conn, const char* ipaddr, int port, mjproc* Proc )
         if ( conn->ConnectCallback ) conn->ConnectCallback( conn );
         return true;
     }
-    // connect failed
-    if ( ret < 0 ) {  
-        // set nonblock connect
-        if ( errno == EINPROGRESS ) return mjConn_AddConnectEvent( conn );
-        MJLOG_ERR( "connect failed" );
-        mjConn_Delete( conn );
-        return false;
-    }
-    // can;t be here
-    MJLOG_ERR( "can't be here" );
+    // connect failed, set nonblock connect
+    if ( errno == EINPROGRESS ) return mjConn_AddConnectEvent( conn );
+    MJLOG_ERR( "connect failed" );  
+    mjConn_Delete( conn );
     return false;
 }
 
