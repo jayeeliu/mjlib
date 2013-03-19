@@ -58,8 +58,8 @@ bool mjStr_CopyS( mjStr sa, const char* s )
 
 bool mjStr_CatB(mjStr sa, char *s, unsigned int n)
 {
-  if (!sa->data) return mjStr_CopyB(sa, s, n);       /* sa is null, copy from s */
-  if (!mjStr_ReadyPlus(sa, n + 1)) return false;    /* extend if needed */
+  if ( !sa->data ) return mjStr_CopyB( sa, s, n );       /* sa is null, copy from s */
+  if ( !mjStr_ReadyPlus(sa, n + 1)) return false;    /* extend if needed */
   memcpy(sa->data + sa->length, s, n);               /* copy string */
   sa->length += n;
   sa->data[sa->length] = '\0';                       /* set byte to zero */

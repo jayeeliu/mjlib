@@ -30,7 +30,7 @@ extern bool     mjConnB_SetServer( mjConnB conn, void* server );
 extern bool     mjConnB_SetTimeout( mjConnB conn, unsigned int readTimeout, 
                                 unsigned int writeTimeout );
 
-extern mjConnB  mjConnB_NewClient( const char* addr, int port, unsigned int timeout );
+extern mjConnB  mjConnB_Connect( const char* addr, int port, unsigned int timeout );
 extern mjConnB  mjConnB_New( int fd );
 extern void     mjConnB_Delete( mjConnB conn );
 

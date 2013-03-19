@@ -24,12 +24,14 @@ static void mjTcpSrvM_AcceptHandler( void* data )
         return;
     }
     // create new action 
-    mjConn conn = mjConn_New( srv, srv->ev, cfd );
+    mjConn conn = mjConn_New( srv->ev, cfd );
     if ( !conn ) {
         MJLOG_ERR( "mjConn create error" );
         mjSock_Close( cfd );
         return;
     }
+    // set conn server
+    mjConn_SetServer( conn, srv );
     // run Handler, conn is parameter
     srv->Handler( conn );
 }

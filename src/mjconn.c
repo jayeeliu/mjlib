@@ -572,6 +572,22 @@ bool mjConn_SetPrivate( mjConn conn, void* private, mjproc* FreePrivte )
 }
 
 /*
+=====================================================
+mjConn_SetServer
+    set conn server, when conn in server side
+=====================================================
+*/
+bool mjConn_SetServer( mjConn conn, void* server )
+{
+    if ( !conn ) {
+        MJLOG_ERR( "conn is null" );
+        return false;
+    }
+    conn->server    = server;
+    return true;
+}
+
+/*
 ==================================================================
 mjConn_DelConnectEvent
     del connect event
@@ -700,7 +716,7 @@ mjConn_New
     return NULL -- fail, other -- success
 ================================================
 */
-mjConn mjConn_New( void* server, mjev ev, int fd )
+mjConn mjConn_New( mjev ev, int fd )
 {
     // event loop must not be null
     if ( !ev ) {
@@ -717,7 +733,7 @@ mjConn mjConn_New( void* server, mjev ev, int fd )
     }
 
     conn->fd        = fd;           // set conn fd 
-    conn->server    = server;       // set server
+    conn->server    = NULL;       // set server
     conn->ev        = ev;           // set ev
     // init timeout event
     conn->connectTimeout        = 0;   

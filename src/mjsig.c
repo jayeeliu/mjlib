@@ -5,22 +5,29 @@
 
 #define MAX_SIGNAL 256
 
-struct signal_descriptor { /* signal struct */
-    int count;
-    sighandler *handler;
+// signal struct
+struct signal_descriptor {
+    int         count;
+    sighandler* handler;
 };
 
-static int signal_queue_len;
-static int signal_queue[MAX_SIGNAL];
+static int  signal_queue_len;
+static int  signal_queue[MAX_SIGNAL];
 static struct signal_descriptor signal_state[MAX_SIGNAL];
 static sigset_t blocked_sig;
 
+/*
+=====================================================
+mjSig_Init
+    init signal
+=====================================================
+*/
 void mjSig_Init()
 {
     signal_queue_len = 0;
-    memset(signal_queue, 0, sizeof(signal_queue));
-    memset(signal_state, 0, sizeof(signal_state));
-    sigfillset(&blocked_sig);
+    memset( signal_queue, 0, sizeof( signal_queue ) );
+    memset( signal_state, 0, sizeof( signal_state ) );
+    sigfillset( &blocked_sig );
 }
 
 static void signal_handler(int sig)

@@ -8,7 +8,7 @@ typedef void* mjthread( void* data );
 
 struct mjConn {
     int     fd;                             // fd 
-    void*   server;                         // tcpserver 
+    void*   server;                         // tcpserver for server side conn 
     mjev    ev;
 
     unsigned int    connectTimeout;         // connect timeout 
@@ -64,8 +64,9 @@ extern bool mjConn_Connect( mjConn conn, const char* ipaddr, int port, mjproc* p
 extern bool mjConn_SetConnectTimeout( mjConn conn, unsigned int connectTimeout );
 extern bool mjConn_SetTimeout( mjConn conn, unsigned int readTimeout, unsigned int writeTimeout );
 extern bool mjConn_SetPrivate( mjConn conn, void* private, mjproc* FreePrivte );
+extern bool mjConn_SetServer( mjConn conn, void* server );
 
-extern mjConn   mjConn_New( void* srv, mjev ev, int fd );
+extern mjConn   mjConn_New( mjev ev, int fd );
 extern void     mjConn_Delete( mjConn conn );
 
 #endif

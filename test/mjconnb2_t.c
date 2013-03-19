@@ -5,7 +5,7 @@
 
 int main()
 {
-    mjConnB conn = mjConnB_NewClient( "mail.sina.com.cn", 80, 3000);
+    mjConnB conn = mjConnB_Connect( "mail.sina.com.cn", 80, 3000);
     if ( !conn ) {
         printf( "conn error" );
         return -1;

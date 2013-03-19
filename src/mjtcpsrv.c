@@ -25,13 +25,15 @@ static void mjTcpSrv_AcceptHandler( void* data )
         mjSock_Close( cfd );
         return;
     }
-    // create new action 
-    mjConn conn = mjConn_New( srv, srv->ev, cfd );
+    // create new connection
+    mjConn conn = mjConn_New( srv->ev, cfd );
     if ( !conn ) {
         MJLOG_ERR( "mjConn create error" );
         mjSock_Close( cfd );
         return;
     }
+    // set conn server
+    mjConn_SetServer( conn, srv );
     // run Handler, conn is parameter
     srv->Handler( conn );
 }

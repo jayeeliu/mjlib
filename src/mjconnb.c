@@ -280,7 +280,7 @@ mjConnB mjConnB_New( int fd )
 /*
 ===============================================================
 mjConnB_ClientReady
-    Used by mjConnB_NewClient for connect timeout
+    Used by mjConnB_Connect for connect timeout
     return  0 -- connect timeout or poll failed
             1 -- connect ok
 ===============================================================
@@ -310,12 +310,12 @@ static int mjConnB_ClientReady( int fd, unsigned int timeout )
 
 /*
 ==============================================================================
-mjConnB_NewClient
+mjConnB_Connect
     conn to addr and port
     return NULL -- fail, other -- success
 ==============================================================================
 */
-mjConnB mjConnB_NewClient( const char* addr, int port, unsigned int timeout )
+mjConnB mjConnB_Connect( const char* addr, int port, unsigned int timeout )
 {
     char _port[6];
     snprintf( _port, 6, "%d", port );

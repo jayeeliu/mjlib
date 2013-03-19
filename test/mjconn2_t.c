@@ -23,7 +23,7 @@ int main()
     mjev ev = mjEV_New();
     int cfd = socket(AF_INET, SOCK_STREAM, 0);
     
-    mjConn conn = mjConn_New(NULL, ev, cfd);
+    mjConn conn = mjConn_New( ev, cfd);
     mjConn_SetConnectTimeout(conn, 2000);
     mjConn_Connect(conn, "12.1.1.12", 7879, conn_write);
 

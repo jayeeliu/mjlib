@@ -77,7 +77,7 @@ void proxyhandler( void* args )
 {
     mjConn conn = ( mjConn ) args;
     int cfd = mjSock_TcpSocket();
-    mjConn clientConn = mjConn_New( NULL, conn->ev, cfd );
+    mjConn clientConn = mjConn_New( conn->ev, cfd );
     clientConn->private = conn;
     mjConn_SetPrivate( conn, clientConn, FreeClient );
     mjConn_Connect( clientConn, "202.108.33.60", 80, On_Connect ); 
