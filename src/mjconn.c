@@ -611,7 +611,7 @@ mjConn_ConnectEventCallback
     connect callback
 ===================================================================
 */
-static void mjConn_ConnectEventCallback( void* arg)
+static void mjConn_ConnectEventCallback( void* arg )
 {
     mjConn conn = ( mjConn )arg;
     int err = 0;
@@ -727,7 +727,7 @@ mjConn mjConn_New( mjev ev, int fd )
     }
 
     conn->fd        = fd;           // set conn fd 
-    conn->server    = NULL;       // set server
+    conn->server    = NULL;         // set server
     conn->ev        = ev;           // set ev
     // init timeout event
     conn->connectTimeout        = 0;   
