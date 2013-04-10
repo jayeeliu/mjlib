@@ -78,9 +78,9 @@ GetCurrentTime
 long long GetCurrentTime()
 {
     struct timeval tv;
-    gettimeofday(&tv, NULL);
+    gettimeofday( &tv, NULL );
 
-    return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
+    return ( tv.tv_sec * 1000 + tv.tv_usec / 1000 );
 }
 
 int ProcessSpawn( int nProcs )
@@ -106,7 +106,7 @@ SavePid
     save pid to file.
 ==============================================
 */
-void SavePid( const char *pidFile )
+void SavePid( const char* pidFile )
 {
 	if ( !pidFile ) {
         MJLOG_ERR( "pidFile is null" );
@@ -119,7 +119,7 @@ void SavePid( const char *pidFile )
 		return;
 	}
 
-	fprintf(fp, "%ld\n", ( long )getpid());
+	fprintf( fp, "%ld\n", ( long )getpid() );
 
 	if ( fclose( fp ) == -1 ) {
         MJLOG_ERR( "close pid file %s error", pidFile);
@@ -133,7 +133,7 @@ RemovePid
     remove pid file.
 =================================================
 */
-void RemovePid( const char *pidFile )
+void RemovePid( const char* pidFile )
 {
 	if ( !pidFile ) {
         MJLOG_ERR ( "pidFile is null" );
@@ -145,37 +145,47 @@ void RemovePid( const char *pidFile )
 	}
 }
 
-int worker_new(char *args[], int *rfd, int *wfd)
+/*
+====================================================
+Worker_New
+    Run worker
+    args: worker filename
+    rfd: read handler
+    wfd: write handler
+    return: true or false
+====================================================
+*/
+bool Worker_New( char* args[], int* rfd, int* wfd)
 {
     int pin[2], pout[2];
-    if (pipe(pin) == -1) return -1;
-    if (pipe(pout) == -1) {
-        close(pin[0]);
-        close(pin[1]);
-        return -1;
-    }
+    if ( pipe( pin ) == -1 ) goto failout1;
+    if ( pipe( pout ) == -1 ) goto failout2;
 
     pid_t pid = vfork();
-    if (pid < 0) {
-        close(pin[0]);
-        close(pin[1]);
-        close(pout[0]);
-        close(pout[1]);
-        return -1;
+    if ( pid < 0 ) goto failout3;
+    // child run, never return
+    if ( pid == 0 ) {
+        close( pin[0] );
+        close( pout[1] ); 
+        dup2( pout[0], 0 );
+        dup2( pin[1], 1 );
+        execv( *args, args );
+        exit( 0 );
     }
-    if (pid == 0) {
-        close(pin[0]);
-        close(pout[1]); 
-        dup2(pout[0], 0);
-        dup2(pin[1], 1);
-        execv(*args, args);
-        exit(0);
-    }
+    // parent run
     *rfd = pin[0];
     *wfd = pout[1];
 
-    close(pin[1]);
-    close(pout[0]);
-    return 0;
-}
+    close( pin[1] );
+    close( pout[0] );
+    return true;
 
+failout3:
+    close( pout[0] );
+    close( pout[1] );
+failout2:
+    close( pin[0] );
+    close( pin[1] );
+failout1:
+    return false;
+}

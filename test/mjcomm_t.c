@@ -9,7 +9,7 @@ int main()
     char *arg[] = { "./ptest" };
     int rfd, wfd;
 
-    int ret = worker_new(arg, &rfd, &wfd);
+    int ret = Worker_New(arg, &rfd, &wfd);
     if (ret < 0) {
         printf("worker new error\n");
         return 1;

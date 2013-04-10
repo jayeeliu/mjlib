@@ -15,9 +15,9 @@ mjTcpSrvT_AcceptHandler
     accept client fd and run
 =========================================================
 */
-static void mjTcpSrvT_AcceptHandler( void *arg )
+static void mjTcpSrvT_AcceptHandler( void* arg )
 {
-    mjTcpSrvT srv = ( mjTcpSrvT )arg;
+    mjTcpSrvT srv = ( mjTcpSrvT ) arg;
 
     // accept, create new client socket
     int cfd = mjSock_Accept( srv->sfd );
@@ -114,7 +114,7 @@ mjTcpSrvT_SetSrvProc
     set server init and exit proc
 ==========================================================================
 */
-bool mjTcpSrvT_SetSrvProc( mjTcpSrvT srv, mjproc* InitSrv, mjproc* ExitSrv)
+bool mjTcpSrvT_SetSrvProc( mjTcpSrvT srv, mjproc* InitSrv, mjproc* ExitSrv )
 {
     if ( !srv ) {
         MJLOG_ERR( "srv is null" );
