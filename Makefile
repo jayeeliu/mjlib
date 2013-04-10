@@ -5,6 +5,7 @@ BASE=$(PWD)
 all:
 	mkdir -p build
 	cd src;	make
+	cd test; make
 test:
 	cd test; make
 install:

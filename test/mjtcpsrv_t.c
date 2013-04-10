@@ -97,7 +97,7 @@ int main()
         return 1;
     }
 
-    mjTcpSrv_SetHandler(server, proxyhandler);
+    mjTcpSrv_SetHandler(server, myhandler);
     mjTcpSrv_Run(server);
 
     mjTcpSrv_Delete(server); 
