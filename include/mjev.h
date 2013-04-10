@@ -33,7 +33,7 @@ typedef struct mjtevent {
 struct mjev {
     int         epfd;   // epoll fd
     mjfevent    fileEventList[MJEV_MAXFD];
-    mjpq        timerEventQueue;
+    mjPQ        timerEventQueue;
 };
 typedef struct mjev* mjev;
 

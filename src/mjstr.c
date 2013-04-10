@@ -365,7 +365,7 @@ bool mjStrList_AddB( mjStrList strList, char* str, int len )
         }
         strList->data[strList->length] = tmpStr;
     }
-    mjStr_CopyB( strList->data[strList->length], str , len);
+    mjStr_CopyB( strList->data[strList->length], str , len );
 
     strList->length++;
     return 0;

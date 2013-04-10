@@ -3,31 +3,26 @@
 #include <stdlib.h>
 #include "mjpq.h"
 
-#define LEN 5
+#define LEN 50000
 
 int main()
 {
-    mjpq pq = mjpq_new();
+    mjPQ pq = mjPQ_New();
     if (!pq) {
         printf("mjprioq new error\n");
         return 1;
     }
 
-    struct pq_elt element[LEN];
     for (int i = 0; i < LEN; i++) {
-        element[i].dt = random();
-        element[i].data = NULL;
-        mjpq_insert(pq, &element[i]);
+        mjPQ_Insert(pq, random(), NULL);
     }
 
-    struct pq_elt tmp;
     for (int i = 0; i < LEN; i++) {
-        mjpq_min(pq, &tmp);
-        mjpq_delmin(pq);
-        printf("%lld\n", tmp.dt);
+        printf("%lld\n", mjPQ_GetMinKey(pq));
+        mjPQ_DelMin(pq);
     }
 
-    mjpq_delete(pq);
+    mjPQ_Delete(pq);
 
     return 0;
 }

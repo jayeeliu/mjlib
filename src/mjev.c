@@ -125,7 +125,7 @@ mjtevent* mjEV_AddTimer( mjev ev, long long ms, mjproc* proc, void* data )
         return NULL;
     }
     // create mjTimerEvent struct
-    mjtevent *te = ( mjtevent* ) calloc( 1, sizeof( mjtevent ) );
+    mjtevent* te = ( mjtevent* ) calloc( 1, sizeof( mjtevent ) );
     if ( !te ) {
         MJLOG_ERR( "mjtevent alloc error" );
         return NULL; 
@@ -135,12 +135,8 @@ mjtevent* mjEV_AddTimer( mjev ev, long long ms, mjproc* proc, void* data )
     te->time        = ms + GetCurrentTime();
     te->TimerProc   = proc;
     te->data        = data;
-    // create queue element struct
-    struct pq_elt pe;
-    pe.dt = te->time;
-    pe.data = te;
     // insert into queue
-    int ret = mjpq_insert( ev->timerEventQueue, &pe );
+    int ret = mjPQ_Insert( ev->timerEventQueue, te->time, te );
     if ( ret < 0 ) {
         MJLOG_ERR( "mjpq_insert error" );
         free( te );
@@ -173,10 +169,7 @@ GetFirstTimer
 */
 static long long GetFirstTimer( mjev ev )
 {
-    struct pq_elt pe;
-    int ret = mjpq_min( ev->timerEventQueue, &pe );
-    if ( ret < 0 ) return -1;
-    return pe.dt;
+    return mjPQ_GetMinKey( ev->timerEventQueue );
 }
 
 /*
@@ -185,14 +178,13 @@ GetFirstTimerEvent
     get first time event from queue
 ==================================================
 */
-static mjtevent* GetFirstTimerEvent(mjev ev)
+static mjtevent* GetFirstTimerEvent( mjev ev )
 {
-    struct pq_elt pe;
-    int ret = mjpq_min( ev->timerEventQueue, &pe );
-    if ( ret < 0 ) return NULL;
+    mjtevent* te = mjPQ_GetMinValue( ev->timerEventQueue );
+    if ( !te ) return NULL;
     // delete timer event from queue
-    mjpq_delmin( ev->timerEventQueue );
-    return pe.data;
+    mjPQ_DelMin( ev->timerEventQueue );
+    return te;
 }
 
 /*
@@ -291,7 +283,7 @@ mjev mjEV_New()
         return NULL;
     }
     // create timer event queue
-    ev->timerEventQueue = mjpq_new();
+    ev->timerEventQueue = mjPQ_New();
     if ( !ev->timerEventQueue ) {
         MJLOG_ERR( "mjpq alloc error" );
         close( ev->epfd );
@@ -316,6 +308,6 @@ void mjEV_Delete( mjev ev )
         return;
     }
     close( ev->epfd );
-    mjpq_delete( ev->timerEventQueue );
+    mjPQ_Delete( ev->timerEventQueue );
     free( ev );
 }

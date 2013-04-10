@@ -6,6 +6,12 @@
 
 #define MAXLEN  20
 
+/*
+===============================================================
+mjReg_Search
+    search string copy result to result
+===============================================================
+*/
 bool mjReg_Search( mjReg reg, char* string, mjStrList result )
 {
     // call regexec to search string

@@ -1,29 +1,31 @@
 #ifndef _MJPQ_H
 #define _MJPQ_H
 
-/**
+#include <stdbool.h>
+
+/*
  * the data hold in prioq
- * dt is used for sorting
- * data is a pointer to the data
+ * key is used for sorting
+ * value is a pointer to the data
  */
 struct pq_elt {
-    long long dt;
-    void *data;
+    long long   key;
+    void*       value;
 };
 
-struct mjpq {
-    struct pq_elt *p;   /* the element array */
-    unsigned int used;  /* used in array */
-    unsigned int total; /* total size of array */
+struct mjPQ {
+    struct pq_elt*  p;      // the element array
+    unsigned int    used;   // used in array
+    unsigned int    total;  // total size of array
 };
+typedef struct mjPQ* mjPQ;
 
-typedef struct mjpq* mjpq;
+extern long long    mjPQ_GetMinKey( mjPQ pq );
+extern void*        mjPQ_GetMinValue( mjPQ pq );
+extern bool         mjPQ_Insert( mjPQ pq, long long key, void* value );
+extern void         mjPQ_DelMin( mjPQ pq );
 
-extern int mjpq_insert(mjpq pq, struct pq_elt *pe);
-extern int mjpq_min(mjpq pq, struct pq_elt *pe);
-extern void mjpq_delmin(mjpq pq);
-
-extern mjpq mjpq_new();
-extern void mjpq_delete(mjpq pq);
+extern mjPQ mjPQ_New();
+extern void mjPQ_Delete( mjPQ pq );
 
 #endif
