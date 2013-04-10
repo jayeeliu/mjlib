@@ -4,6 +4,7 @@ BASE=$(PWD)
 
 all:
 	mkdir -p build
+	cd deps/libjpw; make
 	cd src;	make
 	cd test; make
 test:
@@ -11,6 +12,7 @@ test:
 install:
 	cp build/libmj.so /usr/local/lib
 clean:
+	cd deps/libjpw; make clean
 	cd src; make clean
 	cd test; make clean
 	rm -rf build
