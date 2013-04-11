@@ -155,7 +155,7 @@ mjTcpSrvT mjTcpSrvT_New( int sfd, int threadNum )
     // alloc mjserver_tcp struct 
     mjTcpSrvT srv = ( mjTcpSrvT ) calloc( 1, sizeof( struct mjTcpSrvT ) );
     if ( !srv ) {
-        MJLOG_ERR("create server error");
+        MJLOG_ERR( "create server error" );
         goto failout1;
     }
     srv->sfd         = sfd;          //  set server socket 

@@ -269,7 +269,7 @@ mjConn_DelWriteEvent
     del write event
 ==========================================================
 */
-static void mjConn_DelWriteEvent(mjConn conn)
+static void mjConn_DelWriteEvent( mjConn conn )
 {
     mjEV_Del( conn->ev, conn->fd, MJEV_WRITEABLE );
     // del write timeout event
@@ -281,7 +281,7 @@ static void mjConn_DelWriteEvent(mjConn conn)
     // set write type to NONE
     conn->writeType = MJCONN_NONE;
     // call write callback
-    if ( conn->WriteCallBack ) conn->WriteCallBack(conn);
+    if ( conn->WriteCallBack ) conn->WriteCallBack( conn );
 }
 
 /*
@@ -302,7 +302,7 @@ static void mjConn_WriteEventCallback( void* arg)
     mjStr_Consume( conn->wbuf, ret );
     // no data to write call DelWriteEvent
     if ( conn->wbuf->length == 0 ) {
-        mjConn_DelWriteEvent(conn);
+        mjConn_DelWriteEvent( conn );
     }
     return;
 }

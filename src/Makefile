@@ -1,8 +1,8 @@
 BUILD=../build
 
-IFLAGS= -I../include -I../deps
+IFLAGS= -I../deps
 
-OBJS=mjstr.o mjsock.o mjlog.o mjconnb.o mjcomm.o mjpq.o mjev.o mjmap.o mjtcpsrv.o mjconn.o mjhttpreq.o mjreg.o mjpool.o mjthreadpool.o mjtcpsrvt.o mjsig.o mjsql.o mjopt.o mjworker.o mjproto_http.o mjhttprsp.o mjtcpsrvm.o mjio.o mjjson.o
+OBJS=mjstr.o mjsock.o mjlog.o mjconnb.o mjcomm.o mjpq.o mjev.o mjmap.o mjtcpsrv.o mjconn.o mjhttpreq.o mjreg.o mjpool.o mjthreadpool.o mjtcpsrvt.o mjsig.o mjsql.o mjopt.o mjworker.o mjproto_http.o mjhttprsp.o mjtcpsrvm.o mjio.o mjjson.o mjtcpsrvtp.o
 
 JPWDIR=../deps/libjpw
 JPWOBJS=$(JPWDIR)/json_parser.o $(JPWDIR)/jpw.o $(JPWDIR)/jpw_objects.o

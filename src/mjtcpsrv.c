@@ -142,18 +142,6 @@ static bool mjTcpSrv_EnableAccept( mjTcpSrv srv )
 }
 
 /*
-static bool mjTcpSrv_DisableAccept( mjTcpSrv srv )
-{
-    int ret = mjEV_Del( srv->ev, srv->sfd, MJEV_READABLE );
-    if ( ret < 0 ) {
-        MJLOG_ERR( "mjev del error" );
-        return false;
-    }
-    return true;
-}
-*/
-
-/*
 =========================================
 mjTcpSrv_new
     create new tcpserver

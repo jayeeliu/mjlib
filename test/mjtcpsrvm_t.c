@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include "mjsock.h"
 #include "mjconn.h"
-#include "mjtcpsrvm.h"
+#include "mjtcpsrv.h"
 #include "mjcomm.h"
 
 void on_close(void *data)
@@ -55,14 +55,14 @@ int main()
     }
 
     ProcessSpawn( 4 );
-    mjTcpSrvM server = mjTcpSrvM_New(sfd); 
+    mjTcpSrv server = mjTcpSrv_New(sfd); 
     if (!server) {
         printf("Error create tcpserver\n");
         return 1;
     }
-    mjTcpSrvM_SetHandler(server, myhandler);
-    mjTcpSrvM_Run(server);
+    mjTcpSrv_SetHandler(server, myhandler);
+    mjTcpSrv_Run(server);
 
-    mjTcpSrvM_Delete(server); 
+    mjTcpSrv_Delete(server); 
     return 0;
 }
