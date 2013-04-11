@@ -3,6 +3,38 @@
 #include "mjsock.h"
 #include "mjtcpsrvtp.h"
 
+bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
+{
+    if ( !srv ) {
+        MJLOG_ERR( "server is null" );
+        return false;
+    }
+
+    while ( !srv->stop ) {
+        // TODO: signal and return value
+        int cfd = mjSock_Accept( srv->sfd );
+        if ( !srv->Handler ) {
+            mjSock_Close( cfd );
+            continue;
+        }
+        if ( srv->tpool ) {
+            if ( mjThreadPool_AddWorker( srv->tpool, srv->Handler, &cfd )) 
+                continue;
+        }
+    }
+    return true;
+}
+
+bool mjTcpSrvTP_SetHandler( mjTcpSrvTP srv, mjthread* Handler )
+{
+    if ( !srv ) {   
+        MJLOG_ERR( "server is null" );
+        return false;
+    }
+    srv->Handler = Handler;
+    return true;
+}
+
 mjTcpSrvTP mjTcpSrvTP_New( int sfd, int threadNum )
 {
     mjTcpSrvTP srv = ( mjTcpSrvTP ) calloc( 1, sizeof( struct mjTcpSrvTP ) );
@@ -10,10 +42,14 @@ mjTcpSrvTP mjTcpSrvTP_New( int sfd, int threadNum )
         MJLOG_ERR( "create server error" );
         goto failout1;
     }
-    srv->sfd    = sfd;
+
+    srv->sfd        = sfd;
+    srv->stop       = 0;
+    srv->tpool      = NULL;
+    srv->Handler    = NULL;
+
     mjSock_SetBlocking( srv->sfd, 1 );
-    srv->stop   = 0;
-    srv->tpool  = NULL;
+
     if ( threadNum > 0 ) {
         srv->tpool = mjThreadPool_New( threadNum );
         if ( !srv->tpool ) {
@@ -21,6 +57,8 @@ mjTcpSrvTP mjTcpSrvTP_New( int sfd, int threadNum )
             goto failout2;
         }
     }
+
+    return srv;
 
 failout2:
     free( srv );
@@ -31,4 +69,15 @@ failout1:
 
 bool mjTcpSrvTP_Delete( mjTcpSrvTP srv )
 {
+    if ( !srv ) {
+        MJLOG_ERR( "server is null" );
+        return false;
+    }
+
+    if ( srv->tpool ) {
+        mjThreadPool_Delete( srv->tpool );
+    }
+    mjSock_Close( srv->sfd );
+    free( srv );
+    return true;
 }

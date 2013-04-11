@@ -59,7 +59,7 @@ mjTcpSrvT_Run
 bool mjTcpSrvT_Run( mjTcpSrvT srv )
 {
     if ( !srv ) {
-        MJLOG_ERR("server is null");
+        MJLOG_ERR( "server is null" );
         return false;
     }
 
