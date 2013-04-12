@@ -2,6 +2,7 @@
 #include "mjlog.h"
 #include "mjsock.h"
 #include "mjtcpsrvtp.h"
+#include "mjconnb.h"
 
 bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
 {
@@ -17,10 +18,14 @@ bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
             mjSock_Close( cfd );
             continue;
         }
+        mjConnB conn = mjConnB_New( cfd );
         if ( srv->tpool ) {
-            if ( mjThreadPool_AddWorker( srv->tpool, srv->Handler, &cfd )) 
+            if ( mjThreadPool_AddWorker( srv->tpool, srv->Handler, conn ) ) 
                 continue;
         }
+        pthread_t tid;
+        pthread_create( &tid, NULL, srv->Handler, conn );
+        pthread_detach( tid );
     }
     return true;
 }

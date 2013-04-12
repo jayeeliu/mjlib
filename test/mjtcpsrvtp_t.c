@@ -1,6 +1,21 @@
 #include <stdio.h>
 #include "mjtcpsrvtp.h"
 #include "mjsock.h"
+#include "mjconnb.h"
+#include "mjlog.h"
+
+void* MyHandler( void* arg )
+{
+    mjConnB conn = ( mjConnB ) arg;
+
+    mjStr data = mjStr_New();
+    mjConnB_ReadUntil( conn, "\r\n\r\n", data );
+    mjConnB_WriteS( conn, "OK I'm Here\r\n" );
+
+    mjStr_Delete( data );
+    mjConnB_Delete( conn );
+    return NULL;
+}
 
 int main()
 {
@@ -12,6 +27,7 @@ int main()
         return 1;
     }
 
+    mjTcpSrvTP_SetHandler( srv, MyHandler );
     mjTcpSrvTP_Run( srv );
 
     mjTcpSrvTP_Delete( srv );
