@@ -11,11 +11,18 @@ bool mjThread_RunOnce( mjthread* routine, void* arg )
     return true;
 }
 
+/*
+======================================================
+ThradRoutine:
+    used for short caculate task
+======================================================
+*/
 static void* ThreadRoutine( void* arg )
 {
     if ( !arg ) {
         MJLOG_ERR( "ThreadRoutine arg is null" );
         pthread_exit( NULL );
+        return NULL;
     }
 
     mjThread thread = ( mjThread ) arg;
@@ -44,6 +51,23 @@ static void* ThreadRoutine( void* arg )
         pthread_mutex_unlock( &thread->threadLock );
     }
     pthread_exit( NULL );
+}
+
+static void* LoopThreadRoutine( void* arg )
+{
+    if ( !arg ) {
+        MJLOG_ERR( "LoopThreadRoutine arg is null" );
+        pthread_exit( NULL );
+        return NULL; 
+    }
+
+    mjThread thread = ( mjThread ) arg;
+    while ( !thread->shutDown ) {
+        ( *thread->ThreadWorker ) ( thread->threadArg );
+    }
+
+    pthread_exit( NULL );
+    return NULL;
 }
 
 bool mjThread_AddWork( mjThread thread, mjthread* ThreadWorker, void* arg )
@@ -80,6 +104,25 @@ mjThread mjThread_New()
     thread->ThreadWorker    = NULL;
     thread->threadArg       = NULL;
     pthread_create( &thread->threadID, NULL, ThreadRoutine, thread );
+
+    return thread;
+}
+
+mjThread mjThread_NewLoop( mjthread* ThreadWorker, void* threadArg )
+{
+    mjThread thread = ( mjThread ) calloc(1, sizeof( struct mjThread ) );
+    if ( !thread ) {
+        MJLOG_ERR( "mjthread create error" );
+        return NULL;
+    }
+    
+    thread->shutDown        = 0;
+    thread->status          = MJTHREAD_BUSY;
+    pthread_mutex_init( &thread->threadLock, NULL );
+    pthread_cond_init( &thread->threadReady, NULL );
+    thread->ThreadWorker    = ThreadWorker;
+    thread->threadArg       = threadArg;
+    pthread_create( &thread->threadID, NULL, LoopThreadRoutine, thread );
 
     return thread;
 }

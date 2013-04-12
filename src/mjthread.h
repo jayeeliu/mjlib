@@ -27,6 +27,7 @@ extern bool mjThread_RunOnce( mjthread* routine, void* arg );
 
 extern bool     mjThread_AddWork( mjThread thread, mjthread* ThreadWorker, void* arg );
 extern mjThread mjThread_New();
+extern mjThread mjThread_NewLoop( mjthread* ThreadWorker, void* threadArg );
 extern bool     mjThread_Delete( mjThread thread );
 
 #endif
