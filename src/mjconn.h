@@ -3,8 +3,7 @@
 
 #include "mjstr.h"
 #include "mjev.h"
-
-typedef void* mjthread( void* data );
+#include "mjthread.h"
 
 struct mjConn {
     int     fd;                             // fd 

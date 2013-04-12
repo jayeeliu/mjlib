@@ -4,12 +4,11 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "mjlist.h"
-
-typedef void* mjthread( void* arg );
+#include "mjthread.h"
 
 struct mjThreadPool;
 
-struct mjThread {
+struct mjThreadEntry {
     struct mjThreadPool*    threadPool;             // the threadPool
     struct list_head        nodeList;               // node in list, entry for threadList
     pthread_t               threadID;               // threadID
@@ -19,15 +18,15 @@ struct mjThread {
     mjthread*               ThreadWorker;
     void*                   threadArg;
 };
-typedef struct mjThread* mjThread;
+typedef struct mjThreadEntry* mjThreadEntry;
 
 // threadpool struct
 struct mjThreadPool {
-    pthread_mutex_t     threadListLock;             // lock for threadList
-	struct list_head    threadList;                 // task list 
-	int                 shutDown;                   // shutdown this thread pool?
-    int                 maxThreadNum;               // max thread in thread pool  
-    struct mjThread     threads[0];                 // array of thread id
+    pthread_mutex_t         threadListLock;             // lock for threadList
+	struct list_head        threadList;                 // task list 
+	int                     shutDown;                   // shutdown this thread pool?
+    int                     maxThreadNum;               // max thread in thread pool  
+    struct mjThreadEntry    threads[0];                 // array of thread id
 };
 typedef struct mjThreadPool*  mjThreadPool; 
 

@@ -509,10 +509,8 @@ bool mjConn_RunAsync( mjConn conn, mjthread* Routine, mjproc* Proc )
     conn->ThreadRoutine     = Routine;
     // add thread notify to eventloop
     mjEV_Add( conn->ev, conn->threadReadNotify, MJEV_READABLE, mjConn_ThreadFin, conn );
-    // create thread
-    pthread_t thread_id;
-    pthread_create( &thread_id, NULL, mjConn_Thread, conn );
-    pthread_detach( thread_id );
+    // create and run thread
+    mjThread_RunOnce( mjConn_Thread, conn );
     return true;
 
 failout:

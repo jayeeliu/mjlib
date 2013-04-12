@@ -34,7 +34,7 @@ int main()
         return 1;
     }
 
-    mjTcpSrvT server = mjTcpSrvT_New( sfd, 0 );
+    mjTcpSrvT server = mjTcpSrvT_New( sfd, 20 );
     if ( !server ) {
         printf( "create server error\n" );
         return 1;

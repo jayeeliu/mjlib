@@ -1,8 +1,10 @@
 #include <stdlib.h>
+#include <errno.h>
 #include "mjlog.h"
 #include "mjsock.h"
 #include "mjtcpsrvtp.h"
 #include "mjconnb.h"
+#include "mjthread.h"
 
 bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
 {
@@ -14,18 +16,27 @@ bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
     while ( !srv->stop ) {
         // TODO: signal and return value
         int cfd = mjSock_Accept( srv->sfd );
+        if ( cfd < 0 ) {
+            if ( errno == EINTR ) continue;
+            MJLOG_ERR( "mjSock_Accept Error" );
+            return false;
+        }
+
         if ( !srv->Handler ) {
             mjSock_Close( cfd );
             continue;
         }
         mjConnB conn = mjConnB_New( cfd );
+        if ( !conn ) {
+            MJLOG_ERR( "mjConnB create error" );
+            mjSock_Close( cfd );
+            continue;
+        }
         if ( srv->tpool ) {
             if ( mjThreadPool_AddWorker( srv->tpool, srv->Handler, conn ) ) 
                 continue;
         }
-        pthread_t tid;
-        pthread_create( &tid, NULL, srv->Handler, conn );
-        pthread_detach( tid );
+        mjThread_RunOnce( srv->Handler, conn );
     }
     return true;
 }

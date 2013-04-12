@@ -8,6 +8,7 @@
 #include "mjtcpsrvt.h"
 #include "mjconnb.h"
 #include "mjsig.h"
+#include "mjthread.h"
 
 /*
 =========================================================
@@ -44,10 +45,7 @@ static void mjTcpSrvT_AcceptHandler( void* arg )
     if ( srv->tpool && mjThreadPool_AddWorker( srv->tpool, 
                 srv->Handler, conn ) ) return;
 
-    // add to threadpool error, create new thread
-    pthread_t tid;
-    pthread_create( &tid, NULL, srv->Handler, conn );
-    pthread_detach( tid );
+    mjThread_RunOnce( srv->Handler, conn );
 }
 
 /*

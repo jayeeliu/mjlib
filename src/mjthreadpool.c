@@ -15,7 +15,7 @@ static void* ThreadRoutine( void* arg )
         MJLOG_ERR( "ThreadRoutine arg is null" );
         pthread_exit( NULL );
     }
-    mjThread thread = ( mjThread )arg;          // get thread
+    mjThreadEntry thread = ( mjThreadEntry )arg;          // get thread
     mjThreadPool tPool = thread->threadPool;    // get threadPool
     mjthread* worker;
     void* workerArg;
@@ -69,11 +69,11 @@ bool mjThreadPool_AddWorker( mjThreadPool tPool, mjthread* ThreadWorker, void* a
     // no free thread
     if ( list_empty( &tPool->threadList ) ) return false;
 
-    mjThread thread;
+    mjThreadEntry thread;
     // get free thread
 	pthread_mutex_lock( &tPool->threadListLock ); 
     thread = list_first_entry( &tPool->threadList, 
-                    struct mjThread, nodeList );
+                    struct mjThreadEntry, nodeList );
     if ( thread ) {
         list_del_init( &thread->nodeList );
     }
@@ -100,7 +100,7 @@ mjThreadPool_New
 mjThreadPool mjThreadPool_New( int maxThreadNum ) 
 {
     mjThreadPool tPool = ( mjThreadPool ) calloc( 1, 
-            sizeof( struct mjThreadPool ) + maxThreadNum * sizeof( struct mjThread ) );
+            sizeof( struct mjThreadPool ) + maxThreadNum * sizeof( struct mjThreadEntry ) );
     if ( !tPool ) {
         MJLOG_ERR( "mjThreadPool alloc error" );
         return NULL;
