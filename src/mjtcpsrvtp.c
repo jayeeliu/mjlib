@@ -80,9 +80,8 @@ mjTcpSrvTP mjTcpSrvTP_New( int sfd, int threadNum )
     srv->stop       = 0;
     srv->tpool      = NULL;
     srv->Handler    = NULL;
-
     mjSock_SetBlocking( srv->sfd, 1 );
-
+    // create thread pool
     if ( threadNum > 0 ) {
         srv->tpool = mjThreadPool_New( threadNum );
         if ( !srv->tpool ) {

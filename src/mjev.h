@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <sys/epoll.h>
+#include "mjproc.h"
 #include "mjpq.h"
 
 #define MJEV_MAXFD      60000
@@ -10,8 +11,6 @@
 #define MJEV_NONE       0
 #define MJEV_READABLE   1
 #define MJEV_WRITEABLE  2
-
-typedef void* ( *mjProc ) ( void* arg );
 
 // file event struct
 typedef struct mjfevent {
