@@ -5,6 +5,7 @@
 #include "mjtcpsrvtp.h"
 #include "mjconnb.h"
 #include "mjthread.h"
+#include "mjsig.h"
 
 bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
 {
@@ -14,7 +15,8 @@ bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
     }
 
     while ( !srv->stop ) {
-        // TODO: signal and return value
+        mjSig_ProcessQueue();
+
         int cfd = mjSock_Accept( srv->sfd );
         if ( cfd < 0 ) {
             if ( errno == EINTR ) continue;
@@ -29,7 +31,6 @@ bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
         mjConnB conn = mjConnB_New( cfd );
         if ( !conn ) {
             MJLOG_ERR( "mjConnB create error" );
-            mjSock_Close( cfd );
             continue;
         }
         if ( srv->tpool ) {
@@ -51,6 +52,22 @@ bool mjTcpSrvTP_SetHandler( mjTcpSrvTP srv, mjthread* Handler )
     return true;
 }
 
+bool mjTcpSrvTP_SetStop( mjTcpSrvTP srv, int value )
+{
+    if ( !srv ) {
+        MJLOG_ERR( "server is null" );
+        return false;
+    } 
+    srv->stop = ( value == 0 ) ? 0 : 1;
+    return true;
+}
+
+/*
+============================================================
+mjTcpSrvTP_New
+    create new tcpserver accept-threadpool
+============================================================
+*/
 mjTcpSrvTP mjTcpSrvTP_New( int sfd, int threadNum )
 {
     mjTcpSrvTP srv = ( mjTcpSrvTP ) calloc( 1, sizeof( struct mjTcpSrvTP ) );
@@ -74,6 +91,7 @@ mjTcpSrvTP mjTcpSrvTP_New( int sfd, int threadNum )
         }
     }
 
+    mjSig_Init();
     return srv;
 
 failout2:
@@ -83,6 +101,12 @@ failout1:
     return NULL;
 }
 
+/*
+============================================
+mjTcpSrvTP_Delete
+    delete server
+============================================
+*/
 bool mjTcpSrvTP_Delete( mjTcpSrvTP srv )
 {
     if ( !srv ) {

@@ -23,7 +23,7 @@ struct mjThread {
 };
 typedef struct mjThread* mjThread;
 
-extern bool mjThread_RunOnce( mjthread* routine, void* arg );
+extern bool     mjThread_RunOnce( mjthread* routine, void* arg );
 
 extern bool     mjThread_AddWork( mjThread thread, mjthread* ThreadWorker, void* arg );
 extern mjThread mjThread_New();

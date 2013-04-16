@@ -20,6 +20,10 @@ void* MyHandler( void* arg )
 int main()
 {
     int sfd = mjSock_TcpServer( 7879 );
+    if ( sfd < 0 ) {
+        printf( "mjSock_TcpServer error" );
+        return 1;
+    }
 
     mjTcpSrvTP srv = mjTcpSrvTP_New( sfd, 10 );
     if ( !srv ) {
@@ -29,7 +33,6 @@ int main()
 
     mjTcpSrvTP_SetHandler( srv, MyHandler );
     mjTcpSrvTP_Run( srv );
-
     mjTcpSrvTP_Delete( srv );
 
     return 0;

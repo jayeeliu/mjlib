@@ -91,7 +91,7 @@ bool mjThread_AddWork( mjThread thread, mjthread* ThreadWorker, void* arg )
 
 mjThread mjThread_New()
 {
-    mjThread thread = ( mjThread ) calloc(1, sizeof( struct mjThread ) );
+    mjThread thread = ( mjThread ) calloc( 1, sizeof( struct mjThread ) );
     if ( !thread ) {
         MJLOG_ERR( "mjthread create error" );
         return NULL;
@@ -110,7 +110,7 @@ mjThread mjThread_New()
 
 mjThread mjThread_NewLoop( mjthread* ThreadWorker, void* threadArg )
 {
-    mjThread thread = ( mjThread ) calloc(1, sizeof( struct mjThread ) );
+    mjThread thread = ( mjThread ) calloc( 1, sizeof( struct mjThread ) );
     if ( !thread ) {
         MJLOG_ERR( "mjthread create error" );
         return NULL;

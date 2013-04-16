@@ -261,7 +261,7 @@ mjConnB mjConnB_New( int fd )
         conn->rbuf = mjStr_New();
         if ( !conn->rbuf ) {
             MJLOG_ERR( "mjStr create error" );
-            close( fd );
+            mjSock_Close( fd );
             return NULL;
         }
     }
