@@ -6,10 +6,11 @@
 #include "mjcomm.h"
 #include "mjpool.h"
 
-void on_close(void *arg)
+void* on_close(void *arg)
 {
     mjConn conn = (mjConn)arg;
     mjConn_Delete(conn);
+    return NULL;
 }
 
 void* thread_run(void *arg)
@@ -18,10 +19,11 @@ void* thread_run(void *arg)
     return NULL;
 }
 
-void thread_finish(void *arg)
+void* thread_finish(void *arg)
 {
     mjConn conn = (mjConn)arg;
     mjConn_WriteS(conn, "thread finish", on_close);
+    return NULL;
 }
 
 void finish_write(void *arg)
@@ -30,18 +32,20 @@ void finish_write(void *arg)
     mjConn_RunAsync(conn, thread_run, thread_finish);
 }
 
-extern void handle_stream(void *arg);
+extern void* handle_stream(void *arg);
 
-void handle_request(void *arg)
+void* handle_request(void *arg)
 {
     mjConn conn = (mjConn)arg;
     mjConn_Write(conn, conn->data, handle_stream); 
+    return NULL;
 }
 
-void handle_stream(void *arg)
+void* handle_stream(void *arg)
 {
     mjConn conn = (mjConn)arg;
     mjConn_Read(conn, handle_request); 
+    return NULL;
 }
 
 int main()

@@ -220,7 +220,7 @@ mjConnB_SetPrivate
     set conn private data and FreePrivate fun
 =================================================
 */
-bool mjConnB_SetPrivate( mjConnB conn, void* private, mjproc* FreePrivate )
+bool mjConnB_SetPrivate( mjConnB conn, void* private, mjProc FreePrivate )
 {
     if ( !conn ) {
         MJLOG_ERR( "conn is null" );

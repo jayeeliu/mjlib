@@ -5,17 +5,19 @@
 
 static int stop = 0;
 
-void conn_close(void *arg)
+void* conn_close(void *arg)
 {
     mjConn conn = (mjConn)arg;
     mjConn_Delete(conn);
     stop = 1;
+    return NULL;
 }
 
-void conn_write(void *arg)
+void* conn_write(void *arg)
 {
     mjConn conn = (mjConn)arg;
     mjConn_WriteS(conn, "test\r\n\r\n", conn_close);
+    return NULL;
 }
 
 int main()

@@ -9,7 +9,7 @@
 #include "mjconn.h"
 #include "mjsig.h"
 
-static void mjTcpSrv_AcceptHandler( void* data )
+static void* mjTcpSrv_AcceptHandler( void* data )
 {
     mjTcpSrv srv = ( mjTcpSrv )data;
 
@@ -17,25 +17,26 @@ static void mjTcpSrv_AcceptHandler( void* data )
     int cfd = mjSock_Accept( srv->sfd );
     if ( cfd < 0 ) {
 //        MJLOG_ERR( "mjSock_Accept error: %s", strerror( errno ) );
-        return;
+        return NULL;
     }
     // no server Handler, exit 
     if ( !srv->Handler ) {
         MJLOG_WARNING( "no server Handler found" );
         mjSock_Close( cfd );
-        return;
+        return NULL;
     }
     // create new connection
     mjConn conn = mjConn_New( srv->ev, cfd );
     if ( !conn ) {
         MJLOG_ERR( "mjConn create error" );
         mjSock_Close( cfd );
-        return;
+        return NULL;
     }
     // set conn server
     mjConn_SetServer( conn, srv );
     // run Handler, conn is parameter
     srv->Handler( conn );
+    return NULL;
 }
 
 /*
@@ -69,7 +70,7 @@ mjTcpSrv_SetHandler
     conn is the parameter
 ==========================================================
 */
-bool mjTcpSrv_SetHandler( mjTcpSrv srv, mjproc* Handler )
+bool mjTcpSrv_SetHandler( mjTcpSrv srv, mjProc Handler )
 {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
@@ -86,7 +87,7 @@ mjTcpSrv_SetSrvProc
     srv is the parameter
 =========================================================================
 */
-bool mjTcpSrv_SetSrvProc( mjTcpSrv srv, mjproc* InitSrv, mjproc* ExitSrv )
+bool mjTcpSrv_SetSrvProc( mjTcpSrv srv, mjProc InitSrv, mjProc ExitSrv )
 {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
@@ -103,7 +104,7 @@ mjTcpSrv_SetPrivate
     set server private struct and free private function
 ============================================================================
 */
-bool mjTcpSrv_SetPrivate( mjTcpSrv srv, void* private, mjproc* FreePrivate )
+bool mjTcpSrv_SetPrivate( mjTcpSrv srv, void* private, mjProc FreePrivate )
 {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
@@ -155,9 +156,9 @@ mjTcpSrv mjTcpSrv_New( int sfd )
         MJLOG_ERR( "create server error" );
         goto failout1;
     }
+    mjSock_SetBlocking( srv->sfd, 0 );
     // set server filed
     srv->sfd     = sfd;  
-    mjSock_SetBlocking( srv->sfd, 0 );
     // server not stop
     srv->stop    = 0;
     // init server loop
@@ -166,19 +167,16 @@ mjTcpSrv mjTcpSrv_New( int sfd )
         MJLOG_ERR( "create ev error" );
         goto failout2;
     }
-
     // enable accept
     if ( !mjTcpSrv_EnableAccept( srv ) ) {
         MJLOG_ERR( "mjev add error" );
         goto failout3;
     }
-   
     srv->Handler     = NULL;
     srv->InitSrv     = NULL;
     srv->ExitSrv     = NULL;
     srv->private     = NULL;
     srv->FreePrivate = NULL;
-       
     // init signal 
     mjSig_Init();
     mjSig_Register( SIGPIPE, SIG_IGN );

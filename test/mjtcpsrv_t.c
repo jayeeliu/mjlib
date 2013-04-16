@@ -7,16 +7,18 @@
 #include "mjcomm.h"
 #include "mjlog.h"
 
-void on_close(void *data)
+void* on_close(void *data)
 {
     mjConn conn = (mjConn)data;
     mjConn_Delete(conn);
+    return NULL;
 }
 
-void on_write3(void *data)
+void* on_write3(void *data)
 {
     mjConn conn = (mjConn)data;
     mjConn_Flush(conn, on_close);
+    return NULL;
 }
 
 void *threadroutine(void *data)
@@ -26,54 +28,57 @@ void *threadroutine(void *data)
     return NULL;
 }
 
-void on_write2(void *data)
+void* on_write2(void *data)
 {
     mjConn conn = (mjConn) data;
     mjConn_RunAsync(conn, threadroutine, on_write3);
+    return NULL;
 }
 
-void on_write1(void *data)
+void* on_write1(void *data)
 {
     mjConn conn = (mjConn)data;
-//    int x = 6;
-//    for(int i = 0; i < 100000; ++i) {
-//        x = x * 13;
-//    }
     mjConn_WriteS(conn, "OK, TCPSERVER READY!!!\n", on_close);
+    return NULL;
 }
-void myhandler(void *data)
+void* myhandler(void *data)
 {
     mjConn conn = (mjConn)data;
     mjConn_ReadUntil(conn, "\r\n\r\n", on_write1);
+    return NULL;
 }
 
-void On_ReadResponse( void* args )
+void* On_ReadResponse( void* args )
 {
     mjConn clientConn = ( mjConn ) args;
     printf("%s\n", clientConn->data->data);
     MJLOG_ERR( " OK RESPONSE " );
     mjConn_Delete( clientConn->private );    
+    return NULL;
 }
 
-void On_WriteHeader( void* args )
+void* On_WriteHeader( void* args )
 {
     mjConn clientConn = ( mjConn ) args;
     mjConn_ReadUntil( clientConn, "\r\n", On_ReadResponse );
+    return NULL;
 }
 
-void On_Connect( void* args )
+void* On_Connect( void* args )
 {
     mjConn clientConn = ( mjConn ) args;
     mjConn_WriteS( clientConn, "GET / HTTP/1.1\r\n\r\n", On_WriteHeader );
+    return NULL;
 }
 
-void FreeClient( void* args )
+void* FreeClient( void* args )
 {
     mjConn clientConn = ( mjConn ) args;
     mjConn_Delete( clientConn );
+    return NULL;
 }
 
-void proxyhandler( void* args ) 
+void* proxyhandler( void* args ) 
 {
     mjConn conn = ( mjConn ) args;
     int cfd = mjSock_TcpSocket();
@@ -81,6 +86,7 @@ void proxyhandler( void* args )
     clientConn->private = conn;
     mjConn_SetPrivate( conn, clientConn, FreeClient );
     mjConn_Connect( clientConn, "202.108.33.60", 80, On_Connect ); 
+    return NULL;
 }
 
 int main()

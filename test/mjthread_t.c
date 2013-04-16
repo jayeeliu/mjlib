@@ -24,13 +24,14 @@ void* MyWorker( void* arg )
     return NULL;
 }
 
-void AcceptHandler( void* arg )
+void* AcceptHandler( void* arg )
 {
     LoopServer server = ( LoopServer ) arg;
     int cfd;
     read( server->nfd[0], &cfd, sizeof( int ) );
     printf( "read socket %d, in thread: %ld\n", cfd, server->thread->threadID );
     close( cfd );
+    return NULL;
 }
 
 int main()

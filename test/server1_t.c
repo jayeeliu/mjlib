@@ -19,27 +19,30 @@ void Option_Init()
     mjOpt_Define( NULL, "port", MJOPT_INT, &port, "7879", "p", 1, "set port" );
 }
 
-void On_Close( void* arg )
+void* On_Close( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
     mjConn_Delete( conn );
+    return NULL;
 }
 
-void Conn1_OK( void* arg )
+void* Conn1_OK( void* arg )
 {
     mjConn conn1 = ( mjConn ) arg;
     mjConn conn = conn1->private;
 
     mjConn_WriteS( conn, "Conn1 OK", On_Close );
+    return NULL;
 }
 
-void Client_Clean( void* arg )
+void* Client_Clean( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
     mjConn_Delete( conn );
+    return NULL;
 }
 
-void Handler( void* arg )
+void* Handler( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
     connPrivate connP = ( connPrivate ) calloc ( 1, 
@@ -47,7 +50,7 @@ void Handler( void* arg )
     if ( !connP ) {
         MJLOG_ERR( "alloc connPrivate error" );
         mjConn_Delete( conn );
-        return;
+        return NULL;
     }
 
     mjConn_SetPrivate( conn, connP, NULL );
@@ -60,6 +63,7 @@ void Handler( void* arg )
     mjConn_SetPrivate( connP->conn1, conn, Client_Clean );
     mjConn_SetConnectTimeout( connP->conn1, 1000 );
     mjConn_Connect( connP->conn1, "127.0.0.1", 3306, Conn1_OK);
+    return NULL;
 }
 
 int main()

@@ -6,44 +6,45 @@
 #include "mjtcpsrv.h"
 #include "mjcomm.h"
 
-void on_close(void *data)
+void* on_close(void *data)
 {
     mjConn conn = (mjConn)data;
     mjConn_Delete(conn);
+    return NULL;
 }
 
-void on_write3(void *data)
+void* on_write3(void *data)
 {
     mjConn conn = (mjConn)data;
     mjConn_Flush(conn, on_close);
+    return NULL;
 }
 
-void *threadroutine(void *data)
+void* threadroutine(void *data)
 {
     mjConn conn = (mjConn) data;
     mjStr_CatS(conn->wbuf, "data from thread\n");
     return NULL;
 }
 
-void on_write2(void *data)
+void* on_write2(void *data)
 {
     mjConn conn = (mjConn) data;
     mjConn_RunAsync(conn, threadroutine, on_write3);
+    return NULL;
 }
 
-void on_write1(void *data)
+void* on_write1(void *data)
 {
     mjConn conn = (mjConn)data;
- //   int x = 6;
- //   for(int i = 0; i < 100000; ++i) {
- //       x = x * 13;
- //   }
     mjConn_WriteS(conn, "OK, TCPSERVER READY!!!\n", on_close);
+    return NULL;
 }
-void myhandler(void *data)
+void* myhandler(void *data)
 {
     mjConn conn = (mjConn)data;
     mjConn_ReadUntil(conn, "\r\n\r\n", on_write1);
+    return NULL;
 }
 
 int main()

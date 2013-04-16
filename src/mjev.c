@@ -16,7 +16,7 @@ mjEV_Add
     output -1-- add event failed,  0--add event success
 ===============================================================
 */
-bool mjEV_Add( mjev ev, int fd, int mask, mjproc *proc, void *data )
+bool mjEV_Add( mjev ev, int fd, int mask, mjProc proc, void *data )
 {
     // sanity check
     if ( !ev || !proc ) {
@@ -118,7 +118,7 @@ mjEV_AddTimer
     add timer event to mjev
 ========================================================================
 */
-mjtevent* mjEV_AddTimer( mjev ev, long long ms, mjproc* proc, void* data )
+mjtevent* mjEV_AddTimer( mjev ev, long long ms, mjProc proc, void* data )
 {
     if ( !ev || !proc ) {
         MJLOG_ERR( "ev or proc is null" );

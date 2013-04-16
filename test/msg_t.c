@@ -13,13 +13,14 @@ void Option_Init()
     mjOpt_Define( NULL, "port", MJOPT_INT, &port, "7879", "p", 1, "set port" );
 }
 
-void on_close( void* arg )
+void* on_close( void* arg )
 {
     mjConn conn = ( mjConn )arg;
     mjConn_Delete( conn );
+    return NULL;
 }
 
-void on_read( void* arg )
+void* on_read( void* arg )
 {
     mjConn conn = ( mjConn )arg;
     mjStrList strList = mjStrList_New();
@@ -35,12 +36,14 @@ void on_read( void* arg )
     }
 
     mjStrList_Delete( strList );
+    return NULL;
 }
 
-void Msg_Handler( void* arg )
+void* Msg_Handler( void* arg )
 {
     mjConn conn = ( mjConn )arg;
     mjConn_ReadUntil( conn, "\r\n", on_read );
+    return NULL;
 }
 
 int main( int argc, char* argv[] )

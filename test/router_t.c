@@ -13,7 +13,7 @@ struct session {
 };
 typedef struct session* session;
 
-void On_Connect( void* arg )
+void* On_Connect( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
     session sess = conn->private;
@@ -25,9 +25,10 @@ void On_Connect( void* arg )
         mjConn_Delete( sess->clientConn1 );
         mjConn_Delete( sess->clientConn2 );
     }
+    return NULL;
 }
 
-void RouterHandler( void* arg )
+void* RouterHandler( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
     
@@ -35,7 +36,7 @@ void RouterHandler( void* arg )
     if ( !sess ) {
         MJLOG_ERR( "malloc error" );
         mjConn_Delete( conn );
-        return;
+        return NULL;
     }
     sess->serverConn    = conn;
     sess->connected     = 0;
@@ -51,6 +52,8 @@ void RouterHandler( void* arg )
 
     mjConn_Connect( sess->clientConn1, "123.126.42.251", 80, On_Connect );
     mjConn_Connect( sess->clientConn2, "123.126.42.251", 80, On_Connect );
+
+    return NULL;
 }
 
 int main()

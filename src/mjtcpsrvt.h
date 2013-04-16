@@ -11,18 +11,18 @@ struct mjTcpSrvT {
     mjThreadPool    tpool;              // thread pool 
     mjthread*       Handler;            // worker to run
 
-    mjproc*         InitSrv;            // InitSrv proc
-    mjproc*         ExitSrv;            // ExitSrv proc
+    mjProc          InitSrv;            // InitSrv proc
+    mjProc          ExitSrv;            // ExitSrv proc
 
     void*           private;            // user server private data 
-    mjproc*         FreePrivate;        // FreePrivate proc
+    mjProc          FreePrivate;        // FreePrivate proc
 };
 typedef struct mjTcpSrvT* mjTcpSrvT;
 
 extern bool         mjTcpSrvT_Run( mjTcpSrvT srv );
 extern bool         mjTcpSrvT_SetHandler( mjTcpSrvT srv, mjthread* Handler );
-extern bool         mjTcpSrvT_SetPrivate( mjTcpSrvT srv, void* private, mjproc* FreePrivate );
-extern bool         mjTcpSrvT_SetSrvProc( mjTcpSrvT srv, mjproc* InitSrv, mjproc* ExitSrv );
+extern bool         mjTcpSrvT_SetPrivate( mjTcpSrvT srv, void* private, mjProc FreePrivate );
+extern bool         mjTcpSrvT_SetSrvProc( mjTcpSrvT srv, mjProc InitSrv, mjProc ExitSrv );
 extern bool         mjTcpSrvT_SetStop( mjTcpSrvT srv, int value );
 
 extern mjTcpSrvT    mjTcpSrvT_New( int sfd, int threadNum );

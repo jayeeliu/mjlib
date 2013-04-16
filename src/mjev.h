@@ -11,13 +11,13 @@
 #define MJEV_READABLE   1
 #define MJEV_WRITEABLE  2
 
-typedef void mjproc( void* arg );
+typedef void* ( *mjProc ) ( void* arg );
 
 // file event struct
 typedef struct mjfevent {
     int     mask;
-    mjproc* ReadProc;
-    mjproc* WriteProc;
+    mjProc  ReadProc;
+    mjProc  WriteProc;
     void*   data;
 } mjfevent;
 
@@ -25,7 +25,7 @@ typedef struct mjfevent {
 typedef struct mjtevent {
     int         valid;
     long long   time;
-    mjproc*     TimerProc;
+    mjProc      TimerProc;
     void*       data;
 } mjtevent;
 
@@ -37,9 +37,9 @@ struct mjev {
 };
 typedef struct mjev* mjev;
 
-extern bool         mjEV_Add( mjev ev, int fd, int mask, mjproc* proc, void* data );
+extern bool         mjEV_Add( mjev ev, int fd, int mask, mjProc proc, void* data );
 extern bool         mjEV_Del( mjev ev, int fd, int mask );
-extern mjtevent*    mjEV_AddTimer( mjev ev, long long ms, mjproc* proc, void* data );
+extern mjtevent*    mjEV_AddTimer( mjev ev, long long ms, mjProc proc, void* data );
 extern bool         mjEV_DelTimer( mjev ev, mjtevent *te );
 extern void         mjEV_Run( mjev ev );
 

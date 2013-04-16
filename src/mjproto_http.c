@@ -6,7 +6,7 @@
 #include "mjconn.h"
 #include "mjproto_http.h"
 
-static void on_header( void* arg )
+static void* on_header( void* arg )
 {
     mjConn conn = ( mjConn )arg;
     mjHttpData httpData = ( mjHttpData )conn->private;
@@ -18,19 +18,19 @@ static void on_header( void* arg )
     if ( !httpData->request ) {
         MJLOG_ERR( "mjHttpReq_New error" );
         mjConn_Delete( conn );
-        return;
+        return NULL;
     }
     httpData->response = mjHttpRsp_New();
     if ( !httpData->response ) {
         MJLOG_ERR( "mjHttpRsp_new error" );
         mjConn_Delete( conn );
-        return;
+        return NULL;
     }
     httpData->param = mjStrList_New();
     if ( !httpData->param ) {
         MJLOG_ERR( "mjStrList_New error" );
         mjConn_Delete( conn );
-        return;
+        return NULL;
     }
     // set default response header
     mjHttpRsp_AddHeader( httpData->response, "Content-Type", 
@@ -46,11 +46,11 @@ static void on_header( void* arg )
     for ( i = 0; urls[i].url != NULL; i++ ) {
         if ( mjReg_Search( urls[i].reg, location->data, httpData->param ) ) {
             urls[i].fun( conn );
-            return;
+            return NULL;
         }
     }
     urls[i].fun( conn );
-    return;
+    return NULL;
 }
 
 /*
@@ -59,7 +59,7 @@ httpData_free
     free per conn data
 ================================================
 */
-static void httpData_free( void* arg )
+static void* httpData_free( void* arg )
 {
     mjHttpData httpData = ( mjHttpData )arg;
     if ( httpData->request ) {
@@ -72,6 +72,7 @@ static void httpData_free( void* arg )
         mjStrList_Delete( httpData->param );
     }
     free( httpData );
+    return NULL;
 }
 
 /*
@@ -82,18 +83,19 @@ http_worker
     read header
 ==========================================================
 */
-void http_Worker( void* arg )
+void* http_Worker( void* arg )
 {
     mjConn conn = ( mjConn )arg;
     void* httpData = calloc( 1, sizeof( struct mjHttpData ) );
     if ( !httpData ) {
         MJLOG_ERR( "httpData alloc error" );
         mjConn_Delete( conn );
-        return;
+        return NULL;
     }
     // set conn private data
     mjConn_SetPrivate( conn, httpData, httpData_free );
     mjConn_ReadUntil( conn, "\r\n\r\n", on_header ); 
+    return NULL;
 }
 
 /*
@@ -104,22 +106,23 @@ http_InitSrv
     create mjreg
 ==============================================
 */
-void http_InitSrv( void* arg )
+void* http_InitSrv( void* arg )
 {
     mjTcpSrv srv = ( mjTcpSrv )arg;
     struct mjHttpUrl* urls = srv->private;
     if ( !urls ) {
         MJLOG_ERR( "Oops urls is null" );
-        return;
+        return NULL;
     }
     // create mjreg
     for ( int i = 0; urls[i].url != NULL; i++ ) {
         urls[i].reg = mjReg_New( urls[i].url );
         if ( !urls[i].reg ) {
             MJLOG_ERR( "mjreg_new Error" );
-            return;
+            return NULL;
         }
     }
+    return NULL;
 }
 
 /*
@@ -129,13 +132,13 @@ http_ExitSrv
     delete mjreg
 ===============================================
 */
-void http_ExitSrv( void* arg )
+void* http_ExitSrv( void* arg )
 {
     mjTcpSrv srv = ( mjTcpSrv )arg;
     struct mjHttpUrl* urls = srv->private;
     if ( !urls ) {
         MJLOG_ERR( "Oops urls is null" );
-        return;
+        return NULL;
     }
     // delete mjReg
     for ( int i = 0; urls[i].url != NULL; i++ ) {
@@ -143,6 +146,8 @@ void http_ExitSrv( void* arg )
             mjReg_Delete( urls[i].reg );
         } 
     }
+
+    return NULL;
 }
 
 /*

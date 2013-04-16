@@ -13,7 +13,7 @@ static int count = 0;
 
 struct timeval tv1, tv2;
 
-static void on_finish(void *arg)
+static void* on_finish(void *arg)
 {
     mjConn conn = (mjConn)arg;
     //if ( count >= 99999 ) mjTcpSrv_SetStop( conn->server, 1);
@@ -22,22 +22,25 @@ static void on_finish(void *arg)
     gettimeofday( &tv2, NULL );
 //    printf("%ld\n", (tv2.tv_usec - tv1.tv_usec) );
     count++;
+    return NULL;
 }
 
-static void main0(void *arg)
+static void* main0(void *arg)
 {
     mjConn conn = (mjConn)arg;
     mjConn_WriteS(conn, "main0 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
+    return NULL;
 }
 
-static void main1(void *arg)
+static void* main1(void *arg)
 {
     gettimeofday( &tv1, NULL );
     mjConn conn = (mjConn)arg;
     mjConn_WriteS(conn, "main1 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
+    return NULL;
 }
 
-static void main2(void *arg)
+static void* main2(void *arg)
 {
     mjConn conn = (mjConn)arg;
 
@@ -60,9 +63,10 @@ static void main2(void *arg)
     mjConn_BufWriteS( conn, "\r\n" );
     mjConn_WriteS(conn, buf, on_finish);
     mjStr_Delete( str );
+    return NULL; 
 }
 
-static void main3(void *arg)
+static void* main3(void *arg)
 {
     mjConn conn = (mjConn)arg;
 
@@ -76,6 +80,7 @@ static void main3(void *arg)
     mjConn_Flush(conn, on_finish);
 
     mjStr_Delete(out);
+    return NULL;
 }
 
 struct mjHttpUrl urls[] = {

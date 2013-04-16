@@ -16,7 +16,7 @@ mjTcpSrvT_AcceptHandler
     accept client fd and run
 =========================================================
 */
-static void mjTcpSrvT_AcceptHandler( void* arg )
+static void* mjTcpSrvT_AcceptHandler( void* arg )
 {
     mjTcpSrvT srv = ( mjTcpSrvT ) arg;
 
@@ -24,28 +24,29 @@ static void mjTcpSrvT_AcceptHandler( void* arg )
     int cfd = mjSock_Accept( srv->sfd );
     if ( cfd < 0 ) {
         MJLOG_ERR( "mjSock_Accept error: %d", errno );
-        return;
+        return NULL;
     }
     // no server handler, exit 
     if ( !srv->Handler ) {
         MJLOG_WARNING( "no server handler found" );
         mjSock_Close( cfd );
-        return;
+        return NULL;
     }
     // create new connection
     mjConnB conn = mjConnB_New( cfd );
     if ( !conn ) {
         MJLOG_ERR( "mjtcpconn create error" );
         mjSock_Close( cfd );
-        return;
+        return NULL;
     }
     mjConnB_SetServer( conn, srv );
 
     // add worker to threadpool
     if ( srv->tpool && mjThreadPool_AddWorker( srv->tpool, 
-                srv->Handler, conn ) ) return;
+                srv->Handler, conn ) ) return NULL;
 
     mjThread_RunOnce( srv->Handler, conn );
+    return NULL;
 }
 
 /*
@@ -95,7 +96,7 @@ mjTcpSrvT_SetPrivate
     set server private
 ============================================================================
 */
-bool mjTcpSrvT_SetPrivate( mjTcpSrvT srv, void* private, mjproc* FreePrivate )
+bool mjTcpSrvT_SetPrivate( mjTcpSrvT srv, void* private, mjProc FreePrivate )
 {
     if ( !srv ) {
         MJLOG_ERR( "srv is null" );
@@ -112,7 +113,7 @@ mjTcpSrvT_SetSrvProc
     set server init and exit proc
 ==========================================================================
 */
-bool mjTcpSrvT_SetSrvProc( mjTcpSrvT srv, mjproc* InitSrv, mjproc* ExitSrv )
+bool mjTcpSrvT_SetSrvProc( mjTcpSrvT srv, mjProc InitSrv, mjProc ExitSrv )
 {
     if ( !srv ) {
         MJLOG_ERR( "srv is null" );

@@ -4,7 +4,7 @@
 static int count = 0;
 static int stop = 0;
 
-void timershow(void *data)
+void* timershow(void *data)
 {
     mjev ev = (mjev)data;
     printf("timer run: %4d\n", count++);
@@ -13,6 +13,7 @@ void timershow(void *data)
     } else {
         stop = 1;
     }
+    return NULL;
 }
 
 int main()

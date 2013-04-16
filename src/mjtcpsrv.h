@@ -8,20 +8,20 @@ struct mjTcpSrv {
     int             sfd;
     int             stop;
     mjev            ev;    
-    mjproc*         Handler;                // Handler when accept a connect
+    mjProc          Handler;                // Handler when accept a connect
 
-    mjproc*         InitSrv;                // init Server proc
-    mjproc*         ExitSrv;                // exit Server proc
+    mjProc          InitSrv;                // init Server proc
+    mjProc          ExitSrv;                // exit Server proc
 
     void*           private;                // user server data, mostly user server struct
-    mjproc*         FreePrivate;            // proc used to free private data  
+    mjProc          FreePrivate;            // proc used to free private data  
 };
 typedef struct mjTcpSrv* mjTcpSrv;
 
 extern bool     mjTcpSrv_Run( mjTcpSrv srv );
-extern bool     mjTcpSrv_SetHandler( mjTcpSrv srv, mjproc* Handler );
-extern bool     mjTcpSrv_SetPrivate( mjTcpSrv srv, void* private, mjproc* FreePrivate );
-extern bool     mjTcpSrv_SetSrvProc( mjTcpSrv srv, mjproc* InitSrv, mjproc* ExitSrv );
+extern bool     mjTcpSrv_SetHandler( mjTcpSrv srv, mjProc Handler );
+extern bool     mjTcpSrv_SetPrivate( mjTcpSrv srv, void* private, mjProc FreePrivate );
+extern bool     mjTcpSrv_SetSrvProc( mjTcpSrv srv, mjProc InitSrv, mjProc ExitSrv );
 extern bool     mjTcpSrv_SetStop( mjTcpSrv srv, int value );
 
 extern mjTcpSrv mjTcpSrv_New( int sfd );

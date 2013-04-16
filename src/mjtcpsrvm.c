@@ -10,7 +10,7 @@
 #include "mjconn.h"
 #include "mjsig.h"
 
-static void mjTcpSrvM_AcceptHandler( void* data )
+static void* mjTcpSrvM_AcceptHandler( void* data )
 {
     mjTcpSrvM srv = ( mjTcpSrvM )data;
 
@@ -21,19 +21,20 @@ static void mjTcpSrvM_AcceptHandler( void* data )
     if ( !srv->Handler ) {
         MJLOG_WARNING( "no server Handler found" );
         mjSock_Close( cfd );
-        return;
+        return NULL;
     }
     // create new action 
     mjConn conn = mjConn_New( srv->ev, cfd );
     if ( !conn ) {
         MJLOG_ERR( "mjConn create error" );
         mjSock_Close( cfd );
-        return;
+        return NULL;
     }
     // set conn server
     mjConn_SetServer( conn, srv );
     // run Handler, conn is parameter
     srv->Handler( conn );
+    return NULL;
 }
 
 /*
@@ -68,7 +69,7 @@ mjTcpSrvM_SetHandler
     conn is the parameter
 ==========================================================
 */
-bool mjTcpSrvM_SetHandler( mjTcpSrvM srv, mjproc* Handler )
+bool mjTcpSrvM_SetHandler( mjTcpSrvM srv, mjProc Handler )
 {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
@@ -85,7 +86,7 @@ mjTcpSrvM_SetSrvProc
     srv is the parameter
 =========================================================================
 */
-bool mjTcpSrvM_SetSrvProc( mjTcpSrvM srv, mjproc* InitSrv, mjproc* ExitSrv )
+bool mjTcpSrvM_SetSrvProc( mjTcpSrvM srv, mjProc InitSrv, mjProc ExitSrv )
 {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
@@ -102,7 +103,7 @@ mjTcpSrvM_SetPrivate
     set server private struct and free private function
 ============================================================================
 */
-bool mjTcpSrvM_SetPrivate( mjTcpSrvM srv, void* private, mjproc* FreePrivate )
+bool mjTcpSrvM_SetPrivate( mjTcpSrvM srv, void* private, mjProc FreePrivate )
 {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );

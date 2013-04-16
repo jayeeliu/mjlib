@@ -13,7 +13,7 @@ struct mjConnB {
     const char*     delim;              // the delim when readtype is READUNTIL 
     int             rbytes;             // read data size when readtype is READBYTES 
 
-    mjproc*         FreePrivate;        // free private data callback 
+    mjProc          FreePrivate;        // free private data callback 
     void*           private;            // private data
 };    
 typedef struct mjConnB* mjConnB;
@@ -25,7 +25,7 @@ extern int      mjConnB_Write( mjConnB conn, mjStr data );
 extern int      mjConnB_WriteB( mjConnB conn, char* buf, int length );
 extern int      mjConnB_WriteS( mjConnB conn, char* buf );
 
-extern bool     mjConnB_SetPrivate( mjConnB conn, void* private, mjproc* FreePrivate );
+extern bool     mjConnB_SetPrivate( mjConnB conn, void* private, mjProc FreePrivate );
 extern bool     mjConnB_SetServer( mjConnB conn, void* server );
 extern bool     mjConnB_SetTimeout( mjConnB conn, unsigned int readTimeout, 
                                 unsigned int writeTimeout );

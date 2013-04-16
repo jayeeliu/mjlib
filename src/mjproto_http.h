@@ -21,13 +21,13 @@ typedef struct mjHttpData* mjHttpData;
 // url redirect struct
 struct mjHttpUrl {
     char*   url;
-    void    ( *fun )( void* data );
+    void*    ( *fun )( void* data );
     mjReg   reg;
 };
 
-extern void     http_Worker( void* arg );
-extern void     http_InitSrv( void* arg );
-extern void     http_ExitSrv( void* arg );
+extern void*    http_Worker( void* arg );
+extern void*    http_InitSrv( void* arg );
+extern void*    http_ExitSrv( void* arg );
 extern mjStr    FileToStr( const char* fileName );
 
 #endif
