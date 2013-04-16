@@ -4,8 +4,9 @@
 #include <mjsock.h>
 #include <mjthread.h>
 #include <mjev.h>
+#include <mjconn.h>
 
-#define WORKER_NUM 4
+#define WORKER_NUM 2
 
 struct LoopServer {
     mjev        ev;
@@ -14,13 +15,17 @@ struct LoopServer {
 };
 typedef struct LoopServer* LoopServer;
 
-
-void* MyWorker( void* arg )
+void* on_close( void* arg )
 {
-    LoopServer server = ( LoopServer ) arg;
+    mjConn conn = ( mjConn ) arg;
+    mjConn_Delete( conn );
+    return NULL;
+}
 
-    mjEV_Run( server->ev );
-
+void* on_read( void* arg )
+{
+    mjConn conn = ( mjConn ) arg;
+    mjConn_WriteS( conn, "read OK!", on_close );
     return NULL;
 }
 
@@ -29,8 +34,17 @@ void* AcceptHandler( void* arg )
     LoopServer server = ( LoopServer ) arg;
     int cfd;
     read( server->nfd[0], &cfd, sizeof( int ) );
-    printf( "read socket %d, in thread: %ld\n", cfd, server->thread->threadID );
-    close( cfd );
+    mjConn conn = mjConn_New( server->ev, cfd );
+
+    mjConn_ReadUntil( conn, "\r\n\r\n", on_read );
+    return NULL;
+}
+
+void* MyWorker( void* arg )
+{
+    LoopServer server = ( LoopServer ) arg;
+    
+    mjEV_Run( server->ev );
     return NULL;
 }
 

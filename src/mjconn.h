@@ -36,7 +36,7 @@ struct mjConn {
     mjProc      ThreadCallBack;             // thread callback function 
     int         threadReadNotify;           // thread notify fd 
     int         threadWriteNotify;          // thread notify write fd 
-    mjthread*   ThreadRoutine;              // thread routine to be run in runasync
+    mjProc      ThreadRoutine;              // thread routine to be run in runasync
 
     int error;                              //  some error happened 
     int closed;                             //  fd closed 
@@ -57,7 +57,7 @@ extern bool mjConn_BufWriteS( mjConn conn, char* buf );
 extern bool mjConn_BufWrite( mjConn conn, mjStr buf );
 extern bool mjConn_Flush( mjConn conn, mjProc CallBack );
 // thread func
-extern bool mjConn_RunAsync( mjConn conn, mjthread* Routine, mjProc CallBack );
+extern bool mjConn_RunAsync( mjConn conn, mjProc Routine, mjProc CallBack );
 // conn func
 extern bool mjConn_Connect( mjConn conn, const char* ipaddr, int port, mjProc CallBack );
 

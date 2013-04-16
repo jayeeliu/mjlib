@@ -80,7 +80,7 @@ mjTcpSrvT_SetHandler
     mjConnB as parameter
 ==============================================================
 */
-bool mjTcpSrvT_SetHandler( mjTcpSrvT srv, mjthread* Handler )
+bool mjTcpSrvT_SetHandler( mjTcpSrvT srv, mjProc Handler )
 {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );

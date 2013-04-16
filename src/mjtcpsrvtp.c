@@ -42,7 +42,7 @@ bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
     return true;
 }
 
-bool mjTcpSrvTP_SetHandler( mjTcpSrvTP srv, mjthread* Handler )
+bool mjTcpSrvTP_SetHandler( mjTcpSrvTP srv, mjProc Handler )
 {
     if ( !srv ) {   
         MJLOG_ERR( "server is null" );

@@ -487,7 +487,7 @@ mjConn_RunAsync
     change the data
 =====================================================================
 */
-bool mjConn_RunAsync( mjConn conn, mjthread* Routine, mjProc CallBack )
+bool mjConn_RunAsync( mjConn conn, mjProc Routine, mjProc CallBack )
 {
     // RunAsync can't re enter
     if ( conn->threadType != MJCONN_NONE ) {

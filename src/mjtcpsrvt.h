@@ -9,7 +9,7 @@ struct mjTcpSrvT {
     int             stop;               // stop server
     mjev            ev;    
     mjThreadPool    tpool;              // thread pool 
-    mjthread*       Handler;            // worker to run
+    mjProc          Handler;            // worker to run
 
     mjProc          InitSrv;            // InitSrv proc
     mjProc          ExitSrv;            // ExitSrv proc
@@ -20,7 +20,7 @@ struct mjTcpSrvT {
 typedef struct mjTcpSrvT* mjTcpSrvT;
 
 extern bool         mjTcpSrvT_Run( mjTcpSrvT srv );
-extern bool         mjTcpSrvT_SetHandler( mjTcpSrvT srv, mjthread* Handler );
+extern bool         mjTcpSrvT_SetHandler( mjTcpSrvT srv, mjProc Handler );
 extern bool         mjTcpSrvT_SetPrivate( mjTcpSrvT srv, void* private, mjProc FreePrivate );
 extern bool         mjTcpSrvT_SetSrvProc( mjTcpSrvT srv, mjProc InitSrv, mjProc ExitSrv );
 extern bool         mjTcpSrvT_SetStop( mjTcpSrvT srv, int value );

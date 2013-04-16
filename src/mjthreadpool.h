@@ -15,7 +15,7 @@ struct mjThreadEntry {
 
     pthread_mutex_t         threadLock;             // threadLock for threadWorker
     pthread_cond_t          threadReady;            // threadReady condition
-    mjthread*               ThreadWorker;
+    mjProc                  ThreadWorker;
     void*                   threadArg;
 };
 typedef struct mjThreadEntry* mjThreadEntry;
@@ -30,7 +30,7 @@ struct mjThreadPool {
 };
 typedef struct mjThreadPool*  mjThreadPool; 
 
-extern bool         mjThreadPool_AddWorker( mjThreadPool tpool, mjthread* thread, void* arg );
+extern bool         mjThreadPool_AddWorker( mjThreadPool tpool, mjProc thread, void* arg );
 extern mjThreadPool mjThreadPool_New( int maxThreadNum );
 extern bool         mjThreadPool_Delete( mjThreadPool tPool );
 

@@ -17,7 +17,7 @@ static void* ThreadRoutine( void* arg )
     }
     mjThreadEntry thread = ( mjThreadEntry )arg;          // get thread
     mjThreadPool tPool = thread->threadPool;    // get threadPool
-    mjthread* worker;
+    mjProc worker;
     void* workerArg;
 
 	while ( 1 ) { 
@@ -56,7 +56,7 @@ mjThreadPool_AddWorker
     return: 0 --- success, -1 --- fail
 ===========================================================================
 */ 
-bool mjThreadPool_AddWorker( mjThreadPool tPool, mjthread* ThreadWorker, void* arg ) 
+bool mjThreadPool_AddWorker( mjThreadPool tPool, mjProc ThreadWorker, void* arg ) 
 { 
     if ( !tPool ) {
         MJLOG_ERR( "mjthread pool is null" );
