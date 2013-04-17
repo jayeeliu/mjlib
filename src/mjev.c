@@ -56,8 +56,8 @@ bool mjEV_Add( mjev ev, int fd, int mask, mjProc proc, void *data )
         fdev->mask = newmask;
     }
     // we must change proc and proc data
-    if ( mask & MJEV_READABLE ) fdev->ReadProc = proc;
-    if ( mask & MJEV_WRITEABLE ) fdev->WriteProc = proc;
+    if ( mask & MJEV_READABLE ) fdev->ReadCallBack = proc;
+    if ( mask & MJEV_WRITEABLE ) fdev->WriteCallBack = proc;
     fdev->data = data;
 
     return true;
@@ -250,12 +250,12 @@ void mjEV_Run( mjev ev )
 	    if ( fdev->mask & mask & MJEV_READABLE ) {
             // we have run fileproc
 	        rFired = 1;
-		    fdev->ReadProc( fdev->data );
+		    fdev->ReadCallBack( fdev->data );
 	    }
 
 	    if ( fdev->mask & mask & MJEV_WRITEABLE ) {
-		    if ( !rFired || fdev->WriteProc != fdev->ReadProc ) {
-			    fdev->WriteProc( fdev->data );
+		    if ( !rFired || fdev->WriteCallBack != fdev->ReadCallBack ) {
+			    fdev->WriteCallBack( fdev->data );
 			}
 		}
 	} 

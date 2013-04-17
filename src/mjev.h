@@ -15,8 +15,8 @@
 // file event struct
 typedef struct mjfevent {
     int     mask;
-    mjProc  ReadProc;
-    mjProc  WriteProc;
+    mjProc  ReadCallBack;
+    mjProc  WriteCallBack;
     void*   data;
 } mjfevent;
 

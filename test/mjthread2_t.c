@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "mjthread.h"
 
 void* Routine( void* arg )
@@ -9,24 +10,29 @@ void* Routine( void* arg )
     return NULL;
 }
 
+void* PreRoutine( void* arg )
+{
+    printf("Before thread\n");
+    return NULL;
+}
+
+void* PostRoutine( void* arg )
+{
+    printf("After thread\n");
+    return NULL;
+}
+
 int main()
 {
-    mjThread thread1 = mjThread_New();
-    mjThread thread2 = mjThread_New();
+    mjThread thread = mjThread_New();
     int count = 0;
-    
-    while ( count < 10000 ) {
-        bool ret = mjThread_AddWork( thread1, Routine, "1" );
-        if ( !ret ) {
-
-            ret = mjThread_AddWork( thread2, Routine, "2" );
-            if ( !ret ) {
-                printf("ADD ERROR\n");
-            }
-        }
+   
+    mjThread_SetPrePost( thread, PreRoutine, PostRoutine ); 
+    while ( count < 10 ) {
+        mjThread_AddWork( thread, Routine, "1" );
         count++;
     }
-    mjThread_Delete( thread1 );
-    mjThread_Delete( thread2 );
+    sleep(10);
+    mjThread_Delete( thread );
     return 0;
 }

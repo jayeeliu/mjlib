@@ -15,7 +15,7 @@ bool mjThread_RunOnce( mjProc Routine, void* arg )
 
 /*
 ======================================================
-ThradRoutine:
+ThreadRoutine:
     used for short caculate task
 ======================================================
 */
@@ -29,15 +29,25 @@ static void* DefaultRoutine( void* arg )
 
     mjThread thread = ( mjThread ) arg;
 
-    while ( !thread->shutDown ) {
+    while ( 1 ) {
         pthread_mutex_lock( &thread->threadLock );
         while ( !thread->Routine && !thread->shutDown ) {
             pthread_cond_wait( &thread->threadReady, &thread->threadLock );
         }
         pthread_mutex_unlock( &thread->threadLock );
 
+        if ( thread->shutDown ) break;
+        
+        if ( thread->PreRoutine ) {
+            ( *thread->PreRoutine ) ( thread );
+        }
+
         if ( thread->Routine ) {
             ( *thread->Routine ) ( thread->arg );
+        }
+
+        if ( thread->PostRoutine ) {
+            ( *thread->PostRoutine ) ( thread );
         }
         
         pthread_mutex_lock( &thread->threadLock );
@@ -49,22 +59,27 @@ static void* DefaultRoutine( void* arg )
     pthread_exit( NULL );
 }
 
-static void* LoopThreadRoutine( void* arg )
+/*
+===================================================
+DefaultLoopRoutine
+    Default Loop Thread Routine
+===================================================
+*/
+static void* DefaultLoopRoutine( void* arg )
 {
     if ( !arg ) {
-        MJLOG_ERR( "LoopThreadRoutine arg is null" );
+        MJLOG_ERR( "DefaultLoopRoutine arg is null" );
         pthread_exit( NULL );
         return NULL; 
     }
 
     mjThread thread = ( mjThread ) arg;
+
     while ( !thread->shutDown ) {
         ( *thread->Routine ) ( thread->arg );
     }
-
     thread->closed = 1;
     pthread_exit( NULL );
-    return NULL;
 }
 
 bool mjThread_AddWork( mjThread thread, mjProc Routine, void* arg )
@@ -86,6 +101,40 @@ bool mjThread_AddWork( mjThread thread, mjProc Routine, void* arg )
     pthread_mutex_unlock( &thread->threadLock );
 
     return retval;
+}
+
+/*
+============================================================================
+mjThread_SetPrivate
+    set private data and freeprivate Proc
+============================================================================
+*/
+bool mjThread_SetPrivate( mjThread thread, void* private, mjProc FreePrivate )
+{
+    if ( !thread ) {
+        MJLOG_ERR( "thread is null" );
+        return false;
+    }
+    thread->private     = private;
+    thread->FreePrivate = FreePrivate;
+    return true;
+}
+
+/*
+=================================================================================
+mjThread_SetPrePost
+    set Pre and Post Routine
+=================================================================================
+*/
+bool mjThread_SetPrePost( mjThread thread, mjProc PreRoutine, mjProc PostRoutine )
+{
+    if ( !thread ) {
+        MJLOG_ERR( "thread is null" );
+        return false;
+    }
+    thread->PreRoutine  = PreRoutine;
+    thread->PostRoutine = PostRoutine;
+    return true;
 }
 
 /*
@@ -113,6 +162,12 @@ mjThread mjThread_New()
     return thread;
 }
 
+/*
+=====================================================================
+mjThread_NewLoop
+    create Loop Thread
+=====================================================================
+*/
 mjThread mjThread_NewLoop( mjProc Routine, void* arg )
 {
     mjThread thread = ( mjThread ) calloc( 1, sizeof( struct mjThread ) );
@@ -127,11 +182,17 @@ mjThread mjThread_NewLoop( mjProc Routine, void* arg )
     thread->arg         = arg;
     pthread_mutex_init( &thread->threadLock, NULL );
     pthread_cond_init( &thread->threadReady, NULL );
-    pthread_create( &thread->threadID, NULL, LoopThreadRoutine, thread );
+    pthread_create( &thread->threadID, NULL, DefaultLoopRoutine, thread );
 
     return thread;
 }
 
+/*
+=================================================
+mjThread_Delete
+    stop thread
+=================================================
+*/
 bool mjThread_Delete( mjThread thread )
 {
     if ( !thread ) {
@@ -146,6 +207,14 @@ bool mjThread_Delete( mjThread thread )
     if ( thread->closed != 1 ) {
         MJLOG_ERR( "something wrong" );
     }
+
+    if ( thread->FreePrivate && thread->private ) {
+        thread->FreePrivate( thread->private );
+    }
+
+    pthread_mutex_destroy( &thread->threadLock );
+    pthread_cond_destroy( &thread->threadReady );
+
     free( thread );
     return true;
 }
