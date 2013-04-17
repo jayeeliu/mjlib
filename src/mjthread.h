@@ -4,26 +4,32 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "mjproc.h"
+#include "mjlist.h"
 
 #define MJTHREAD_FREE   0
 #define MJTHREAD_READY  1
 #define MJTHREAD_BUSY   2
 
+struct mjThreadPool2;
+
 struct mjThread {
-    pthread_t       threadID;
-    pthread_mutex_t threadLock;
-    pthread_cond_t  threadReady;
+    pthread_t               threadID;
+    pthread_mutex_t         threadLock;
+    pthread_cond_t          threadReady;
     
-    mjProc          Routine;
-    void*           arg; 
+    mjProc                  Routine;
+    void*                   arg; 
 
-    mjProc          PreRoutine;
-    mjProc          PostRoutine;
-    mjProc          FreePrivate;
-    void*           private;        // holding private data, point to threadpool when in threadpool
+    mjProc                  PreRoutine;
+    mjProc                  PostRoutine;
+    mjProc                  FreePrivate;
+    void*                   private;        // holding private data, point to threadpool when in threadpool
 
-    int             closed;
-    int             shutDown;
+    struct mjThreadPool2*   tPool;
+    struct list_head        nodeList;       // for threadPool
+
+    int                     closed;
+    int                     shutDown;
 };
 typedef struct mjThread* mjThread;
 

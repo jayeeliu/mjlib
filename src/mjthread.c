@@ -155,6 +155,12 @@ mjThread mjThread_New()
     thread->closed      = 0;
     thread->Routine     = NULL;
     thread->arg         = NULL;
+    thread->PreRoutine  = NULL;
+    thread->PostRoutine = NULL;
+    thread->FreePrivate = NULL;
+    thread->private     = NULL;
+    thread->tPool       = NULL;
+
     pthread_mutex_init( &thread->threadLock, NULL );
     pthread_cond_init( &thread->threadReady, NULL );
     pthread_create( &thread->threadID, NULL, DefaultRoutine, thread );

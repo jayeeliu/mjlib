@@ -14,10 +14,6 @@ void* myworker(void* arg)
     int ret = mjConnB_ReadUntil( conn, "\r\n\r\n", data );
     if ( ret <= 0 ) goto out;
     
-    //int x = 6;
-    //for(int i = 0; i < 1000000; ++i) {
-    //    x = x * 13;
-    //}
     mjConnB_WriteS( conn, "HERE" );
 
 out:

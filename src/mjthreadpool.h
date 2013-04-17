@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "mjlist.h"
-#include "mjthread.h"
+#include "mjproc.h"
 
 struct mjThreadPool;
 
