@@ -15,9 +15,9 @@ struct mjThreadPool2 {
 };
 typedef struct mjThreadPool2*  mjThreadPool2; 
 
-extern bool         mjThreadPool2_AddWorker( mjThreadPool2 tpool, mjProc thread, void* arg );
-extern bool         mjThreadPool2_AddThread( mjThreadPool2 tpool, mjThread thread );
-extern mjThreadPool mjThreadPool2_New();
-extern bool         mjThreadPool2_Delete( mjThreadPool2 tPool );
+extern bool             mjThreadPool2_AddWorker( mjThreadPool2 tpool, mjProc thread, void* arg );
+extern bool             mjThreadPool2_AddThread( mjThreadPool2 tpool, mjThread thread );
+extern mjThreadPool2    mjThreadPool2_New();
+extern bool             mjThreadPool2_Delete( mjThreadPool2 tPool );
 
 #endif

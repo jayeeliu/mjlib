@@ -3,6 +3,12 @@
 #include "mjthread.h"
 #include "mjlog.h"
 
+/*
+=========================================================
+mjThread_RunOnce
+    create thread and run Routine
+=========================================================
+*/
 bool mjThread_RunOnce( mjProc Routine, void* arg )
 {
     pthread_t tid;
@@ -21,38 +27,24 @@ ThreadRoutine:
 */
 static void* DefaultRoutine( void* arg )
 {
-    if ( !arg ) {
-        MJLOG_ERR( "ThreadRoutine arg is null" );
-        pthread_exit( NULL );
-        return NULL;
-    }
-
+    // arg can't be null
     mjThread thread = ( mjThread ) arg;
-
+    
     while ( 1 ) {
         pthread_mutex_lock( &thread->threadLock );
         while ( !thread->Routine && !thread->shutDown ) {
             pthread_cond_wait( &thread->threadReady, &thread->threadLock );
         }
         pthread_mutex_unlock( &thread->threadLock );
-
+        // should shutdown, break
         if ( thread->shutDown ) break;
-        
-        if ( thread->PreRoutine ) {
-            ( *thread->PreRoutine ) ( thread );
-        }
-
-        if ( thread->Routine ) {
-            ( *thread->Routine ) ( thread->arg );
-        }
-
-        if ( thread->PostRoutine ) {
-            ( *thread->PostRoutine ) ( thread );
-        }
-        
+        // call routine
+        if ( thread->PreRoutine ) ( *thread->PreRoutine ) ( thread );
+        if ( thread->Routine ) ( *thread->Routine ) ( thread->arg );
+        if ( thread->PostRoutine ) ( *thread->PostRoutine ) ( thread );
+        // set thread to free 
         pthread_mutex_lock( &thread->threadLock );
-        thread->Routine = NULL;
-        thread->arg     = NULL;
+        thread->Routine = thread->arg = NULL;
         pthread_mutex_unlock( &thread->threadLock );
     }
     thread->closed = 1;
@@ -67,12 +59,7 @@ DefaultLoopRoutine
 */
 static void* DefaultLoopRoutine( void* arg )
 {
-    if ( !arg ) {
-        MJLOG_ERR( "DefaultLoopRoutine arg is null" );
-        pthread_exit( NULL );
-        return NULL; 
-    }
-
+    // arg can't be null
     mjThread thread = ( mjThread ) arg;
 
     while ( !thread->shutDown ) {
@@ -82,16 +69,23 @@ static void* DefaultLoopRoutine( void* arg )
     pthread_exit( NULL );
 }
 
+/*
+====================================================================
+mjThread_AddWork
+    add Routine to thread
+====================================================================
+*/
 bool mjThread_AddWork( mjThread thread, mjProc Routine, void* arg )
 {
     if ( !thread ) {
         MJLOG_ERR( "thread is null" );
         return false;
     }
+    if ( !Routine ) return true;
     
+    // add worker to thread
+    if ( pthread_mutex_trylock( &thread->threadLock ) ) return false;
     bool retval = false;
-
-    pthread_mutex_lock( &thread->threadLock );
     if ( !thread->Routine ) {
         thread->Routine = Routine;
         thread->arg     = arg;
@@ -151,20 +145,9 @@ mjThread mjThread_New()
         return NULL;
     }
    
-    thread->shutDown    = 0; 
-    thread->closed      = 0;
-    thread->Routine     = NULL;
-    thread->arg         = NULL;
-    thread->PreRoutine  = NULL;
-    thread->PostRoutine = NULL;
-    thread->FreePrivate = NULL;
-    thread->private     = NULL;
-    thread->tPool       = NULL;
-
     pthread_mutex_init( &thread->threadLock, NULL );
     pthread_cond_init( &thread->threadReady, NULL );
     pthread_create( &thread->threadID, NULL, DefaultRoutine, thread );
-
     return thread;
 }
 
@@ -182,14 +165,9 @@ mjThread mjThread_NewLoop( mjProc Routine, void* arg )
         return NULL;
     }
     
-    thread->shutDown    = 0;
-    thread->closed      = 0;
     thread->Routine     = Routine;
     thread->arg         = arg;
-    pthread_mutex_init( &thread->threadLock, NULL );
-    pthread_cond_init( &thread->threadReady, NULL );
     pthread_create( &thread->threadID, NULL, DefaultLoopRoutine, thread );
-
     return thread;
 }
 

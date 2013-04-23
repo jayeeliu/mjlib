@@ -1,53 +1,7 @@
 #include <stdlib.h>
 
 #include "mjlog.h"
-#include "mjthreadpool.h"
-
-/*
-=======================================================================
-ThreadRoutine
-    threadpool main routine
-=======================================================================
-*/
-static void* ThreadRoutine( void* arg ) 
-{
-    if ( !arg ) {
-        MJLOG_ERR( "ThreadRoutine arg is null" );
-        pthread_exit( NULL );
-    }
-    mjThreadEntry thread = ( mjThreadEntry )arg;          // get thread
-    mjThreadPool tPool = thread->threadPool;    // get threadPool
-    mjProc worker;
-    void* workerArg;
-
-	while ( 1 ) { 
-		// wait for cond
-        pthread_mutex_lock( &thread->threadLock ); 
-		while ( !thread->ThreadWorker && !tPool->shutDown ) { 
-			pthread_cond_wait( &thread->threadReady, &thread->threadLock ); 
-		} 
-        // get worker
-        worker      = thread->ThreadWorker;
-        workerArg   = thread->threadArg;
-        thread->ThreadWorker    = NULL;
-        thread->threadArg       = NULL;
-        pthread_mutex_unlock( &thread->threadLock );
-
-		// call worker process 
-		if ( worker ) {
-		    ( *worker ) ( workerArg );
-        }
-		// destory the threadpool 
-		if ( tPool->shutDown ) break; 
-
-        // add thread to freelist
-        pthread_mutex_lock( &tPool->threadListLock );
-        list_add_tail( &thread->nodeList, &tPool->threadList );
-        pthread_mutex_unlock( &tPool->threadListLock );
-	}
-	// thread shutdown
-	pthread_exit( NULL ); 
-} 
+#include "mjthreadpool2.h"
 
 /*
 ===========================================================================
@@ -56,7 +10,7 @@ mjThreadPool_AddWorker
     return: 0 --- success, -1 --- fail
 ===========================================================================
 */ 
-bool mjThreadPool_AddWorker( mjThreadPool tPool, mjProc ThreadWorker, void* arg ) 
+bool mjThreadPool2_AddWorker( mjThreadPool2 tPool, mjProc ThreadWorker, void* arg ) 
 { 
     if ( !tPool ) {
         MJLOG_ERR( "mjthread pool is null" );
@@ -90,14 +44,25 @@ bool mjThreadPool_AddWorker( mjThreadPool tPool, mjProc ThreadWorker, void* arg 
     return false; 
 }
 
-bool mjThreadPool_AddThread( mjThreadPool tPool, mjThread thread )
+/*
+======================================================================
+mjThreadPool_AddThread
+    add thread to threadpool
+======================================================================
+*/
+bool mjThreadPool2_AddThread( mjThreadPool2 tPool, mjThread thread )
 {
+    if ( !tPool ) {
+        MJLOG_ERR( "tPool is null" );
+        return false;
+    }
     thread->private = tPool;
     INIT_LIST_HEAD( &thread->nodeList );
 
     pthread_mutex_lock( &tPool->threadListLock );
     list_add_tail( &thread->nodeList, &tPool->threadList );
     pthread_mutex_unlock( &tPool->threadListLock );
+
     return true;
 }
 
@@ -108,9 +73,9 @@ mjThreadPool_New
     return: NOT NULL--- mjThreadPool struct, NULL --- fail
 ==========================================================
 */
-mjThreadPool mjThreadPool_New() 
+mjThreadPool mjThreadPool2_New() 
 {
-    mjThreadPool tPool = ( mjThreadPool ) calloc( 1, sizeof( struct mjThreadPool ) );
+    mjThreadPool2 tPool = ( mjThreadPool2 ) calloc( 1, sizeof( struct mjThreadPool2 ) );
     if ( !tPool ) {
         MJLOG_ERR( "mjThreadPool alloc error" );
         return NULL;
@@ -130,7 +95,7 @@ mjThreadPool_delete
     destory thread pool
 ===========================================
 */
-bool mjThreadPool_Delete( mjThreadPool tPool ) 
+bool mjThreadPool2_Delete( mjThreadPool2 tPool ) 
 { 
     if ( !tPool ) {
         MJLOG_ERR( "tPool is null" );

@@ -34,5 +34,6 @@ int main()
     }
     sleep(10);
     mjThread_Delete( thread );
+
     return 0;
 }
