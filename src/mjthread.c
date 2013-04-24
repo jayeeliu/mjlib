@@ -81,6 +81,10 @@ bool mjThread_AddWork( mjThread thread, mjProc Routine, void* arg )
         MJLOG_ERR( "thread is null" );
         return false;
     }
+    if ( thread->type != MJTHREAD_NORMAL ) {
+        MJLOG_ERR( "only normal thread can add work" );
+        return false;
+    }
     if ( !Routine ) return true;
     
     // add worker to thread
@@ -144,7 +148,8 @@ mjThread mjThread_New()
         MJLOG_ERR( "mjthread create error" );
         return NULL;
     }
-   
+  
+    thread->type = MJTHREAD_NORMAL; 
     pthread_mutex_init( &thread->threadLock, NULL );
     pthread_cond_init( &thread->threadReady, NULL );
     pthread_create( &thread->threadID, NULL, DefaultRoutine, thread );
@@ -159,14 +164,20 @@ mjThread_NewLoop
 */
 mjThread mjThread_NewLoop( mjProc Routine, void* arg )
 {
+    if ( !Routine ) {
+        MJLOG_ERR( "Loop Rountine can't be null");
+        return NULL;
+    }
+
     mjThread thread = ( mjThread ) calloc( 1, sizeof( struct mjThread ) );
     if ( !thread ) {
         MJLOG_ERR( "mjthread create error" );
         return NULL;
     }
-    
-    thread->Routine     = Routine;
-    thread->arg         = arg;
+   
+    thread->type    = MJTHREAD_LOOP;
+    thread->Routine = Routine;
+    thread->arg     = arg;
     pthread_create( &thread->threadID, NULL, DefaultLoopRoutine, thread );
     return thread;
 }
@@ -183,22 +194,27 @@ bool mjThread_Delete( mjThread thread )
         MJLOG_ERR( "thread is null" );
         return false;
     }
+    // cant' re enter
     if ( thread->shutDown ) return false;
-    
     thread->shutDown = 1;
-    pthread_cond_broadcast( &thread->threadReady );
+    // only normal thread need broadcast 
+    if ( thread->type == MJTHREAD_NORMAL ) {
+        pthread_cond_broadcast( &thread->threadReady );
+    }
+    // wait thread exit
     pthread_join( thread->threadID, NULL );
     if ( thread->closed != 1 ) {
         MJLOG_ERR( "something wrong" );
     }
-
+    // free private
     if ( thread->FreePrivate && thread->private ) {
         thread->FreePrivate( thread->private );
     }
-
-    pthread_mutex_destroy( &thread->threadLock );
-    pthread_cond_destroy( &thread->threadReady );
-
+    // only normal thread need destory
+    if ( thread->type == MJTHREAD_NORMAL ) {
+        pthread_mutex_destroy( &thread->threadLock );
+        pthread_cond_destroy( &thread->threadReady );
+    }
     free( thread );
     return true;
 }

@@ -4,9 +4,9 @@
 
 void* Routine( void* arg )
 {
-    char* name = arg;
-
-    printf("Run OK: %s\n", name);
+    static int count = 0;
+    printf("count: %4d\n", count++);
+    sleep(1);
     return NULL;
 }
 
@@ -24,15 +24,9 @@ void* PostRoutine( void* arg )
 
 int main()
 {
-    mjThread thread = mjThread_New();
-    int count = 0;
-   
-    mjThread_SetPrePost( thread, PreRoutine, PostRoutine ); 
-    while ( count < 10 ) {
-        mjThread_AddWork( thread, Routine, "1" );
-        count++;
-    }
-    sleep(10);
+    mjThread thread = mjThread_NewLoop( Routine, NULL );
+  
+    sleep( 5 ); 
     mjThread_Delete( thread );
 
     return 0;
