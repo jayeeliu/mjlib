@@ -33,7 +33,7 @@ extern bool     mjThread_AddWork( mjThread thread, mjProc Routine, void* arg );
 extern bool     mjThread_SetPrivate( mjThread thread, void* private, mjProc FreePrivate );
 extern bool     mjThread_SetPrePost( mjThread thread, mjProc PreRoutine, mjProc PostRoutine );
 extern mjThread mjThread_New();
-extern mjThread mjThread_NewLoop( mjProc ThreadWorker, void* threadArg );
+extern mjThread mjThread_NewLoop( mjProc Rountine, void* arg );
 extern bool     mjThread_Delete( mjThread thread );
 
 #endif
