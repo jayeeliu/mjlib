@@ -72,7 +72,6 @@ mjIO mjIO_New( const char* fileName)
         MJLOG_ERR( "mjStr_New error" );
         goto failout3;
     }
-
     return io;
 
 failout3:

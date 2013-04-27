@@ -90,7 +90,6 @@ bool mjOpt_Define( char* section, char* key, int type, void* value,
     // add to options list
     INIT_LIST_HEAD( &opt->node );
     list_add_tail( &opt->node, &options );
-
     return true;
 }
 
@@ -256,9 +255,9 @@ void mjOpt_HelpString()
     list_for_each_entry(entry, &options, node) {
         if ( strcmp( entry->cmdKey, "" ) ) {
             if ( !entry->cmdKeyValue ) {
-                printf( "-%s: %s\n", entry->cmdKey, entry->helpString );
+                printf( "\t-%s: %s\n", entry->cmdKey, entry->helpString );
             } else {
-                printf( "-%s <value>: %s\n", entry->cmdKey, entry->helpString );
+                printf( "\t-%s <value>: %s\n", entry->cmdKey, entry->helpString );
             }
         }
     }
