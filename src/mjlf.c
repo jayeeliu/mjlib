@@ -1,27 +1,44 @@
 #include <stdlib.h>
+#include "mjconnb.h"
 #include "mjlog.h"
 #include "mjlf.h"
 #include "mjsock.h"
 
+/*
+===============================================
+mjLF_Routine
+    Routine Run
+===============================================
+*/
 static void* mjLF_Routine( void* arg )
 {
     mjLF server = ( mjLF ) arg;
 
     while ( 1 ) {
-        int cfd = mjSock_Accept( server->port );
+        int cfd = mjSock_Accept( server->sfd );
         if ( cfd < 0 ) continue;
         // invoke follows
-        mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
+        int ret = mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
+        if ( !ret ) mjThread_RunOnce( mjLF_Routine, server );
 
         if ( server->Routine ) {
-            server->Routine( &cfd );
+            mjConnB conn = mjConnB_New( cfd );
+            server->Routine( conn );
+        } else {
+            close( cfd );
         }
         break;
     }
     return NULL; 
 }
 
-mjLF mjLF_New( mjProc Routine, int maxThread, int port )
+/*
+==========================================================
+mjLF_New
+    create mjLF struct
+==========================================================
+*/
+mjLF mjLF_New( mjProc Routine, int maxThread, int sfd )
 {
     mjLF server = ( mjLF ) calloc( 1, sizeof( struct mjLF ) );
     if ( !server ) {
@@ -35,13 +52,18 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int port )
         free( server );
         return NULL;
     }
-    server->port    = port;
+    server->sfd     = sfd;
     server->Routine = Routine;
     mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
-
     return server;
 }
 
+/*
+==========================================
+mjLF_Delete
+    Delete server
+==========================================
+*/
 bool mjLF_Delete( mjLF server )
 {
     if ( !server ) {

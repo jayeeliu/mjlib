@@ -5,13 +5,13 @@
 #include "mjthreadpool2.h"
 
 struct mjLF {
+    int             sfd;
     mjThreadPool2   tPool; 
     mjProc          Routine;
-    int             port;
 };
 typedef struct mjLF* mjLF;
 
-extern mjLF mjLF_New( mjProc Routine, int maxThread, int port );
+extern mjLF mjLF_New( mjProc Routine, int maxThread, int sfd );
 extern bool mjLF_Delete( mjLF server );
 
 #endif
