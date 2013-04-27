@@ -33,8 +33,8 @@ bool mjTcpSrvTP_Run( mjTcpSrvTP srv )
             MJLOG_ERR( "mjConnB create error" );
             continue;
         }
-        if ( srv->tpool ) {
-            if ( mjThreadPool_AddWorker( srv->tpool, srv->Handler, conn ) ) 
+        if ( srv->tPool ) {
+            if ( mjThreadPool_AddWorker( srv->tPool, srv->Handler, conn ) ) 
                 continue;
         }
         mjThread_RunOnce( srv->Handler, conn );
@@ -75,16 +75,12 @@ mjTcpSrvTP mjTcpSrvTP_New( int sfd, int threadNum )
         MJLOG_ERR( "create server error" );
         goto failout1;
     }
-
     srv->sfd        = sfd;
-    srv->stop       = 0;
-    srv->tpool      = NULL;
-    srv->Handler    = NULL;
     mjSock_SetBlocking( srv->sfd, 1 );
     // create thread pool
     if ( threadNum > 0 ) {
-        srv->tpool = mjThreadPool_New( threadNum );
-        if ( !srv->tpool ) {
+        srv->tPool = mjThreadPool_New( threadNum );
+        if ( !srv->tPool ) {
             MJLOG_ERR( "create threadpool error" );
             goto failout2;
         }
@@ -113,9 +109,10 @@ bool mjTcpSrvTP_Delete( mjTcpSrvTP srv )
         return false;
     }
 
-    if ( srv->tpool ) {
-        mjThreadPool_Delete( srv->tpool );
+    if ( srv->tPool ) {
+        mjThreadPool_Delete( srv->tPool );
     }
+
     mjSock_Close( srv->sfd );
     free( srv );
     return true;

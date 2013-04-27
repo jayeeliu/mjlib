@@ -20,7 +20,7 @@ static void* mjLF_Routine( void* arg )
         // invoke follows
         int ret = mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
         if ( !ret ) mjThread_RunOnce( mjLF_Routine, server );
-
+        
         if ( server->Routine ) {
             mjConnB conn = mjConnB_New( cfd );
             server->Routine( conn );
@@ -52,9 +52,17 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int sfd )
         free( server );
         return NULL;
     }
+
     server->sfd     = sfd;
     server->Routine = Routine;
-    mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
+    
+    bool ret = mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
+    if ( !ret ) {
+        MJLOG_ERR( "mjthreadpool addwork" );
+        mjThreadPool2_Delete( server->tPool );
+        free( server );
+        return NULL;
+    }
     return server;
 }
 

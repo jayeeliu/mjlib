@@ -88,13 +88,15 @@ bool mjThread_AddWork( mjThread thread, mjProc Routine, void* arg )
     if ( !Routine ) return true;
     
     // add worker to thread
-    if ( pthread_mutex_trylock( &thread->threadLock ) ) return false;
+    pthread_mutex_lock( &thread->threadLock );
     bool retval = false;
     if ( !thread->Routine ) {
         thread->Routine = Routine;
         thread->arg     = arg;
         pthread_cond_signal( &thread->threadReady );
         retval = true; 
+    } else {
+        MJLOG_ERR( "thread is busy" );
     }
     pthread_mutex_unlock( &thread->threadLock );
 

@@ -20,9 +20,9 @@ int main()
 {
     Daemonize();
     int sfd = mjSock_TcpServer(7879);
-
-    mjLF server = mjLF_New( Routine, 10, sfd);
-    sleep(100);
+    
+    mjLF server = mjLF_New( Routine, 20, sfd);
+    sleep(1000);
     mjLF_Delete( server );
     return 0;
 }

@@ -187,7 +187,6 @@ mjTcpSrvT mjTcpSrvT_New( int sfd, int threadNum )
     srv->ExitSrv     = NULL;
     srv->private     = NULL;
     srv->FreePrivate = NULL;
-
     // init signal handler
     mjSig_Init();
     return srv;
