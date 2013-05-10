@@ -13,25 +13,42 @@ mjLF_Routine
 static void* mjLF_Routine( void* arg )
 {
     mjLF server = ( mjLF ) arg;
-
+    int cfd;
+    // leader run this
     while ( 1 ) {
-        int cfd = mjSock_Accept( server->sfd );
-        if ( cfd < 0 ) continue;
-        // invoke follows
-        int ret = mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
-        if ( !ret ) mjThread_RunOnce( mjLF_Routine, server );
-        
-        if ( server->Routine ) {
-            mjConnB conn = mjConnB_New( cfd );
-            server->Routine( conn );
-        } else {
-            close( cfd );
+        cfd = mjSock_Accept( server->sfd );
+        if ( cfd < 0 ) {
+            MJLOG_ERR("mjSock_Accept Error");
+            continue;
         }
         break;
     }
+    // choose a new leader
+    int ret = mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
+    if ( !ret ) mjThread_RunOnce( mjLF_Routine, server );
+    // change to worker
+    if ( !server->Routine ) {
+        close( cfd );
+        return NULL;
+    }
+    // create new conn 
+    mjConnB conn = mjConnB_New( cfd );
+    if ( !conn ) {
+        MJLOG_ERR("create mjConnB error");
+        close( cfd );
+        return NULL;
+    }
+    server->Routine( conn );
     return NULL; 
 }
 
+void mjLF_Run( mjLF server )
+{
+    if ( !server ) return;
+    while ( !server->shutdown ) {
+        sleep(5);
+    }
+}
 /*
 ==========================================================
 mjLF_New
@@ -45,17 +62,17 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int sfd )
         MJLOG_ERR( "server create errror" );
         return NULL;
     }
-
+    // init new pool
     server->tPool = mjThreadPool2_New( maxThread );
     if ( !server->tPool ) {
         MJLOG_ERR( "mjthreadpool create error" );
         free( server );
         return NULL;
     }
-
+    // set server socket and routine
     server->sfd     = sfd;
     server->Routine = Routine;
-    
+    // add new worker 
     bool ret = mjThreadPool2_AddWork( server->tPool, mjLF_Routine, server );
     if ( !ret ) {
         MJLOG_ERR( "mjthreadpool addwork" );
@@ -78,7 +95,8 @@ bool mjLF_Delete( mjLF server )
         MJLOG_ERR( "server is null" );
         return false;
     }
-
+    // delete thread pool
     mjThreadPool2_Delete( server->tPool );
+    free( server );
     return true;
 }

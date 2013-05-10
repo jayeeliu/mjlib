@@ -70,7 +70,7 @@ mjThreadPool2 mjThreadPool2_New( int maxThread )
     pthread_mutex_init( &tPool->freeListLock, NULL ); 
 	INIT_LIST_HEAD( &tPool->freeList ); 
 
-    for ( int i = 0; i < maxThread; i++ ) {
+    for ( int i = 0; i < tPool->maxThread; i++ ) {
         tPool->threads[i].tPool = tPool;
         INIT_LIST_HEAD( &tPool->threads[i].nodeList );
         list_add_tail ( &tPool->threads[i].nodeList, &tPool->freeList );

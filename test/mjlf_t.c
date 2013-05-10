@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <unistd.h>
 #include "mjlf.h"
 #include "mjsock.h"
@@ -18,11 +19,19 @@ void* Routine( void* arg )
 
 int main()
 {
-    Daemonize();
+//    Daemonize();
     int sfd = mjSock_TcpServer(7879);
+    if ( sfd < 0 ) {
+        printf( "mjSock_TcpServer error" );
+        return 1;
+    }
     
     mjLF server = mjLF_New( Routine, 20, sfd);
-    sleep(1000);
+    if ( !server ) {
+        printf( "mjLF_New error" );
+        return 1;
+    }
+    mjLF_Run( server );
     mjLF_Delete( server );
     return 0;
 }

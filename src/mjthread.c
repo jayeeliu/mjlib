@@ -28,24 +28,29 @@ ThreadRoutine:
 static void* DefaultRoutine( void* arg )
 {
     // arg can't be null
-    mjThread thread = ( mjThread ) arg;
+    mjThread    thread = ( mjThread ) arg;
+    mjProc      PreRoutine;
+    mjProc      PostRoutine;
+    mjProc      Routine;
+    void*       threadArg;
     
     while ( 1 ) {
         pthread_mutex_lock( &thread->threadLock );
         while ( !thread->Routine && !thread->shutDown ) {
             pthread_cond_wait( &thread->threadReady, &thread->threadLock );
         }
+        PreRoutine  = thread->PreRoutine;
+        PostRoutine = thread->PostRoutine;
+        Routine     = thread->Routine;
+        threadArg   = thread->arg;
+        thread->Routine = thread->arg = NULL;
         pthread_mutex_unlock( &thread->threadLock );
         // should shutdown, break
         if ( thread->shutDown ) break;
         // call routine
-        if ( thread->PreRoutine ) ( *thread->PreRoutine ) ( thread );
-        if ( thread->Routine ) ( *thread->Routine ) ( thread->arg );
-        if ( thread->PostRoutine ) ( *thread->PostRoutine ) ( thread );
-        // set thread to free 
-        pthread_mutex_lock( &thread->threadLock );
-        thread->Routine = thread->arg = NULL;
-        pthread_mutex_unlock( &thread->threadLock );
+        if ( PreRoutine ) ( *PreRoutine ) ( thread );
+        if ( Routine ) ( *Routine ) ( threadArg );
+        if ( PostRoutine ) ( *PostRoutine ) ( thread );
     }
     thread->closed = 1;
     pthread_exit( NULL );
@@ -145,6 +150,7 @@ mjThread_New
 */
 mjThread mjThread_New()
 {
+    // alloc mjThread struct
     mjThread thread = ( mjThread ) calloc( 1, sizeof( struct mjThread ) );
     if ( !thread ) {
         MJLOG_ERR( "mjthread create error" );
