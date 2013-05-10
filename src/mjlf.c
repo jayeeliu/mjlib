@@ -3,6 +3,7 @@
 #include "mjlog.h"
 #include "mjlf.h"
 #include "mjsock.h"
+#include "mjsig.h"
 
 /*
 ===============================================
@@ -46,9 +47,11 @@ void mjLF_Run( mjLF server )
 {
     if ( !server ) return;
     while ( !server->shutdown ) {
-        sleep(5);
+        sleep(3);
+        mjSig_ProcessQueue();
     }
 }
+
 /*
 ==========================================================
 mjLF_New
@@ -80,6 +83,8 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int sfd )
         free( server );
         return NULL;
     }
+    // init signal
+    mjSig_Init();
     return server;
 }
 

@@ -4,6 +4,7 @@
 #include "mjsock.h"
 #include "mjconnb.h"
 #include "mjcomm.h"
+#include "mjopt2.h"
 
 void* Routine( void* arg )
 {
@@ -20,13 +21,21 @@ void* Routine( void* arg )
 int main()
 {
 //    Daemonize();
-    int sfd = mjSock_TcpServer(7879);
+    int port;
+    int threadNum;
+
+    mjOpt2_Define( NULL, "port", MJOPT_INT, &port, "7879" );
+    mjOpt2_Define( NULL, "threadnum", MJOPT_INT, &threadNum, "20" );
+
+    mjOpt2_ParseConf( "test.conf" );
+
+    int sfd = mjSock_TcpServer(port);
     if ( sfd < 0 ) {
         printf( "mjSock_TcpServer error" );
         return 1;
     }
     
-    mjLF server = mjLF_New( Routine, 20, sfd);
+    mjLF server = mjLF_New( Routine, threadNum, sfd);
     if ( !server ) {
         printf( "mjLF_New error" );
         return 1;

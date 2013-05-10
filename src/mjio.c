@@ -36,7 +36,6 @@ int mjIO_ReadLine( mjIO io, mjStr data )
         }
         if ( !ret ) {
             ret = -2;
-            MJLOG_ERR( "file close" );
             break;
         }
         mjStr_CatB( io->buffer, buf, ret );

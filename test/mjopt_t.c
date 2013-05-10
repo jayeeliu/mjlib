@@ -29,8 +29,6 @@ int main(int argc, char* argv[])
 
     mjOpt_ParseConf( "test.ini" );
 
-    mjOpt_HelpString();
-
     printf("%d\n", s.value1);
     printf("%d\n", s.value2);
     printf("%d\n", s.value3);
