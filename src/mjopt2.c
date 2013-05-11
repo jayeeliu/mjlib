@@ -60,7 +60,7 @@ bool mjOpt2_Define( char* section, char* key, int type, void* value,
         return false;
     }
     // create mjOpt2 struct
-    mjOpt2 opt = ( mjOpt2 ) calloc( 1, sizeof( struct mjOpt2 ) );
+    mjOpt2 opt = ( mjOpt2 ) calloc ( 1, sizeof( struct mjOpt2 ) );
     if ( !opt ) {
         MJLOG_ERR( "mjOpt2 alloc error" );
         return false;

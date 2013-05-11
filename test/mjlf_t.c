@@ -26,7 +26,6 @@ int main()
 
     mjOpt2_Define( NULL, "port", MJOPT_INT, &port, "7879" );
     mjOpt2_Define( NULL, "threadnum", MJOPT_INT, &threadNum, "20" );
-
     mjOpt2_ParseConf( "test.conf" );
 
     int sfd = mjSock_TcpServer(port);
@@ -35,7 +34,7 @@ int main()
         return 1;
     }
     
-    mjLF server = mjLF_New( Routine, threadNum, sfd);
+    mjLF server = mjLF_New( Routine, threadNum, sfd );
     if ( !server ) {
         printf( "mjLF_New error" );
         return 1;

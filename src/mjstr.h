@@ -39,7 +39,6 @@ extern bool     mjStr_ToUpper( mjStr str );
 
 extern mjStr    mjStr_New();
 extern void     mjStr_Delete( mjStr x );
-
 // function for mjStrList
 extern bool         mjStrList_Add( mjStrList strList, mjStr str );
 extern bool         mjStrList_AddS( mjStrList strList, char* str );

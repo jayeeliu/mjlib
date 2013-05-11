@@ -100,6 +100,7 @@ int ProcessSpawn( int nProcs )
     exit(0);
     return 1;
 }
+
 /*
 ==============================================
 SavePid
@@ -143,6 +144,19 @@ void RemovePid( const char* pidFile )
 	if ( unlink( pidFile ) ) {
         MJLOG_ERR ( "unlike pid file %s error", pidFile );
 	}
+}
+
+/*
+====================================
+GetCPUNumer
+    get online cpu number
+    return: number of online cpus 
+====================================
+ */
+int GetCPUNumber()
+{
+    int cpu_num = sysconf(_SC_NPROCESSORS_ONLN);
+    return cpu_num;
 }
 
 /*

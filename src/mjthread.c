@@ -91,7 +91,6 @@ bool mjThread_AddWork( mjThread thread, mjProc Routine, void* arg )
         return false;
     }
     if ( !Routine ) return true;
-    
     // add worker to thread
     pthread_mutex_lock( &thread->threadLock );
     bool retval = false;
@@ -151,7 +150,7 @@ mjThread_New
 mjThread mjThread_New()
 {
     // alloc mjThread struct
-    mjThread thread = ( mjThread ) calloc( 1, sizeof( struct mjThread ) );
+    mjThread thread = ( mjThread ) calloc ( 1, sizeof( struct mjThread ) );
     if ( !thread ) {
         MJLOG_ERR( "mjthread create error" );
         return NULL;
