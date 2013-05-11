@@ -10,7 +10,6 @@ struct mjReg {
 typedef struct mjReg* mjReg;
 
 extern bool     mjReg_Search( mjReg reg, char* string, mjStrList result );
-
 extern mjReg    mjReg_New( const char* regex );
 extern void     mjReg_Delete( mjReg reg );
 

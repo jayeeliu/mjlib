@@ -81,6 +81,12 @@ failout1:
     return NULL;
 }
 
+/*
+==========================================
+mjIO_Delete
+    delete mjio struct
+==========================================
+*/
 bool mjIO_Delete( mjIO io )
 {
     if ( !io ) {

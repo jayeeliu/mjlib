@@ -5,22 +5,18 @@
 #include "mjconnb.h"
 #include "mjcomm.h"
 #include "mjopt2.h"
+#include "mjproto_txt.h"
 
 void* Routine( void* arg )
 {
     mjConnB conn = ( mjConnB ) arg;
-    mjStr data = mjStr_New();
-    mjConnB_ReadUntil( conn, "\r\n\r\n", data );
-    mjStr_Delete( data );
-    mjConnB_WriteS( conn, "OK HERE\r\n" );
+    mjTxt_RunCmd( NULL, conn ); 
     mjConnB_Delete( conn );
-
     return NULL;
 }
 
 int main()
 {
-//    Daemonize();
     int port;
     int threadNum;
 
@@ -28,7 +24,7 @@ int main()
     mjOpt2_Define( NULL, "threadnum", MJOPT_INT, &threadNum, "20" );
     mjOpt2_ParseConf( "test.conf" );
 
-    int sfd = mjSock_TcpServer(port);
+    int sfd = mjSock_TcpServer( port );
     if ( sfd < 0 ) {
         printf( "mjSock_TcpServer error" );
         return 1;
