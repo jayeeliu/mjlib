@@ -16,5 +16,5 @@ typedef struct PROTO_TXT_ROUTINE {
     mjProc      Routine;
 } PROTO_TXT_ROUTINE;
 
-extern bool mjTxt_RunCmd( PROTO_TXT_ROUTINE routineList[], mjConnB conn );
+extern bool mjTxt_RunCmd( PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn );
 #endif

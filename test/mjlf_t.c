@@ -7,10 +7,15 @@
 #include "mjopt2.h"
 #include "mjproto_txt.h"
 
+PROTO_TXT_ROUTINE routineList[] = {
+  {"get", NULL},
+  {"put", NULL},
+};
+
 void* Routine( void* arg )
 {
     mjConnB conn = ( mjConnB ) arg;
-    mjTxt_RunCmd( NULL, conn ); 
+    mjTxt_RunCmd( routineList, sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn ); 
     mjConnB_Delete( conn );
     return NULL;
 }
