@@ -9,21 +9,29 @@
 
 void* GetRoutine(void* arg)
 {
-  mjConnB conn = (mjConnB) arg;
-  mjConnB_WriteS(conn, "Get Called\r\n");
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  mjConnB_WriteS(cmdData->conn, "Get Called\r\n");
   return NULL; 
 } 
 
 void* PutRoutine(void* arg)
 {
-  mjConnB conn = (mjConnB) arg;
-  mjConnB_WriteS(conn, "Put Called\r\n");
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  mjConnB_WriteS(cmdData->conn, "Put Called\r\n");
+  return NULL;
+}
+
+void* StatRoutine(void* arg)
+{
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  mjConnB_WriteS(cmdData->conn, "OK Here\r\n");
   return NULL;
 }
 
 PROTO_TXT_ROUTINE routineList[] = {
   {"get", GetRoutine},
   {"put", PutRoutine},
+  {"stat", StatRoutine},
 };
 
 void* Routine( void* arg )

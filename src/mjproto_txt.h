@@ -5,10 +5,11 @@
 #include "mjstr.h"
 #include "mjconnb.h"
 
-struct PROTO_TXT_CMD {
-    mjStr   tag;
-    mjStr   cmd;
-    mjStr   arg;
+struct mjProtoTxtData {
+  mjStr   tag;
+  mjStr   cmd;
+  mjStr   arg;
+  mjConnB conn;
 };
 
 typedef struct PROTO_TXT_ROUTINE {
@@ -17,4 +18,5 @@ typedef struct PROTO_TXT_ROUTINE {
 } PROTO_TXT_ROUTINE;
 
 extern bool mjTxt_RunCmd( PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn );
+
 #endif
