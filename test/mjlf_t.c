@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> 
 #include <unistd.h>
 #include "mjlf.h"
 #include "mjsock.h"
@@ -7,9 +7,23 @@
 #include "mjopt2.h"
 #include "mjproto_txt.h"
 
+void* GetRoutine(void* arg)
+{
+  mjConnB conn = (mjConnB) arg;
+  mjConnB_WriteS(conn, "Get Called\r\n");
+  return NULL; 
+} 
+
+void* PutRoutine(void* arg)
+{
+  mjConnB conn = (mjConnB) arg;
+  mjConnB_WriteS(conn, "Put Called\r\n");
+  return NULL;
+}
+
 PROTO_TXT_ROUTINE routineList[] = {
-  {"get", NULL},
-  {"put", NULL},
+  {"get", GetRoutine},
+  {"put", PutRoutine},
 };
 
 void* Routine( void* arg )

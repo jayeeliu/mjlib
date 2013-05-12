@@ -27,7 +27,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn)
     return false;
   }
   mjStr_Split(data, " ", strList);
-  if (strList->length < 3) {
+  if (strList->length < 2) {
     mjConnB_WriteS(conn, "+command error\r\n");
     return false;
   }
@@ -38,7 +38,9 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn)
   // run routine
   for (int i = 0; i < length; i++) {
     if (!strcmp(routineList[i].cmd, cmd->data)) {
-      mjConnB_WriteS(conn, "+match command\r\n");
+      if (routineList[i].Routine) {
+        (*routineList[i].Routine)(conn);
+      }
       mjStrList_Delete(strList);
       mjStr_Delete(data);
       return true;
