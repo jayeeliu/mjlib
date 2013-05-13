@@ -66,7 +66,7 @@ static void* DefaultLoopRoutine( void* arg )
 {
     // arg can't be null
     mjThread thread = ( mjThread ) arg;
-
+    // run server loop
     while ( !thread->shutDown ) {
         ( *thread->Routine ) ( thread->arg );
     }
@@ -175,7 +175,7 @@ mjThread mjThread_NewLoop( mjProc Routine, void* arg )
         MJLOG_ERR( "Loop Rountine can't be null");
         return NULL;
     }
-
+    // create Thread struct
     mjThread thread = ( mjThread ) calloc( 1, sizeof( struct mjThread ) );
     if ( !thread ) {
         MJLOG_ERR( "mjthread create error" );
