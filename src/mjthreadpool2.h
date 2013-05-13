@@ -18,8 +18,8 @@ typedef struct mjThreadEntry2* mjThreadEntry2;
 // threadpool struct
 struct mjThreadPool2 {
     pthread_mutex_t         freeListLock;   // lock for threadList
-	struct list_head        freeList;       // task list 
-	int                     shutDown;       // shutdown this thread pool?
+    struct list_head        freeList;       // task list 
+    int                     shutDown;       // shutdown this thread pool?
     int                     maxThread;
     struct mjThreadEntry2   threads[0];
 };

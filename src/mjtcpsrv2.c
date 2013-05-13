@@ -106,13 +106,22 @@ bool mjServer_Run( mjServer srv ) {
     static int dispatchServer = 0;
     while ( !srv->stop ) {
         int cfd = mjSock_Accept( srv->sfd );
-        if ( cfd < 0 ) continue;
+        if ( cfd < 0 ) {
+            MJLOG_ERR( "mjSock_Accept Error continue" );
+            continue;
+        }
         dispatchServer = ( dispatchServer + 1 ) % srv->serverNum;
         write( srv->serverNotify[dispatchServer], &cfd, sizeof( int ) ); 
     }
     return true;
 }
 
+/*
+=========================================================
+mjServer_New
+    create new mjserver struct
+=========================================================
+*/
 mjServer mjServer_New( int sfd, mjProc Routine ) {
     // alloc server struct
     mjServer srv = ( mjServer ) calloc ( 1, 
