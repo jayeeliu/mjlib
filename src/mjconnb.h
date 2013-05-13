@@ -6,13 +6,13 @@
 
 struct mjConnB {
     int             fd;                 // fd to control
-    void*           server;             // server 
     mjStr           rbuf;               // read read buffer 
 
     int             readtype;           // read type
     const char*     delim;              // the delim when readtype is READUNTIL 
     int             rbytes;             // read data size when readtype is READBYTES 
 
+    void*           server;             // server 
     mjProc          FreePrivate;        // free private data callback 
     void*           private;            // private data
 };    
@@ -32,6 +32,6 @@ extern bool     mjConnB_SetTimeout( mjConnB conn, unsigned int readTimeout,
 
 extern mjConnB  mjConnB_Connect( const char* addr, int port, unsigned int timeout );
 extern mjConnB  mjConnB_New( int fd );
-extern void     mjConnB_Delete( mjConnB conn );
+extern bool     mjConnB_Delete( mjConnB conn );
 
 #endif

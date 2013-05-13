@@ -39,7 +39,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn)
   cmdData.conn = conn;
   // run routine
   for (int i = 0; i < length; i++) {
-    if (!strcmp(routineList[i].cmd, (cmdData.cmd)->data)) {
+    if (!strcasecmp(routineList[i].cmd, (cmdData.cmd)->data)) {
       if (routineList[i].Routine) {
         (*routineList[i].Routine)(&cmdData);
       }

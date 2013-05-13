@@ -39,8 +39,8 @@ static int mjConnB_ReadToBuf( mjConnB conn, mjStr data )
         // buffer has enough data, copy and return
         if ( conn->readtype == MJCONNB_READBYTES ) {
             if ( conn->rbytes <= conn->rbuf->length ) { 
-                mjStr_CopyB(data, conn->rbuf->data, conn->rbytes);
-                mjStr_Consume(conn->rbuf, conn->rbytes);
+                mjStr_CopyB( data, conn->rbuf->data, conn->rbytes );
+                mjStr_Consume( conn->rbuf, conn->rbytes );
                 return data->length;
             }
         } else if ( conn->readtype == MJCONNB_READUNTIL ) {
@@ -65,7 +65,7 @@ static int mjConnB_ReadToBuf( mjConnB conn, mjStr data )
                 MJLOG_ERR( "read timeout" );
                 ret = -2;
             }
-            break;              // other error, break
+            break;                  // other error, break
         }
         if ( ret == 0 )  break;     //read close, break, copy data to rbuf
         // read ok put data to rbuf, try again
@@ -74,10 +74,15 @@ static int mjConnB_ReadToBuf( mjConnB conn, mjStr data )
     // read error or read close, copy data
     mjStr_Copy( data, conn->rbuf );
     mjStr_Consume( conn->rbuf, conn->rbuf->length );
-
     return ret;
 }
 
+/*
+====================================================
+mjConnB_Read
+    read data normal
+====================================================
+*/
 int mjConnB_Read( mjConnB conn, mjStr data )
 {
     // sanity check
@@ -138,13 +143,26 @@ int mjConnB_Write( mjConnB conn, mjStr data )
     return mjConnB_WriteB( conn, data->data, data->length );
 }
 
-int mjConnB_WriteB( mjConnB conn, char* buf , int length )
-{
+/*
+============================================================
+mjConnB_WriteB
+    write data to conn
+    return: -1 --- write error
+            -2 --- write timeout
+            other --- write data
+============================================================
+*/
+int mjConnB_WriteB( mjConnB conn, char* buf , int length ) {
     if ( !conn || !buf || !length ) {
         MJLOG_ERR( "sanity check error");
         return -1;
     }
-    return write( conn->fd, buf, length );
+    int ret = write( conn->fd, buf, length );
+    if ( ret == -1 ) {
+        MJLOG_ERR( "mjConnB Write Error" );
+        if ( errno == EAGAIN || errno == EWOULDBLOCK ) ret = -2;
+    }
+    return ret;
 }
 
 int mjConnB_WriteS( mjConnB conn, char* buf )
@@ -162,8 +180,7 @@ mjConnB_SetServer
     set conn server 
 ============================================================
 */
-bool mjConnB_SetServer( mjConnB conn, void* server)
-{
+bool mjConnB_SetServer( mjConnB conn, void* server ) {
     if ( !conn ) {
         MJLOG_ERR( "conn is null" );
         return false;
@@ -181,8 +198,7 @@ mjConnB_SetTimeout
 =============================================================
 */
 bool mjConnB_SetTimeout( mjConnB conn, unsigned int readTimeout, 
-            unsigned int writeTimeout )
-{
+            unsigned int writeTimeout ) {
     if ( !conn ) {
         MJLOG_ERR( "conn is null" );
         return false;
@@ -210,7 +226,6 @@ bool mjConnB_SetTimeout( mjConnB conn, unsigned int readTimeout,
             return false;
         }
     }
-
     return true;
 }
 
@@ -220,8 +235,7 @@ mjConnB_SetPrivate
     set conn private data and FreePrivate fun
 =================================================
 */
-bool mjConnB_SetPrivate( mjConnB conn, void* private, mjProc FreePrivate )
-{
+bool mjConnB_SetPrivate( mjConnB conn, void* private, mjProc FreePrivate ) {
     if ( !conn ) {
         MJLOG_ERR( "conn is null" );
         return false;
@@ -242,8 +256,7 @@ mjConnB_New
     return NULL -- fail, other -- success
 =========================================================
 */
-mjConnB mjConnB_New( int fd )
-{
+mjConnB mjConnB_New( int fd ) {
     // sanity check
     if ( fd >= MAX_FD ) {
         MJLOG_ERR( "fd is too large" );
@@ -270,10 +283,11 @@ mjConnB mjConnB_New( int fd )
     conn->readtype      = MJCONNB_NONE;
     conn->delim         = NULL;
     conn->rbytes        = -1;
+    // init server
+    conn->server        = NULL;
     // init private
     conn->FreePrivate   = NULL;
     conn->private       = NULL;
-
     return conn;
 }
 
@@ -371,16 +385,16 @@ mjConnB_Delete
     no return
 ==============================================
 */
-void mjConnB_Delete( mjConnB conn )
-{
+bool mjConnB_Delete( mjConnB conn ) {
     // sanity check
     if ( !conn ) {
         MJLOG_ERR( "conn is null" );
-        return;
+        return false;
     }
     // free private data
     if ( conn->private && conn->FreePrivate ) {
         conn->FreePrivate( conn->private );
     }
     mjSock_Close( conn->fd );
+    return true;
 }

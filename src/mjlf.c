@@ -11,8 +11,7 @@ mjLF_Routine
     Routine Run
 ===============================================
 */
-static void* mjLF_Routine( void* arg )
-{
+static void* mjLF_Routine( void* arg ) {
     mjLF srv = ( mjLF ) arg;
     int cfd;
     // leader run this
@@ -45,22 +44,49 @@ static void* mjLF_Routine( void* arg )
         return NULL;
     }
     mjConnB_SetServer( conn, srv );
+    mjConnB_SetTimeout( conn, srv->readTimeout, srv->writeTimeout );
     srv->Routine( conn );
     return NULL; 
 }
 
-bool mjLF_SetStop( mjLF srv, int value )
-{
+/*
+==============================================
+mjLF_SetStop
+    set server stop
+==============================================
+*/
+bool mjLF_SetStop( mjLF srv, int value ) {
     if ( !srv ) {
-        MJLOG_ERR( "server is null" );
+        MJLOG_ERR( "srv is null" );
         return false;
     }
     srv->stop = ( value == 0 ) ? 0 : 1;
     return true;
 }
 
-void mjLF_Run( mjLF srv )
-{
+/*
+==================================================================
+mjLF_SetTimeout
+    set server timeout
+==================================================================
+*/
+bool mjLF_SetTimeout( mjLF srv, int readTimeout, int writeTimeout ) {
+    if ( !srv ) {
+        MJLOG_ERR( "srv is null" );
+        return false;
+    }
+    srv->readTimeout = readTimeout;
+    srv->writeTimeout = writeTimeout;
+    return true;
+}
+
+/*
+====================================
+mjLF_Run
+    run leader follow server
+====================================
+*/
+void mjLF_Run( mjLF srv ) {
     if ( !srv ) return;
     while ( !srv->stop ) {
         sleep(3);
@@ -74,8 +100,7 @@ mjLF_New
     create mjLF struct
 ==========================================================
 */
-mjLF mjLF_New( mjProc Routine, int maxThread, int sfd )
-{
+mjLF mjLF_New( mjProc Routine, int maxThread, int sfd ) {
     mjLF srv = ( mjLF ) calloc( 1, sizeof( struct mjLF ) );
     if ( !srv ) {
         MJLOG_ERR( "server create errror" );
@@ -111,8 +136,7 @@ mjLF_Delete
     Delete server
 ==========================================
 */
-bool mjLF_Delete( mjLF srv )
-{
+bool mjLF_Delete( mjLF srv ) {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
         return false;

@@ -62,6 +62,7 @@ int main()
         printf( "mjLF_New error" );
         return 1;
     }
+    mjLF_SetTimeout( server, 3000, 3000 );
     mjLF_Run( server );
     mjLF_Delete( server );
     return 0;
