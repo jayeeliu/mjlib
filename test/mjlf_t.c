@@ -1,4 +1,5 @@
 #include <stdio.h> 
+#include <string.h>
 #include <unistd.h>
 #include "mjlf.h"
 #include "mjsock.h"
@@ -7,40 +8,61 @@
 #include "mjopt2.h"
 #include "mjproto_txt.h"
 
+struct server_data {
+    char id[1024];
+};
+
 void* GetRoutine(void* arg)
 {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB_WriteS(cmdData->conn, "Get Called\r\n");
-  return NULL; 
+    struct mjProtoTxtData* cmdData = 
+                (struct mjProtoTxtData*) arg;
+    mjConnB_WriteS(cmdData->conn, "Get Called\r\n");
+    return NULL; 
 } 
 
 void* PutRoutine(void* arg)
 {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB_WriteS(cmdData->conn, "Put Called\r\n");
-  return NULL;
+    struct mjProtoTxtData* cmdData = 
+                (struct mjProtoTxtData*) arg;
+    mjConnB_WriteS(cmdData->conn, "Put Called\r\n");
+    return NULL;
 }
 
 void* StatRoutine(void* arg)
 {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB_WriteS(cmdData->conn, "OK Here\r\n");
-  return NULL;
+    struct mjProtoTxtData* cmdData = 
+                (struct mjProtoTxtData*) arg;
+    mjConnB_WriteS(cmdData->conn, "OK Here\r\n");
+    return NULL;
+}
+
+void* TestRoutine(void* arg)
+{
+    struct mjProtoTxtData* cmdData = 
+                (struct mjProtoTxtData*) arg;
+    mjConnB conn = cmdData->conn;
+    mjLF    srv  = conn->server;
+    struct server_data* s_data = srv->private;
+    mjConnB_WriteS( cmdData->conn, s_data->id );
+    return NULL;
 }
 
 PROTO_TXT_ROUTINE routineList[] = {
-  {"get", GetRoutine},
-  {"put", PutRoutine},
-  {"stat", StatRoutine},
+    {"get", GetRoutine},
+    {"put", PutRoutine},
+    {"test", TestRoutine},
+    {"stat", StatRoutine},
 };
 
 void* Routine( void* arg )
 {
     mjConnB conn = ( mjConnB ) arg;
-    mjTxt_RunCmd( routineList, sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn ); 
+    mjTxt_RunCmd( routineList, 
+        sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn );
     mjConnB_Delete( conn );
     return NULL;
 }
+
 
 int main()
 {
@@ -56,6 +78,9 @@ int main()
         printf( "mjSock_TcpServer error" );
         return 1;
     }
+
+    struct server_data s_data;
+    strcpy( s_data.id, "1013\r\n" );
     
     mjLF server = mjLF_New( Routine, threadNum, sfd );
     if ( !server ) {
@@ -63,6 +88,7 @@ int main()
         return 1;
     }
     mjLF_SetTimeout( server, 3000, 3000 );
+    mjLF_SetPrivate( server, &s_data, NULL );
     mjLF_Run( server );
     mjLF_Delete( server );
     return 0;

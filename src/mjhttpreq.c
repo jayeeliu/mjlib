@@ -21,7 +21,7 @@ mjHttpReq mjHttpReq_New( mjStr data )
         return NULL;
     }
     // create mjHttpReq struct
-    mjHttpReq request = ( mjHttpReq ) calloc( 1, sizeof( struct mjHttpReq ) );
+    mjHttpReq request = ( mjHttpReq ) calloc ( 1, sizeof( struct mjHttpReq ) );
     if ( !request ) {
         MJLOG_ERR( "mjHttpReq alloc error" );
         return NULL;

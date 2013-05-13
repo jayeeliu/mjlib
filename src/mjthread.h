@@ -18,8 +18,9 @@ struct mjThread {
 
     mjProc          PreRoutine;
     mjProc          PostRoutine;
-    mjProc          FreePrivate;
+    
     void*           private;        // holding private data, point to threadpool when in threadpool
+    mjProc          FreePrivate;
 
     int             type;
     int             closed;         // 1 when thread exit, otherwise 0

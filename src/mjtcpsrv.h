@@ -5,16 +5,16 @@
 #include "mjev.h"
 
 struct mjTcpSrv {
-    int             sfd;
-    int             stop;
-    mjev            ev;    
-    mjProc          Handler;                // Handler when accept a connect
+    int     sfd;
+    int     stop;
+    mjev    ev;    
+    mjProc  Handler;                // Handler when accept a connect
 
-    mjProc          InitSrv;                // init Server proc
-    mjProc          ExitSrv;                // exit Server proc
+    mjProc  InitSrv;                // init Server proc
+    mjProc  ExitSrv;                // exit Server proc
 
-    void*           private;                // user server data, mostly user server struct
-    mjProc          FreePrivate;            // proc used to free private data  
+    void*   private;                // user server data, mostly user server struct
+    mjProc  FreePrivate;            // proc used to free private data  
 };
 typedef struct mjTcpSrv* mjTcpSrv;
 

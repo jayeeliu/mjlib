@@ -10,12 +10,16 @@ struct mjLF {
     mjThreadPool2   tPool; 
     mjProc          Routine;
 
-    int             readTimeout;
+    int             readTimeout;        // read write timeout
     int             writeTimeout;
+
+    void*           private;            // private data
+    mjProc          FreePrivate;
 };
 typedef struct mjLF* mjLF;
 
 extern void mjLF_Run( mjLF srv );
+extern bool mjLF_SetPrivate( mjLF srv, void* private, mjProc FreePrivate );
 extern bool mjLF_SetStop( mjLF srv, int value );
 extern bool mjLF_SetTimeout( mjLF srv, int readTimeout, int writeTimeout );
 

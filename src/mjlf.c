@@ -50,6 +50,22 @@ static void* mjLF_Routine( void* arg ) {
 }
 
 /*
+=======================================================================
+mjLF_SetPrivate
+    set server private data
+=======================================================================
+*/
+bool mjLF_SetPrivate( mjLF srv, void* private, mjProc FreePrivate ) {
+    if ( !srv ) {
+        MJLOG_ERR( "srv is null" );
+        return false;
+    }
+    srv->private        = private;
+    srv->FreePrivate    = FreePrivate;
+    return true;
+}
+
+/*
 ==============================================
 mjLF_SetStop
     set server stop
@@ -140,6 +156,9 @@ bool mjLF_Delete( mjLF srv ) {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
         return false;
+    }
+    if ( srv->private && srv->FreePrivate ) {
+        srv->FreePrivate( srv->private );
     }
     // delete thread pool
     mjThreadPool2_Delete( srv->tPool );
