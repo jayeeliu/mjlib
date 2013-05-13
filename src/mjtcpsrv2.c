@@ -98,6 +98,10 @@ bool mjServer_Run( mjServer srv ) {
         MJLOG_ERR( "server is null" );
         return false;
     }
+    cpu_set_t cpuset;
+    CPU_ZERO( &cpuset );
+    CPU_SET( 0, &cpuset );
+    pthread_setaffinity_np( pthread_self(), sizeof( cpu_set_t ), &cpuset );
     // accept and dispatch
     static int dispatchServer = 0;
     while ( !srv->stop ) {
@@ -150,6 +154,7 @@ mjServer mjServer_New( int sfd, mjProc Routine ) {
             return NULL;
         }
         cpu_set_t cpuset;
+        CPU_ZERO( &cpuset );
         CPU_SET( i, &cpuset );
         pthread_setaffinity_np( srv->thread[i]->threadID, sizeof( cpu_set_t ), &cpuset );
     }
