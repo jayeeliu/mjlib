@@ -5,7 +5,7 @@
 #include "mjev.h"
 #include "mjthread.h"
 
-struct mjConn {
+struct mjConn2 {
     int     fd;                             // fd 
     void*   server;                         // tcpserver for server side conn 
     mjev    ev;
@@ -44,29 +44,29 @@ struct mjConn {
     mjProc  FreePrivte;                     // free private callback 
     void*   private;                        //  user conn private data 
 };
-typedef struct mjConn* mjConn;
+typedef struct mjConn2* mjConn2;
 
 // read func
-extern bool mjConn_ReadBytes( mjConn conn, int len, mjProc CallBack );
-extern bool mjConn_ReadUntil( mjConn conn, char* delim, mjProc CallBack );
-extern bool mjConn_Read( mjConn conn, mjProc CallBack );
+extern bool mjConn2_ReadBytes( mjConn2 conn, int len, mjProc CallBack );
+extern bool mjConn2_ReadUntil( mjConn2 conn, char* delim, mjProc CallBack );
+extern bool mjConn2_Read( mjConn2 conn, mjProc CallBack );
 // write func
-extern bool mjConn_WriteS( mjConn conn, char* buf, mjProc CallBack );
-extern bool mjConn_Write( mjConn conn, mjStr buf, mjProc CallBack );
-extern bool mjConn_BufWriteS( mjConn conn, char* buf );
-extern bool mjConn_BufWrite( mjConn conn, mjStr buf );
-extern bool mjConn_Flush( mjConn conn, mjProc CallBack );
+extern bool mjConn2_WriteS( mjConn2 conn, char* buf, mjProc CallBack );
+extern bool mjConn2_Write( mjConn2 conn, mjStr buf, mjProc CallBack );
+extern bool mjConn2_BufWriteS( mjConn2 conn, char* buf );
+extern bool mjConn2_BufWrite( mjConn2 conn, mjStr buf );
+extern bool mjConn2_Flush( mjConn2 conn, mjProc CallBack );
 // thread func
-extern bool mjConn_RunAsync( mjConn conn, mjProc Routine, mjProc CallBack );
+extern bool mjConn2_RunAsync( mjConn2 conn, mjProc Routine, mjProc CallBack );
 // conn func
-extern bool mjConn_Connect( mjConn conn, const char* ipaddr, int port, mjProc CallBack );
+extern bool mjConn2_Connect( mjConn2 conn, const char* ipaddr, int port, mjProc CallBack );
 
-extern bool mjConn_SetConnectTimeout( mjConn conn, unsigned int connectTimeout );
-extern bool mjConn_SetTimeout( mjConn conn, unsigned int readTimeout, unsigned int writeTimeout );
-extern bool mjConn_SetPrivate( mjConn conn, void* private, mjProc FreePrivte );
-extern bool mjConn_SetServer( mjConn conn, void* server );
+extern bool mjConn2_SetConnectTimeout( mjConn2 conn, unsigned int connectTimeout );
+extern bool mjConn2_SetTimeout( mjConn2 conn, unsigned int readTimeout, unsigned int writeTimeout );
+extern bool mjConn2_SetPrivate( mjConn2 conn, void* private, mjProc FreePrivte );
+extern bool mjConn2_SetServer( mjConn2 conn, void* server );
 
-extern mjConn   mjConn_New( mjev ev, int fd );
-extern void     mjConn_Delete( mjConn conn );
+extern mjConn2  mjConn2_New( mjev ev, int fd );
+extern bool     mjConn2_Delete( mjConn2 conn );
 
 #endif

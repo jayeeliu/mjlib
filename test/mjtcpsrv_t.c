@@ -38,6 +38,10 @@ void* on_write2(void *data)
 void* on_write1(void *data)
 {
     mjConn conn = (mjConn)data;
+    long long sum=1;
+    for(int i=1; i<100000; i++) {
+        sum *= i;
+    }
     mjConn_WriteS(conn, "OK, TCPSERVER READY!!!\n", on_close);
     return NULL;
 }
