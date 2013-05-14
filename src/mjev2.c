@@ -156,6 +156,45 @@ bool mjEV2_DelTimer( mjEV2 ev, mjtevent2 *te ) {
 }
 
 /*
+===========================================================
+mjEV2_Pending
+    add pending proc to ev
+===========================================================
+*/
+bool mjEV2_Pending( mjEV2 ev, mjProc Proc, void* data ) {
+    if ( !ev || !Proc ) {
+        MJLOG_ERR( "ev or Proc is null" );
+        return false;
+    }
+    if ( ev->pendingNum < PENDING_LIST_LEN ) {
+        ev->pendingList[ev->pendingNum].Proc = Proc;
+        ev->pendingList[ev->pendingNum].data = data;
+        ev->pendingList[ev->pendingNum].next = NULL;
+        ev->pendingNum++;
+    } else {
+        // alloc and set new pending
+        mjpending2* newPending = ( mjpending2* ) calloc 
+                ( 1, sizeof( mjpending2 ) );
+        if ( !newPending ) {
+            MJLOG_ERR( "pending struct alloc error" );
+            return false;
+        }
+        newPending->Proc = Proc;
+        newPending->data = data;
+        newPending->next = NULL;
+        if ( ev->pendingTail == NULL ) {
+            // the first extra pending
+            ev->pendingList[PENDING_LIST_LEN-1].next = newPending;
+        } else {
+            // not the first extra pending
+            ev->pendingTail->next = newPending;
+        }
+        ev->pendingTail = newPending;
+    }
+    return true;
+}
+
+/*
 ==================================================
 GetFirstTimer
     get first timer from timer queue
@@ -203,6 +242,8 @@ void mjEV2_Run( mjEV2 ev ) {
         // adjust wait time, 0 return immediate
         timeWait = ( first <= currTime ) ? 0 : first - currTime;
     }
+    // have pending proc run, no wait
+    if ( ev->pendingNum ) timeWait = 0;
     // wait for event
     struct epoll_event epEvents[MJEV_MAXFD];
     int numevents = epoll_wait( ev->epfd, epEvents, MJEV_MAXFD, timeWait );
@@ -219,7 +260,7 @@ void mjEV2_Run( mjEV2 ev ) {
         if ( te && te->valid && te->TimerProc ) te->TimerProc( te->data );   // call timer proc
         free( te );                                     // free timer event, alloc in addtimer
     }
-    if ( !numevents ) return;  // no events, break
+    if ( !numevents && !ev->pendingNum ) return;  // no events, break
     // get events from list
 	for ( int i = 0; i < numevents; i++ ) {
         // get file event fd, and mjfevent struct
@@ -245,16 +286,24 @@ void mjEV2_Run( mjEV2 ev ) {
 			}
 		}
 	}
+    if ( !ev->pendingNum ) return;
+    // copy pending data
+    int pendingNum = ev->pendingNum;
+    mjpending2 pendingList[PENDING_LIST_LEN];
+    memcpy( pendingList, ev->pendingList, sizeof( pendingList ) );
+    // set pending proc to zero
+    ev->pendingNum  = 0;
+    ev->pendingTail = NULL;
     // run pending proc
-    for ( int i = 0; i < ev->pendingNum; i++ ) {
+    for ( int i = 0; i < pendingNum; i++ ) {
         // call pending proc
-        if ( ev->pendingList[i].Proc ) {
-            ( ev->pendingList[i].Proc ) ( ev->pendingList[i].data );
+        if ( pendingList[i].Proc ) {
+            ( pendingList[i].Proc ) ( pendingList[i].data );
         }
     }
     // run other proc
-    if ( ev->pendingNum >= PENDING_LIST_LEN ) {
-        mjpending2* toRun = ev->pendingList[PENDING_LIST_LEN-1].next;
+    if ( pendingNum > PENDING_LIST_LEN ) {
+        mjpending2* toRun = pendingList[PENDING_LIST_LEN-1].next;
         mjpending2* Next;
         while ( toRun ) {
             Next = toRun->next;
@@ -263,8 +312,6 @@ void mjEV2_Run( mjEV2 ev ) {
             toRun = Next;
         }
     }
-    // set pending proc to zero
-    ev->pendingNum = 0;
 }
 
 /*
@@ -307,7 +354,7 @@ mjEV2_ReleasePending
 ======================================================
 */
 static void mjEV2_ReleasePending( mjEV2 ev ) {
-    if ( ev->pendingNum < PENDING_LIST_LEN ) return;
+    if ( ev->pendingNum <= PENDING_LIST_LEN ) return;
     // release pending struct 
     mjpending2* toRelease = ev->pendingList[PENDING_LIST_LEN-1].next;
     mjpending2* Next;

@@ -30,7 +30,7 @@ typedef struct mjtevent2 {
 typedef struct mjpending2 {
     mjProc              Proc;
     void*               data;
-    struct mjpending2*   next;
+    struct mjpending2*  next;
 } mjpending2;
 
 #define MJEV_MAXFD          60000
@@ -42,6 +42,7 @@ struct mjEV2 {
     mjfevent2   fileEventList[MJEV_MAXFD];
     mjPQ        timerEventQueue;
     int         pendingNum;
+    mjpending2* pendingTail;
     mjpending2  pendingList[PENDING_LIST_LEN];
 };
 typedef struct mjEV2* mjEV2;
