@@ -161,7 +161,7 @@ mjEV2_Pending
     add pending proc to ev
 ===========================================================
 */
-bool mjEV2_Pending( mjEV2 ev, mjProc Proc, void* data ) {
+bool mjEV2_AddPending( mjEV2 ev, mjProc Proc, void* data ) {
     if ( !ev || !Proc ) {
         MJLOG_ERR( "ev or Proc is null" );
         return false;
@@ -192,6 +192,27 @@ bool mjEV2_Pending( mjEV2 ev, mjProc Proc, void* data ) {
         ev->pendingTail = newPending;
     }
     return true;
+}
+
+/*
+=================================================
+mjEV2_DelPending
+    del pending proc according to data.
+    it is useful. when error happends
+    data is freed, before pending proc 
+    called.
+=================================================
+*/
+bool mjEV2_DelPending( mjEV2 ev, void* data ) {
+    if ( !ev->pendingNum ) return true;
+    for ( int i = 0; i < ev->pendingNum; i++ ) {
+        if ( ev->pendingList[i].data == data ) {
+            ev->pendingList[i].Proc = NULL;
+            ev->pendingList[i].data = NULL;
+        }
+    }
+    // TODO: extra list
+    // TODO: pending check. when in pending proc
 }
 
 /*

@@ -41,6 +41,7 @@ struct mjEV2 {
     int         epfd;       // epoll fd
     mjfevent2   fileEventList[MJEV_MAXFD];
     mjPQ        timerEventQueue;
+    // TODO: add active and process pending
     int         pendingNum;
     mjpending2* pendingTail;
     mjpending2  pendingList[PENDING_LIST_LEN];

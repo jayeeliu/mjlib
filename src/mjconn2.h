@@ -2,20 +2,20 @@
 #define _MJCONN_H
 
 #include "mjstr.h"
-#include "mjev.h"
+#include "mjev2.h"
 #include "mjthread.h"
 
 struct mjConn2 {
     int     fd;                             // fd 
     void*   server;                         // tcpserver for server side conn 
-    mjev    ev;
+    mjEV2   ev;
 
     unsigned int    connectTimeout;         // connect timeout 
     unsigned int    readTimeout;            // read timeout 
     unsigned int    writeTimeout;           // write timeout
-    mjtevent*       connectTimeoutEvent;    // connect timeout event
-    mjtevent*       readTimeoutEvent;       // read timeout event 
-    mjtevent*       writeTimeoutEvent;      // write timeout event 
+    mjtevent2*      connectTimeoutEvent;    // connect timeout event
+    mjtevent2*      readTimeoutEvent;       // read timeout event 
+    mjtevent2*      writeTimeoutEvent;      // write timeout event 
 
     mjStr rbuf;                             // read buffer 
     mjStr wbuf;                             // write buffer
@@ -66,7 +66,7 @@ extern bool mjConn2_SetTimeout( mjConn2 conn, unsigned int readTimeout, unsigned
 extern bool mjConn2_SetPrivate( mjConn2 conn, void* private, mjProc FreePrivte );
 extern bool mjConn2_SetServer( mjConn2 conn, void* server );
 
-extern mjConn2  mjConn2_New( mjev ev, int fd );
+extern mjConn2  mjConn2_New( mjEV2 ev, int fd );
 extern bool     mjConn2_Delete( mjConn2 conn );
 
 #endif
