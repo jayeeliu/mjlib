@@ -1,48 +1,59 @@
-#ifndef _MJEV_H
-#define _MJEV_H
+#ifndef _MJEV2_H
+#define _MJEV2_H
 
 #include <stdbool.h>
 #include <sys/epoll.h>
 #include "mjproc.h"
 #include "mjpq.h"
 
-#define MJEV_MAXFD      60000
-
 #define MJEV_NONE       0
 #define MJEV_READABLE   1
 #define MJEV_WRITEABLE  2
 
 // file event struct
-typedef struct mjfevent {
+typedef struct mjfevent2 {
     int     mask;
     mjProc  ReadCallBack;
     mjProc  WriteCallBack;
     void*   data;
-} mjfevent;
+} mjfevent2;
 
 // timer event struct
-typedef struct mjtevent {
+typedef struct mjtevent2 {
     int         valid;
     long long   time;
     mjProc      TimerProc;
     void*       data;
-} mjtevent;
+} mjtevent2;
+
+// pending proc to be run
+typedef struct mjpending2 {
+    mjProc              Proc;
+    void*               data;
+    struct mjpending2*   next;
+} mjpending2;
+
+#define MJEV_MAXFD          60000
+#define PENDING_LIST_LEN    1024
 
 // mjev struct
-struct mjev {
-    int         epfd;   // epoll fd
-    mjfevent    fileEventList[MJEV_MAXFD];
+struct mjEV2 {
+    int         epfd;       // epoll fd
+    mjfevent2   fileEventList[MJEV_MAXFD];
     mjPQ        timerEventQueue;
+    int         pendingNum;
+    mjpending2  pendingList[PENDING_LIST_LEN];
 };
-typedef struct mjev* mjev;
+typedef struct mjEV2* mjEV2;
 
-extern bool         mjEV_Add( mjev ev, int fd, int mask, mjProc proc, void* data );
-extern bool         mjEV_Del( mjev ev, int fd, int mask );
-extern mjtevent*    mjEV_AddTimer( mjev ev, long long ms, mjProc proc, void* data );
-extern bool         mjEV_DelTimer( mjev ev, mjtevent *te );
-extern void         mjEV_Run( mjev ev );
+extern bool         mjEV2_Add( mjEV2 ev, int fd, int mask, mjProc Proc, void* data );
+extern bool         mjEV2_Del( mjEV2 ev, int fd, int mask );
+extern mjtevent2*   mjEV2_AddTimer( mjEV2 ev, long long ms, mjProc Proc, void* data );
+extern bool         mjEV2_DelTimer( mjEV2 ev, mjtevent2 *te );
+extern bool         mjEV2_Pending( mjEV2 ev, mjProc Proc, void* data );
+extern void         mjEV2_Run( mjEV2 ev );
 
-extern mjev         mjEV_New();
-extern void         mjEV_Delete( mjev ev );
+extern mjEV2        mjEV2_New();
+extern bool         mjEV2_Delete( mjEV2 ev );
 
 #endif

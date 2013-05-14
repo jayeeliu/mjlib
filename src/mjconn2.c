@@ -748,7 +748,7 @@ mjConn2 mjConn2_New( mjev ev, int fd ) {
     // create buffer
     conn->rbuf = mjConn2_SetBuffer( rbak );
     conn->wbuf = mjConn2_SetBuffer( wbak );
-    conn->data = mjConn2_SetBuffer( data );
+    conn->data = mjConn2_SetBuffer( dbak );
     if ( !conn->rbuf || !conn->wbuf || !conn->data ) {
         MJLOG_ERR( "mjStr create error" );
         mjSock_Close( fd );

@@ -3,24 +3,23 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
-#include "mjev.h"
+#include "mjev2.h"
 #include "mjcomm.h"
 #include "mjlog.h"
 
 /*
 ================================================================
-mjEV_Add 
+mjEV2_Add 
     Add FileEvent to Loop, fd--socket handler
     mask -- MJEV_READABLE(for read) or MJEV_WRITEABLE(for write)
     proc -- event handle function, data -- args for proc
     output -1-- add event failed,  0--add event success
 ===============================================================
 */
-bool mjEV_Add( mjev ev, int fd, int mask, mjProc proc, void *data )
-{
+bool mjEV2_Add( mjEV2 ev, int fd, int mask, mjProc Proc, void *data ) {
     // sanity check
-    if ( !ev || !proc ) {
-        MJLOG_ERR( "mjev or proc is null" );
+    if ( !ev || !Proc ) {
+        MJLOG_ERR( "mjev or Proc is null" );
         return false;
     }
     // fd must not large than MJEV_MAXFD
@@ -28,17 +27,17 @@ bool mjEV_Add( mjev ev, int fd, int mask, mjProc proc, void *data )
         MJLOG_ERR( "fd is invalid: %d", fd );
         return false;
     }
-    if ( (mask & MJEV_READABLE) == 0 &&
-        (mask & MJEV_WRITEABLE) == 0 ) {
+    // mask check
+    if ( ( mask & MJEV_READABLE ) == 0 &&
+        ( mask & MJEV_WRITEABLE ) == 0 ) {
         MJLOG_ERR( "only support READ and WRITE: %d", mask );
         return false; 
     }
-
     // get mjfevent correspond to fd
-    mjfevent* fdev = &( ev->fileEventList[fd] );     
+    mjfevent2* fdev = &( ev->fileEventList[fd] );     
     int newmask = fdev->mask | mask;            // get new mask 
-
-    if ( fdev->mask != newmask ) {              // we should change epoll
+    // we should change epoll
+    if ( fdev->mask != newmask ) {
         // set epoll event
         struct epoll_event ee;
         ee.data.u64 = 0;
@@ -55,22 +54,20 @@ bool mjEV_Add( mjev ev, int fd, int mask, mjProc proc, void *data )
         // set newmask
         fdev->mask = newmask;
     }
-    // we must change proc and proc data
-    if ( mask & MJEV_READABLE ) fdev->ReadCallBack = proc;
-    if ( mask & MJEV_WRITEABLE ) fdev->WriteCallBack = proc;
+    // we must change Proc and Proc data
+    if ( mask & MJEV_READABLE ) fdev->ReadCallBack = Proc;
+    if ( mask & MJEV_WRITEABLE ) fdev->WriteCallBack = Proc;
     fdev->data = data;
-
     return true;
 }
 
 /*
 ================================================
-mjEV_Del
+mjEV2_Del
     delete event from mjev
 ================================================
 */
-bool mjEV_Del( mjev ev, int fd, int mask )
-{
+bool mjEV2_Del( mjEV2 ev, int fd, int mask ) {
     // sanity check
     if ( !ev ) {
         MJLOG_ERR( "ev is null" );
@@ -87,10 +84,10 @@ bool mjEV_Del( mjev ev, int fd, int mask )
         return false; 
     }
     // set mjev status
-    mjfevent *fdev = &ev->fileEventList[fd];
+    mjfevent2 *fdev = &ev->fileEventList[fd];
     int newmask = fdev->mask & (~mask);         // get newmask
-
-    if ( fdev->mask != newmask ) {              // we should change epoll
+    // we should change epoll
+    if ( fdev->mask != newmask ) { 
         // set epoll event
         struct epoll_event ee;
         ee.data.u64 = 0;
@@ -98,7 +95,6 @@ bool mjEV_Del( mjev ev, int fd, int mask )
         ee.events   = 0;
         if ( newmask & MJEV_READABLE ) ee.events |= EPOLLIN;
         if ( newmask & MJEV_WRITEABLE ) ee.events |= EPOLLOUT;
-
         // modify or delete event
         int op = ( newmask == MJEV_NONE ) ? EPOLL_CTL_DEL : EPOLL_CTL_MOD;
         if ( epoll_ctl( ev->epfd, op, fd, &ee ) == -1 ) {
@@ -108,24 +104,23 @@ bool mjEV_Del( mjev ev, int fd, int mask )
         // set newmask
         fdev->mask = newmask;
     }
-
     return true;
 }
 
 /*
 ========================================================================
-mjEV_AddTimer
+mjEV2_AddTimer
     add timer event to mjev
 ========================================================================
 */
-mjtevent* mjEV_AddTimer( mjev ev, long long ms, mjProc proc, void* data )
-{
-    if ( !ev || !proc ) {
-        MJLOG_ERR( "ev or proc is null" );
+mjtevent2* mjEV2_AddTimer( mjEV2 ev, long long ms, 
+        mjProc Proc, void* data ) {
+    if ( !ev || !Proc ) {
+        MJLOG_ERR( "ev or Proc is null" );
         return NULL;
     }
     // create mjTimerEvent struct
-    mjtevent* te = ( mjtevent* ) calloc( 1, sizeof( mjtevent ) );
+    mjtevent2* te = ( mjtevent2* ) calloc( 1, sizeof( mjtevent2 ) );
     if ( !te ) {
         MJLOG_ERR( "mjtevent alloc error" );
         return NULL; 
@@ -133,7 +128,7 @@ mjtevent* mjEV_AddTimer( mjev ev, long long ms, mjProc proc, void* data )
     // init timerevent struct
     te->valid       = 1;                 
     te->time        = ms + GetCurrentTime();
-    te->TimerProc   = proc;
+    te->TimerProc   = Proc;
     te->data        = data;
     // insert into queue
     int ret = mjPQ_Insert( ev->timerEventQueue, te->time, te );
@@ -147,12 +142,11 @@ mjtevent* mjEV_AddTimer( mjev ev, long long ms, mjProc proc, void* data )
 
 /*
 ===============================================
-mjEV_DelTimer
+mjEV2_DelTimer
     invalid mjtevent
 ===============================================
 */
-bool mjEV_DelTimer( mjev ev, mjtevent *te )
-{
+bool mjEV2_DelTimer( mjEV2 ev, mjtevent2 *te ) {
     if ( !ev || !te ) {
         MJLOG_ERR( "ev or te is null" );
         return false;
@@ -167,8 +161,7 @@ GetFirstTimer
     get first timer from timer queue
 ==================================================
 */
-static long long GetFirstTimer( mjev ev )
-{
+static long long GetFirstTimer( mjEV2 ev ) {
     return mjPQ_GetMinKey( ev->timerEventQueue );
 }
 
@@ -178,9 +171,8 @@ GetFirstTimerEvent
     get first time event from queue
 ==================================================
 */
-static mjtevent* GetFirstTimerEvent( mjev ev )
-{
-    mjtevent* te = mjPQ_GetMinValue( ev->timerEventQueue );
+static mjtevent2* GetFirstTimerEvent( mjEV2 ev ) {
+    mjtevent2* te = mjPQ_GetMinValue( ev->timerEventQueue );
     if ( !te ) return NULL;
     // delete timer event from queue
     mjPQ_DelMin( ev->timerEventQueue );
@@ -189,12 +181,11 @@ static mjtevent* GetFirstTimerEvent( mjev ev )
 
 /*
 ===================================
-mjEV_Run
+mjEV2_Run
     run event loop
 ===================================
 */
-void mjEV_Run( mjev ev ) 
-{
+void mjEV2_Run( mjEV2 ev ) {
     // sanity check
     if ( !ev ) {
         MJLOG_ERR( "mjev is null" );
@@ -212,7 +203,6 @@ void mjEV_Run( mjev ev )
         // adjust wait time, 0 return immediate
         timeWait = ( first <= currTime ) ? 0 : first - currTime;
     }
-
     // wait for event
     struct epoll_event epEvents[MJEV_MAXFD];
     int numevents = epoll_wait( ev->epfd, epEvents, MJEV_MAXFD, timeWait );
@@ -221,24 +211,21 @@ void mjEV_Run( mjev ev )
         MJLOG_ERR( "epoll_wait error. errno: %d, msg: %s", errno, strerror( errno ) );
         return; // some error
     }
-
     // get timer event, run it
     first = GetFirstTimer( ev );                       
     currTime = GetCurrentTime();        
-    if ( first != -1 && first <= currTime ) {       // run timer event
-        mjtevent *te = GetFirstTimerEvent( ev );    // get timer event from queue
+    if ( first != -1 && first <= currTime ) {           // run timer event
+        mjtevent2 *te = GetFirstTimerEvent( ev );       // get timer event from queue
         if ( te && te->valid && te->TimerProc ) te->TimerProc( te->data );   // call timer proc
-        free( te );                                 // free timer event, alloc in addtimer
+        free( te );                                     // free timer event, alloc in addtimer
     }
-
     if ( !numevents ) return;  // no events, break
-    
     // get events from list
-	for (int i = 0; i < numevents; i++) {
+	for ( int i = 0; i < numevents; i++ ) {
         // get file event fd, and mjfevent struct
-	    struct epoll_event *e = &epEvents[i];
+	    struct epoll_event* e = &epEvents[i];
 	    int fd = e->data.fd;
-	    mjfevent *fdev = &ev->fileEventList[fd];
+	    mjfevent2* fdev = &ev->fileEventList[fd];
         // check file op mask
 	    int mask = 0;
 	    if ( e->events & EPOLLIN ) mask |= MJEV_READABLE;
@@ -252,27 +239,47 @@ void mjEV_Run( mjev ev )
 	        rFired = 1;
 		    fdev->ReadCallBack( fdev->data );
 	    }
-
 	    if ( fdev->mask & mask & MJEV_WRITEABLE ) {
 		    if ( !rFired || fdev->WriteCallBack != fdev->ReadCallBack ) {
 			    fdev->WriteCallBack( fdev->data );
 			}
 		}
-	} 
+	}
+    // run pending proc
+    for ( int i = 0; i < ev->pendingNum; i++ ) {
+        // call pending proc
+        if ( ev->pendingList[i].Proc ) {
+            ( ev->pendingList[i].Proc ) ( ev->pendingList[i].data );
+        }
+    }
+    // run other proc
+    if ( ev->pendingNum >= PENDING_LIST_LEN ) {
+        mjpending2* toRun = ev->pendingList[PENDING_LIST_LEN-1].next;
+        mjpending2* Next;
+        while ( toRun ) {
+            Next = toRun->next;
+            toRun->Proc( toRun->data ); 
+            free( toRun );
+            toRun = Next;
+        }
+    }
+    // set pending proc to zero
+    ev->pendingNum = 0;
 }
 
 /*
 =====================================================
-mjEV_New
+mjEV2_New
     create mjev struct
+    return NULL --- failed
 =====================================================
 */
-mjev mjEV_New()
+mjEV2 mjEV2_New()
 {
     // create mjev struct 
-    mjev ev = ( mjev ) calloc( 1, sizeof( struct mjev ) );
+    mjEV2 ev = ( mjEV2 ) calloc ( 1, sizeof( struct mjEV2 ) );
     if ( !ev ) {
-        MJLOG_ERR( "mjev malloc error" );
+        MJLOG_ERR( "mjEV2 malloc error" );
         return NULL;
     }
     // create new epoll
@@ -294,20 +301,40 @@ mjev mjEV_New()
 }
 
 /*
+======================================================
+mjEV2_ReleasePending
+    release Pending struct
+======================================================
+*/
+static void mjEV2_ReleasePending( mjEV2 ev ) {
+    if ( ev->pendingNum < PENDING_LIST_LEN ) return;
+    // release pending struct 
+    mjpending2* toRelease = ev->pendingList[PENDING_LIST_LEN-1].next;
+    mjpending2* Next;
+    while ( toRelease ) {
+        Next = toRelease->next;
+        free( toRelease );
+        toRelease = Next;
+    }
+}
+
+/*
 ==============================
-mjEV_Delete
+mjEV2_Delete
     Delete mjev object. 
     No Return.
 ==============================
 */
-void mjEV_Delete( mjev ev )
-{
+bool mjEV2_Delete( mjEV2 ev ) {
     // sanity check
     if ( !ev ) {
         MJLOG_ERR( "mjev is null" );
-        return;
+        return false;
     }
     close( ev->epfd );
     mjPQ_Delete( ev->timerEventQueue );
+    // release pending struct
+    mjEV2_ReleasePending( ev );
     free( ev );
+    return true;
 }
