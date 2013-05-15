@@ -10,27 +10,26 @@ struct mjConn2 {
     void*   server;                         // tcpserver for server side conn 
     mjEV2   ev;
 
-    unsigned int    connectTimeout;         // connect timeout 
-    unsigned int    readTimeout;            // read timeout 
-    unsigned int    writeTimeout;           // write timeout
-    mjtevent2*      connectTimeoutEvent;    // connect timeout event
-    mjtevent2*      readTimeoutEvent;       // read timeout event 
-    mjtevent2*      writeTimeoutEvent;      // write timeout event 
-
     mjStr rbuf;                             // read buffer 
     mjStr wbuf;                             // write buffer
     mjStr data;                             // data get from rbuf
 
-    int     connectType;                    // connect type
-    mjProc  ConnectCallback;                // ConnectCallback
+    int             connectType;            // connect type
+    mjProc          ConnectCallback;        // ConnectCallback
+    unsigned int    connectTimeout;         // connect timeout 
+    mjtevent2*      connectTimeoutEvent;    // connect timeout event
 
-    int     readType;                       // readType
-    mjProc  ReadCallBack;                   // read callback 
-    char*   delim;                          // the delim when readType is READUNTIL
-    int     rbytes;                         // read data size when readType is READBYTES
+    int             readType;               // readType
+    mjProc          ReadCallBack;           // read callback 
+    char*           delim;                  // the delim when readType is READUNTIL
+    int             rbytes;                 // read data size when readType is READBYTES
+    unsigned int    readTimeout;            // read timeout 
+    mjtevent2*      readTimeoutEvent;       // read timeout event 
 
-    int     writeType;                      // write type 
-    mjProc  WriteCallBack;                  // write callback 
+    int             writeType;              // write type 
+    mjProc          WriteCallBack;          // write callback 
+    unsigned int    writeTimeout;           // write timeout
+    mjtevent2*      writeTimeoutEvent;      // write timeout event 
 
     int         threadType;                 // thread type
     mjProc      ThreadCallBack;             // thread callback function 

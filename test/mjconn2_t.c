@@ -1,38 +1,41 @@
 #include <stdio.h>
 #include <sys/socket.h>
-#include "mjconn.h"
-#include "mjev.h"
+#include "mjconn2.h"
+#include "mjev2.h"
+#include "mjlog.h"
 
 static int stop = 0;
 
 void* conn_close(void *arg)
 {
-    mjConn conn = (mjConn)arg;
-    mjConn_Delete(conn);
+    mjConn2 conn = (mjConn2)arg;
+    MJLOG_ERR( "write ok close" );
+    mjConn2_Delete(conn);
     stop = 1;
     return NULL;
 }
 
 void* conn_write(void *arg)
 {
-    mjConn conn = (mjConn)arg;
-    mjConn_WriteS(conn, "test\r\n\r\n", conn_close);
+    mjConn2 conn = (mjConn2)arg;
+    MJLOG_ERR( "connect OK begin write" );
+    mjConn2_WriteS(conn, "test\r\n\r\n", conn_close);
     return NULL;
 }
 
 int main()
 {
-    mjev ev = mjEV_New();
+    mjEV2 ev = mjEV2_New();
     int cfd = socket(AF_INET, SOCK_STREAM, 0);
     
-    mjConn conn = mjConn_New( ev, cfd);
-    mjConn_SetConnectTimeout(conn, 2000);
-    mjConn_Connect(conn, "12.1.1.12", 7879, conn_write);
+    mjConn2 conn = mjConn2_New(ev, cfd);
+    mjConn2_SetConnectTimeout(conn, 2000);
+    mjConn2_Connect(conn, "127.0.0.1", 7879, conn_write);
 
     while (!stop) {
-        mjEV_Run(ev);
+        mjEV2_Run(ev);
     }
-    mjEV_Delete(ev);
+    mjEV2_Delete(ev);
 
     return 0;
 }
