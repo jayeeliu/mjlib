@@ -700,7 +700,7 @@ bool mjConn2_Connect( mjConn2 conn, const char* ipaddr,
         // connect success
         conn->connectType = MJCONN_NONE;
         if ( conn->ConnectCallback ) {
-            mjEV2_Pending( conn->ev, conn->ConnectCallback, conn );
+            mjEV2_AddPending( conn->ev, conn->ConnectCallback, conn );
         }
         return true;
     }

@@ -1,9 +1,10 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "mjev2.h"
 
 void* PendingTest( void* data ) {
     printf( "PendingTest Run!!!\n" );
-    mjEV2_Pending( data, PendingTest, data );
+    mjEV2_AddPending( data, PendingTest, data );
     return NULL;
 }
 
@@ -13,7 +14,7 @@ int main() {
         printf( "mjEV2_New error" );
         return 1;
     }
-    mjEV2_Pending( ev, PendingTest, ev );
+    mjEV2_AddPending( ev, PendingTest, ev );
     while ( 1 ) {
         mjEV2_Run( ev );
         sleep(1);

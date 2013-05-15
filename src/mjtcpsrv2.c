@@ -38,7 +38,7 @@ static void* mjTcpSrv2_AcceptRoutine( void* arg ) {
 
 static void* mjTcpSrv2_Run( void* arg ) {
     mjTcpSrv2 srv = ( mjTcpSrv2 ) arg;
-    mjEV_Run( srv->ev );
+    mjEV2_Run( srv->ev );
     return NULL;
 }
 
@@ -53,13 +53,13 @@ static mjTcpSrv2 mjTcpSrv2_New( int sfd, mjProc Routine ) {
     srv->sfd     = sfd;
     srv->Routine = Routine;
     // set event Loop
-    srv->ev = mjEV_New();
+    srv->ev = mjEV2_New();
     if ( !srv->ev ) {
         MJLOG_ERR( "create ev error" );
         goto failout2;
     }
     // add read event
-    if ( ( mjEV_Add( srv->ev, srv->sfd, MJEV_READABLE,
+    if ( ( mjEV2_Add( srv->ev, srv->sfd, MJEV_READABLE,
             mjTcpSrv2_AcceptRoutine, srv ) ) < 0 ) {
         MJLOG_ERR( "mjev add error" );
         goto failout3;
@@ -70,7 +70,7 @@ static mjTcpSrv2 mjTcpSrv2_New( int sfd, mjProc Routine ) {
     return srv;
 
 failout3:
-    mjEV_Delete( srv->ev );
+    mjEV2_Delete( srv->ev );
 failout2:
     free( srv );
 failout1:
@@ -86,7 +86,7 @@ static bool mjTcpSrv2_Delete( mjTcpSrv2 srv ) {
     if ( srv->private && srv->FreePrivate ) {
         srv->FreePrivate( srv->private );
     }
-    mjEV_Delete( srv->ev );
+    mjEV2_Delete( srv->ev );
     mjSock_Close( srv->sfd );
     free( srv );
     return true;

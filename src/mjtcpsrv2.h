@@ -2,13 +2,13 @@
 #define MJTCPSRV2_H
 
 #include <stdbool.h>
-#include "mjev.h"
+#include "mjev2.h"
 #include "mjthread.h"
 
 struct mjTcpSrv2 {
     int     sfd;
     int     stop;
-    mjev    ev;
+    mjEV2   ev;
 
     mjProc  Routine;
    

@@ -5,6 +5,7 @@
 #include <sys/epoll.h>
 #include "mjproc.h"
 #include "mjpq.h"
+#include "mjlist.h"
 
 #define MJEV_NONE       0
 #define MJEV_READABLE   1
@@ -30,7 +31,7 @@ typedef struct mjtevent2 {
 typedef struct mjpending2 {
     mjProc              Proc;
     void*               data;
-    struct mjpending2*  next;
+    struct list_head    pendingNode;
 } mjpending2;
 
 #define MJEV_MAXFD          60000
@@ -38,21 +39,19 @@ typedef struct mjpending2 {
 
 // mjev struct
 struct mjEV2 {
-    int         epfd;       // epoll fd
-    mjfevent2   fileEventList[MJEV_MAXFD];
-    mjPQ        timerEventQueue;
-    // TODO: add active and process pending
-    int         pendingNum;
-    mjpending2* pendingTail;
-    mjpending2  pendingList[PENDING_LIST_LEN];
+    int                 epfd;       // epoll fd
+    mjfevent2           fileEventList[MJEV_MAXFD];
+    mjPQ                timerEventQueue;
+    struct list_head    pendingHead;
 };
 typedef struct mjEV2* mjEV2;
 
 extern bool         mjEV2_Add( mjEV2 ev, int fd, int mask, mjProc Proc, void* data );
 extern bool         mjEV2_Del( mjEV2 ev, int fd, int mask );
 extern mjtevent2*   mjEV2_AddTimer( mjEV2 ev, long long ms, mjProc Proc, void* data );
-extern bool         mjEV2_DelTimer( mjEV2 ev, mjtevent2 *te );
-extern bool         mjEV2_Pending( mjEV2 ev, mjProc Proc, void* data );
+extern bool         mjEV2_DelTimer( mjEV2 ev, mjtevent2* te );
+extern bool         mjEV2_AddPending( mjEV2 ev, mjProc Proc, void* data );
+extern bool         mjEV2_DelPending( mjEV2 ev, void* data );
 extern void         mjEV2_Run( mjEV2 ev );
 
 extern mjEV2        mjEV2_New();

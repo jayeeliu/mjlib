@@ -166,31 +166,17 @@ bool mjEV2_AddPending( mjEV2 ev, mjProc Proc, void* data ) {
         MJLOG_ERR( "ev or Proc is null" );
         return false;
     }
-    if ( ev->pendingNum < PENDING_LIST_LEN ) {
-        ev->pendingList[ev->pendingNum].Proc = Proc;
-        ev->pendingList[ev->pendingNum].data = data;
-        ev->pendingList[ev->pendingNum].next = NULL;
-        ev->pendingNum++;
-    } else {
-        // alloc and set new pending
-        mjpending2* newPending = ( mjpending2* ) calloc 
+    // alloc and set new pending
+    mjpending2* newPending = ( mjpending2* ) calloc 
                 ( 1, sizeof( mjpending2 ) );
-        if ( !newPending ) {
-            MJLOG_ERR( "pending struct alloc error" );
-            return false;
-        }
-        newPending->Proc = Proc;
-        newPending->data = data;
-        newPending->next = NULL;
-        if ( ev->pendingTail == NULL ) {
-            // the first extra pending
-            ev->pendingList[PENDING_LIST_LEN-1].next = newPending;
-        } else {
-            // not the first extra pending
-            ev->pendingTail->next = newPending;
-        }
-        ev->pendingTail = newPending;
+    if ( !newPending ) {
+        MJLOG_ERR( "pending struct alloc error" );
+        return false;
     }
+    newPending->Proc = Proc;
+    newPending->data = data;
+    INIT_LIST_HEAD( &newPending->pendingNode );
+    list_add_tail( &ev->pendingHead, &newPending->pendingNode ); 
     return true;
 }
 
@@ -203,17 +189,14 @@ mjEV2_DelPending
     called.
 =================================================
 */
+/*
 bool mjEV2_DelPending( mjEV2 ev, void* data ) {
-    if ( !ev->pendingNum ) return true;
-    for ( int i = 0; i < ev->pendingNum; i++ ) {
-        if ( ev->pendingList[i].data == data ) {
-            ev->pendingList[i].Proc = NULL;
-            ev->pendingList[i].data = NULL;
-        }
-    }
-    // TODO: extra list
-    // TODO: pending check. when in pending proc
+    if ( !ev->pendingHead ) return true;
+    mjpending2* toRelease = ev->pendingHead;
+    mjpending2* next;
+    
 }
+*/
 
 /*
 ==================================================
@@ -264,7 +247,7 @@ void mjEV2_Run( mjEV2 ev ) {
         timeWait = ( first <= currTime ) ? 0 : first - currTime;
     }
     // have pending proc run, no wait
-    if ( ev->pendingNum ) timeWait = 0;
+    if ( !list_empty( &ev->pendingHead ) ) timeWait = 0;
     // wait for event
     struct epoll_event epEvents[MJEV_MAXFD];
     int numevents = epoll_wait( ev->epfd, epEvents, MJEV_MAXFD, timeWait );
@@ -281,7 +264,7 @@ void mjEV2_Run( mjEV2 ev ) {
         if ( te && te->valid && te->TimerProc ) te->TimerProc( te->data );   // call timer proc
         free( te );                                     // free timer event, alloc in addtimer
     }
-    if ( !numevents && !ev->pendingNum ) return;  // no events, break
+    if ( !numevents && list_empty( &ev->pendingHead ) ) return;  // no events, break
     // get events from list
 	for ( int i = 0; i < numevents; i++ ) {
         // get file event fd, and mjfevent struct
@@ -307,31 +290,19 @@ void mjEV2_Run( mjEV2 ev ) {
 			}
 		}
 	}
-    if ( !ev->pendingNum ) return;
-    // copy pending data
-    int pendingNum = ev->pendingNum;
-    mjpending2 pendingList[PENDING_LIST_LEN];
-    memcpy( pendingList, ev->pendingList, sizeof( pendingList ) );
-    // set pending proc to zero
-    ev->pendingNum  = 0;
-    ev->pendingTail = NULL;
+    // check and run pending proc
+    if ( list_empty( &ev->pendingHead ) ) return;
+    struct list_head savedPendingHead;
+    INIT_LIST_HEAD( &savedPendingHead );
+    list_splice( &ev->pendingHead, &savedPendingHead );
+    INIT_LIST_HEAD( &ev->pendingHead );
     // run pending proc
-    for ( int i = 0; i < pendingNum; i++ ) {
-        // call pending proc
-        if ( pendingList[i].Proc ) {
-            ( pendingList[i].Proc ) ( pendingList[i].data );
-        }
-    }
-    // run other proc
-    if ( pendingNum > PENDING_LIST_LEN ) {
-        mjpending2* toRun = pendingList[PENDING_LIST_LEN-1].next;
-        mjpending2* Next;
-        while ( toRun ) {
-            Next = toRun->next;
-            toRun->Proc( toRun->data ); 
-            free( toRun );
-            toRun = Next;
-        }
+    mjpending2* entry;
+    mjpending2* tmp;
+    list_for_each_entry_safe( entry, tmp, &savedPendingHead, pendingNode ) {
+        list_del( &entry->pendingNode );
+        entry->Proc( entry->data );
+        free( entry );
     }
 }
 
@@ -342,8 +313,7 @@ mjEV2_New
     return NULL --- failed
 =====================================================
 */
-mjEV2 mjEV2_New()
-{
+mjEV2 mjEV2_New() {
     // create mjev struct 
     mjEV2 ev = ( mjEV2 ) calloc ( 1, sizeof( struct mjEV2 ) );
     if ( !ev ) {
@@ -365,6 +335,7 @@ mjEV2 mjEV2_New()
         free( ev );
         return NULL;
     }
+    INIT_LIST_HEAD( &ev->pendingHead );
     return ev;
 }
 
@@ -375,14 +346,13 @@ mjEV2_ReleasePending
 ======================================================
 */
 static void mjEV2_ReleasePending( mjEV2 ev ) {
-    if ( ev->pendingNum <= PENDING_LIST_LEN ) return;
+    if ( list_empty( &ev->pendingHead ) ) return;
     // release pending struct 
-    mjpending2* toRelease = ev->pendingList[PENDING_LIST_LEN-1].next;
-    mjpending2* Next;
-    while ( toRelease ) {
-        Next = toRelease->next;
-        free( toRelease );
-        toRelease = Next;
+    mjpending2* entry;
+    mjpending2* tmp;
+    list_for_each_entry_safe( entry, tmp, &ev->pendingHead, pendingNode ) {
+        list_del( &entry->pendingNode );
+        free( entry );
     }
 }
 
