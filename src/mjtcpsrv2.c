@@ -122,7 +122,7 @@ mjServer_New
     create new mjserver struct
 =========================================================
 */
-mjServer mjServer_New( int sfd, mjProc Routine ) {
+mjServer mjServer_New( int sfd, mjProc serverRoutine ) {
     // alloc server struct
     mjServer srv = ( mjServer ) calloc ( 1, 
             sizeof( struct mjServer ) );
@@ -133,9 +133,9 @@ mjServer mjServer_New( int sfd, mjProc Routine ) {
     // set listen socket blocking
     mjSock_SetBlocking( sfd, 1 );
     // update fileds
-    srv->sfd        = sfd;
-    srv->Routine    = Routine;
-    srv->serverNum  = GetCPUNumber();
+    srv->sfd            = sfd;
+    srv->serverRoutine  = serverRoutine;
+    srv->serverNum      = GetCPUNumber();
     if ( srv->serverNum <= 0 ) {
         MJLOG_ERR( "cpu count error" );
         free( srv );
@@ -150,14 +150,14 @@ mjServer mjServer_New( int sfd, mjProc Routine ) {
             return NULL;
         }
         srv->serverNotify[i] = fd[0];
-        srv->server[i] = mjTcpSrv2_New( fd[1], srv->Routine );
+        srv->server[i] = mjTcpSrv2_New( fd[1], srv->serverRoutine );
         if ( !srv->server[i] ) {
             MJLOG_ERR( "mjTcpSrv2 create error" );
             mjServer_Delete( srv );
             return NULL;
         }
-        srv->thread[i] = mjThread_NewLoop( mjTcpSrv2_Run, srv->server[i] );
-        if ( !srv->thread[i] ) {
+        srv->serverThread[i] = mjThread_NewLoop( mjTcpSrv2_Run, srv->server[i] );
+        if ( !srv->serverThread[i] ) {
             MJLOG_ERR( "mjThread create error" );
             mjServer_Delete( srv );
             return NULL;
@@ -165,7 +165,7 @@ mjServer mjServer_New( int sfd, mjProc Routine ) {
         cpu_set_t cpuset;
         CPU_ZERO( &cpuset );
         CPU_SET( i, &cpuset );
-        pthread_setaffinity_np( srv->thread[i]->threadID, sizeof( cpu_set_t ), &cpuset );
+        pthread_setaffinity_np( srv->serverThread[i]->threadID, sizeof( cpu_set_t ), &cpuset );
     }
     return srv;
 }
@@ -178,8 +178,8 @@ bool mjServer_Delete( mjServer srv ) {
     }
     // free fd and mjTcpSrv2
     for ( int i = 0; i < srv->serverNum; i++ ) {
-        if ( srv->thread[i] ) {
-            mjThread_Delete( srv->thread[i] );
+        if ( srv->serverThread[i] ) {
+            mjThread_Delete( srv->serverThread[i] );
         }
         if ( srv->serverNotify[i] ) {
             mjSock_Close( srv->serverNotify[i] );

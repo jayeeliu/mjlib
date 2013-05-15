@@ -13,10 +13,10 @@ static void* on_close( void* arg )
 static void* on_write( void* arg )
 {
     mjConn2 conn = ( mjConn2 ) arg;
-    long long sum=1;
-    for(int i=1; i<100000; i++) {
-        sum *= i;
-    }
+//    long long sum=1;
+//    for(int i=1; i<100000; i++) {
+//        sum *= i;
+//    }
     mjConn2_WriteS( conn, "Final Server Ready!!!\r\n", on_close );
     return NULL;
 }

@@ -481,8 +481,7 @@ mjConn2_RunAsync
     change the data
 =====================================================================
 */
-bool mjConn2_RunAsync( mjConn2 conn, mjProc Routine, mjProc CallBack )
-{
+bool mjConn2_RunAsync( mjConn2 conn, mjProc Routine, mjProc CallBack ) {
     // RunAsync can't re enter
     if ( conn->threadType != MJCONN_NONE ) {
         MJLOG_ERR( "threadType must be MJCONN_NONE" );
@@ -495,8 +494,7 @@ bool mjConn2_RunAsync( mjConn2 conn, mjProc Routine, mjProc CallBack )
     }
     // create notify fd
     int notify[2];
-    int ret = pipe( notify );
-    if ( ret < 0 ) {
+    if ( pipe( notify ) < 0 ) {
         MJLOG_ERR( "pipe error: %s", strerror( errno )  );
         goto failout;
     }
