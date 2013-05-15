@@ -2,9 +2,15 @@
 #include <unistd.h>
 #include "mjev2.h"
 
-void* PendingTest( void* data ) {
-    printf( "PendingTest Run!!!\n" );
-    mjEV2_AddPending( data, PendingTest, data );
+void* PendingTest2( void* data ) {
+    printf( "PendingTest2 Run!!!\n" );
+    return NULL;
+}
+
+void* PendingTest1( void* data ) {
+    printf( "PendingTest1 Run!!!\n" );
+    mjEV2_AddPending( data, PendingTest1, data );
+    mjEV2_AddPending( data, PendingTest2, data );
     return NULL;
 }
 
@@ -14,7 +20,7 @@ int main() {
         printf( "mjEV2_New error" );
         return 1;
     }
-    mjEV2_AddPending( ev, PendingTest, ev );
+    mjEV2_AddPending( ev, PendingTest1, ev );
     while ( 1 ) {
         mjEV2_Run( ev );
         sleep(1);

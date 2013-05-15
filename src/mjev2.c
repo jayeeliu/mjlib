@@ -176,7 +176,7 @@ bool mjEV2_AddPending( mjEV2 ev, mjProc Proc, void* data ) {
     newPending->Proc = Proc;
     newPending->data = data;
     INIT_LIST_HEAD( &newPending->pendingNode );
-    list_add_tail( &ev->pendingHead, &newPending->pendingNode ); 
+    list_add_tail( &newPending->pendingNode, &ev->pendingHead ); 
     return true;
 }
 
@@ -189,14 +189,18 @@ mjEV2_DelPending
     called.
 =================================================
 */
-/*
 bool mjEV2_DelPending( mjEV2 ev, void* data ) {
-    if ( !ev->pendingHead ) return true;
-    mjpending2* toRelease = ev->pendingHead;
-    mjpending2* next;
-    
+    if ( list_empty( &ev->pendingHead ) ) return false;
+    mjpending2* entry;
+    mjpending2* tmp;
+    list_for_each_entry_safe( entry, tmp, &ev->pendingHead, pendingNode ) {
+        if ( entry->data == data ) {
+            list_del( &entry->pendingNode );
+            free( entry );
+        }
+    }
+    return true; 
 }
-*/
 
 /*
 ==================================================
