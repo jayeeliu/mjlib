@@ -67,6 +67,7 @@ static mjTcpSrv2 mjTcpSrv2_New( int sfd, mjProc Routine ) {
         MJLOG_ERR( "create server error" );
         goto failout1;
     }
+    //mjSock_SetBlocking( sfd, 0);
     srv->sfd     = sfd;
     srv->Routine = Routine;
     // set event Loop
