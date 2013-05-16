@@ -1,5 +1,5 @@
-#ifndef MJTCPSRV2_H
-#define MJTCPSRV2_H
+#ifndef MJMAINSRV_H
+#define MJMAINSRV_H
 
 #include <stdbool.h>
 #include "mjev.h"

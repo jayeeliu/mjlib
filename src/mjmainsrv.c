@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include "mjtcpsrv2.h"
+#include "mjmainsrv.h"
 #include "mjconn.h"
 #include "mjcomm.h"
 #include "mjsock.h"
