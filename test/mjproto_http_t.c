@@ -3,7 +3,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/time.h>
-#include "mjconn.h"
+#include "mjconn2.h"
 #include "mjhttprsp.h"
 #include "mjproto_http.h"
 #include "mjtcpsrv.h"
@@ -15,9 +15,9 @@ struct timeval tv1, tv2;
 
 static void* on_finish(void *arg)
 {
-    mjConn conn = (mjConn)arg;
+    mjConn2 conn = (mjConn2)arg;
     //if ( count >= 99999 ) mjTcpSrv_SetStop( conn->server, 1);
-    mjConn_Delete(conn);
+    mjConn2_Delete(conn);
     
     gettimeofday( &tv2, NULL );
 //    printf("%ld\n", (tv2.tv_usec - tv1.tv_usec) );
@@ -27,22 +27,22 @@ static void* on_finish(void *arg)
 
 static void* main0(void *arg)
 {
-    mjConn conn = (mjConn)arg;
-    mjConn_WriteS(conn, "main0 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
+    mjConn2 conn = (mjConn2)arg;
+    mjConn2_WriteS(conn, "main0 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
     return NULL;
 }
 
 static void* main1(void *arg)
 {
     gettimeofday( &tv1, NULL );
-    mjConn conn = (mjConn)arg;
-    mjConn_WriteS(conn, "main1 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
+    mjConn2 conn = (mjConn2)arg;
+    mjConn2_WriteS(conn, "main1 is hereaslfkjlaskfjlkasfdj;aslkdjf;asldjf;aslkjfd;asldkfj;aslkdjf;alsdkjf;aslkdjfas;ldkfjas;dlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkf", on_finish);
     return NULL;
 }
 
 static void* main2(void *arg)
 {
-    mjConn conn = (mjConn)arg;
+    mjConn2 conn = (mjConn2)arg;
 
     gettimeofday( &tv1, NULL );
 
@@ -57,27 +57,27 @@ static void* main2(void *arg)
     mjHttpRsp response = HTTP_GETRSP( conn );
     mjHttpRsp_AddHeader( response, "Content-Length", buflen );
 
-    mjConn_BufWriteS( conn , "HTTP/1.1 200 OK\r\n" );
+    mjConn2_BufWriteS( conn , "HTTP/1.1 200 OK\r\n" );
     mjStr str = mjHttpRsp_HeaderToStr( response );
-    mjConn_BufWrite( conn, str );
-    mjConn_BufWriteS( conn, "\r\n" );
-    mjConn_WriteS(conn, buf, on_finish);
+    mjConn2_BufWrite( conn, str );
+    mjConn2_BufWriteS( conn, "\r\n" );
+    mjConn2_WriteS(conn, buf, on_finish);
     mjStr_Delete( str );
     return NULL; 
 }
 
 static void* main3(void *arg)
 {
-    mjConn conn = (mjConn)arg;
+    mjConn2 conn = (mjConn2)arg;
 
     mjStr out = FileToStr("test.html");
 
     char buf[1024] = { 0 };
     sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n", out->length);
 
-    mjConn_BufWriteS( conn, buf );
-    mjConn_BufWrite( conn, out );
-    mjConn_Flush(conn, on_finish);
+    mjConn2_BufWriteS( conn, buf );
+    mjConn2_BufWrite( conn, out );
+    mjConn2_Flush(conn, on_finish);
 
     mjStr_Delete(out);
     return NULL;

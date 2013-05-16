@@ -2,7 +2,7 @@
 #define _MJCONNB_H
 
 #include "mjstr.h"
-#include "mjev.h"
+#include "mjproc.h"
 
 struct mjConnB {
     int             fd;                 // fd to control

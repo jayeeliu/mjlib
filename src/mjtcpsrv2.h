@@ -9,9 +9,8 @@ struct mjTcpSrv2 {
     int     sfd;
     int     stop;
     mjEV2   ev;
-    void*   mainServer;
-
     mjProc  Routine;
+    void*   mainServer;
    
     void*   private;
     mjProc  FreePrivate; 

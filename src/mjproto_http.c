@@ -3,12 +3,12 @@
 #include <string.h>
 #include "mjtcpsrv.h"
 #include "mjlog.h"
-#include "mjconn.h"
+#include "mjconn2.h"
 #include "mjproto_http.h"
 
 static void* on_header( void* arg )
 {
-    mjConn conn = ( mjConn )arg;
+    mjConn2 conn = ( mjConn2 )arg;
     mjHttpData httpData = ( mjHttpData )conn->private;
     mjTcpSrv server = ( mjTcpSrv )conn->server;
     struct mjHttpUrl* urls = ( struct mjHttpUrl* ) server->private;
@@ -17,19 +17,19 @@ static void* on_header( void* arg )
     httpData->request = mjHttpReq_New( conn->data );
     if ( !httpData->request ) {
         MJLOG_ERR( "mjHttpReq_New error" );
-        mjConn_Delete( conn );
+        mjConn2_Delete( conn );
         return NULL;
     }
     httpData->response = mjHttpRsp_New();
     if ( !httpData->response ) {
         MJLOG_ERR( "mjHttpRsp_new error" );
-        mjConn_Delete( conn );
+        mjConn2_Delete( conn );
         return NULL;
     }
     httpData->param = mjStrList_New();
     if ( !httpData->param ) {
         MJLOG_ERR( "mjStrList_New error" );
-        mjConn_Delete( conn );
+        mjConn2_Delete( conn );
         return NULL;
     }
     // set default response header
@@ -85,16 +85,16 @@ http_worker
 */
 void* http_Worker( void* arg )
 {
-    mjConn conn = ( mjConn )arg;
+    mjConn2 conn = ( mjConn2 )arg;
     void* httpData = calloc( 1, sizeof( struct mjHttpData ) );
     if ( !httpData ) {
         MJLOG_ERR( "httpData alloc error" );
-        mjConn_Delete( conn );
+        mjConn2_Delete( conn );
         return NULL;
     }
     // set conn private data
-    mjConn_SetPrivate( conn, httpData, httpData_free );
-    mjConn_ReadUntil( conn, "\r\n\r\n", on_header ); 
+    mjConn2_SetPrivate( conn, httpData, httpData_free );
+    mjConn2_ReadUntil( conn, "\r\n\r\n", on_header ); 
     return NULL;
 }
 
