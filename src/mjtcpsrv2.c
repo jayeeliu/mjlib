@@ -190,7 +190,7 @@ bool mjMainServer_Async( mjMainServer srv, mjProc workerRoutine, void* rdata,
     asyncData->finNotify_r  = notifyFd[0];
     asyncData->finNotify_w  = notifyFd[1];
     // add routine to threadpool
-    if ( !mjThreadPool2_AddWork( srv->workerThreadPool, 
+    if ( !mjThreadPool_AddWork( srv->workerThreadPool, 
             mjMainServer_AsyncRoutine, asyncData ) ) {
         if ( !mjThread_RunOnce( mjMainServer_AsyncRoutine, asyncData ) ) {
             MJLOG_ERR( "Oops async run Error" );
@@ -302,7 +302,7 @@ mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, int workerThreadNu
     }
     // update threadpool
     srv->workerThreadNum = workerThreadNum;
-    srv->workerThreadPool = mjThreadPool2_New( srv->workerThreadNum ); 
+    srv->workerThreadPool = mjThreadPool_New( srv->workerThreadNum ); 
     if ( !srv->workerThreadPool ) {
         MJLOG_ERR( "threadpool create error" );
         mjMainServer_Delete( srv );
@@ -338,7 +338,7 @@ bool mjMainServer_Delete( mjMainServer srv ) {
     }
     // free worker threadpool
     if ( srv->workerThreadPool ) {
-        mjThreadPool2_Delete( srv->workerThreadPool );
+        mjThreadPool_Delete( srv->workerThreadPool );
     }
     free(srv);
     return true;

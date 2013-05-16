@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include "mjev2.h"
-#include "mjthreadpool2.h"
+#include "mjthreadpool.h"
 
 struct mjTcpSrv2 {
     int     sfd;
@@ -36,7 +36,7 @@ struct mjMainServer {
     int             stop;
     
     int             workerThreadNum;
-    mjThreadPool2   workerThreadPool;
+    mjThreadPool    workerThreadPool;
 
     mjProc          serverRoutine;
     int             serverNum;

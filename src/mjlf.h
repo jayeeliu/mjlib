@@ -2,12 +2,12 @@
 #define __MJLF_H
 
 #include <stdbool.h>
-#include "mjthreadpool2.h"
+#include "mjthreadpool.h"
 
 struct mjLF {
     int             sfd;
     int             stop;
-    mjThreadPool2   tPool; 
+    mjThreadPool    tPool; 
     mjProc          Routine;
 
     int             readTimeout;        // read write timeout

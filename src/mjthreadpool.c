@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "mjthreadpool2.h"
+#include "mjthreadpool.h"
 #include "mjlog.h"
 
 /*
@@ -10,7 +10,7 @@ mjThreadPool_AddWork
     return: 0 --- success, -1 --- fail
 ===============================================================================
 */ 
-bool mjThreadPool2_AddWork( mjThreadPool2 tPool, mjProc Routine, void* arg ) { 
+bool mjThreadPool_AddWork( mjThreadPool tPool, mjProc Routine, void* arg ) { 
     // sanity check
     if ( !tPool ) {
         MJLOG_ERR( "mjthread pool is null" );
@@ -24,8 +24,8 @@ bool mjThreadPool2_AddWork( mjThreadPool2 tPool, mjProc Routine, void* arg ) {
     if ( list_empty( &tPool->freeList ) ) return false;
     // get free thread
 	pthread_mutex_lock( &tPool->freeListLock ); 
-    mjThreadEntry2 entry  = list_first_entry( &tPool->freeList, 
-                    struct mjThreadEntry2, nodeList );
+    mjThreadEntry entry  = list_first_entry( &tPool->freeList, 
+                    struct mjThreadEntry, nodeList );
     if ( entry ) {
         list_del_init( &entry->nodeList );
     }
@@ -41,15 +41,15 @@ bool mjThreadPool2_AddWork( mjThreadPool2 tPool, mjProc Routine, void* arg ) {
 
 /*
 ===============================================================================
-mjThreadPool2_ThreadFin
+mjThreadPool_ThreadFin
     thread post routine
     add thread to freelist
 ===============================================================================
 */
-static void* mjThreadPool2_ThreadFin( void* arg ) {
+static void* mjThreadPool_ThreadFin( void* arg ) {
     // get thread entry struct
     mjThread thread = ( mjThread ) arg;
-    mjThreadEntry2 entry = ( mjThreadEntry2 ) thread->private;
+    mjThreadEntry entry = ( mjThreadEntry ) thread->private;
     // add thread to free list 
     pthread_mutex_lock( &entry->tPool->freeListLock );
     list_add_tail( &entry->nodeList, &entry->tPool->freeList );
@@ -64,11 +64,11 @@ mjThreadPool_New
     return: NOT NULL--- mjThreadPool struct, NULL --- fail
 ===============================================================================
 */
-mjThreadPool2 mjThreadPool2_New( int maxThread ) {
+mjThreadPool mjThreadPool_New( int maxThread ) {
     // alloc threadpool struct
-    mjThreadPool2 tPool = ( mjThreadPool2 ) calloc( 1, 
-            sizeof( struct mjThreadPool2 ) + 
-            maxThread * sizeof( struct mjThreadEntry2 ) );
+    mjThreadPool tPool = ( mjThreadPool ) calloc( 1, 
+            sizeof( struct mjThreadPool ) + 
+            maxThread * sizeof( struct mjThreadEntry ) );
     if ( !tPool ) {
         MJLOG_ERR( "mjThreadPool alloc error" );
         return NULL;
@@ -84,12 +84,12 @@ mjThreadPool2 mjThreadPool2_New( int maxThread ) {
         list_add_tail( &tPool->threads[i].nodeList, &tPool->freeList );
         // create new thread
         tPool->threads[i].thread = mjThread_New();
-        // set mjThreadEntry2 as private data
+        // set mjThreadEntry as private data
         mjThread_SetPrivate( tPool->threads[i].thread, 
                     &tPool->threads[i], NULL );
         // set post proc
         mjThread_SetPrePost( tPool->threads[i].thread, 
-                    NULL, mjThreadPool2_ThreadFin );
+                    NULL, mjThreadPool_ThreadFin );
     }
     return tPool; 
 } 
@@ -100,7 +100,7 @@ mjThreadPool_delete
     destory thread pool
 ===============================================================================
 */
-bool mjThreadPool2_Delete( mjThreadPool2 tPool ) {
+bool mjThreadPool_Delete( mjThreadPool tPool ) {
     // sanity check 
     if ( !tPool ) {
         MJLOG_ERR( "tPool is null" );

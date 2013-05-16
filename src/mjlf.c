@@ -24,7 +24,7 @@ static void* mjLF_Routine( void* arg ) {
         break;
     }
     // choose a new leader
-    int ret = mjThreadPool2_AddWork( srv->tPool, mjLF_Routine, srv );
+    int ret = mjThreadPool_AddWork( srv->tPool, mjLF_Routine, srv );
     if ( !ret ) {
         ret = mjThread_RunOnce( mjLF_Routine, srv );
         if ( !ret ) {
@@ -123,7 +123,7 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int sfd ) {
         return NULL;
     }
     // init new pool
-    srv->tPool = mjThreadPool2_New( maxThread );
+    srv->tPool = mjThreadPool_New( maxThread );
     if ( !srv->tPool ) {
         MJLOG_ERR( "mjthreadpool create error" );
         free( srv );
@@ -133,10 +133,10 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int sfd ) {
     srv->sfd     = sfd;
     srv->Routine = Routine;
     // add new worker 
-    bool ret = mjThreadPool2_AddWork( srv->tPool, mjLF_Routine, srv );
+    bool ret = mjThreadPool_AddWork( srv->tPool, mjLF_Routine, srv );
     if ( !ret ) {
         MJLOG_ERR( "mjthreadpool addwork" );
-        mjThreadPool2_Delete( srv->tPool );
+        mjThreadPool_Delete( srv->tPool );
         free( srv );
         return NULL;
     }
@@ -161,7 +161,7 @@ bool mjLF_Delete( mjLF srv ) {
         srv->FreePrivate( srv->private );
     }
     // delete thread pool
-    mjThreadPool2_Delete( srv->tPool );
+    mjThreadPool_Delete( srv->tPool );
     free( srv );
     return true;
 }

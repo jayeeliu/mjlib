@@ -6,27 +6,27 @@
 #include "mjlist.h"
 #include "mjthread.h"
 
-struct mjThreadPool2;
+struct mjThreadPool;
 
-struct mjThreadEntry2 {
-    struct mjThreadPool2*   tPool;
+struct mjThreadEntry {
+    struct mjThreadPool*    tPool;
     struct list_head        nodeList;
     mjThread                thread;
 };
-typedef struct mjThreadEntry2* mjThreadEntry2;
+typedef struct mjThreadEntry* mjThreadEntry;
 
 // threadpool struct
-struct mjThreadPool2 {
+struct mjThreadPool {
     pthread_mutex_t         freeListLock;   // lock for threadList
     struct list_head        freeList;       // task list 
     int                     shutDown;       // shutdown this thread pool?
     int                     maxThread;
-    struct mjThreadEntry2   threads[0];
+    struct mjThreadEntry    threads[0];
 };
-typedef struct mjThreadPool2*  mjThreadPool2;
+typedef struct mjThreadPool*  mjThreadPool;
 
-extern bool             mjThreadPool2_AddWork( mjThreadPool2 tPool, mjProc Routine, void* arg );
-extern mjThreadPool2    mjThreadPool2_New( int maxThread );
-extern bool             mjThreadPool2_Delete( mjThreadPool2 tPool );
+extern bool             mjThreadPool_AddWork( mjThreadPool tPool, mjProc Routine, void* arg );
+extern mjThreadPool     mjThreadPool_New( int maxThread );
+extern bool             mjThreadPool_Delete( mjThreadPool tPool );
 
 #endif
