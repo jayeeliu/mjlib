@@ -6,13 +6,6 @@
 #include "mjopt.h"
 #include "mjconn.h"
 
-static int port;
-
-void Option_Init()
-{
-    mjOpt_Define( NULL, "port", MJOPT_INT, &port, "7879", "p", 1, "set port" );
-}
-
 void* on_close( void* arg )
 {
     mjConn conn = ( mjConn )arg;
@@ -48,10 +41,7 @@ void* Msg_Handler( void* arg )
 
 int main( int argc, char* argv[] )
 {
-    Option_Init();
-
-    mjOpt_ParseCmd( argc, argv );
-    int sfd = mjSock_TcpServer( port );
+    int sfd = mjSock_TcpServer( 7879 );
     if ( sfd < 0 ) {
         printf( "socket create error" );
         return 1;

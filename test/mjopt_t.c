@@ -15,12 +15,12 @@ int main(int argc, char* argv[])
 {
     struct setting s;
 
-    mjOpt_Define(NULL, "value1", MJOPT_INT, &s.value1, "10", "v1", 1, "set value1");
-    mjOpt_Define(NULL, "value2", MJOPT_INT, &s.value2, "20", "v2", 1, "set value2");
-    mjOpt_Define(NULL, "value3", MJOPT_INT, &s.value3, NULL, "v3", 1, "set value3");
-    mjOpt_Define(NULL, "strval", MJOPT_STR, s.strval1, NULL, "s1", 1, "set strvalue1");
-    mjOpt_Define(NULL, "strval2", MJOPT_STR, s.strval2, NULL, "s2", 1, "set strvalue2");
-    mjOpt_Define(NULL, "strval3", MJOPT_STR, s.strval3, NULL, "s3", 1, "set strvalue3");
+    mjOpt_Define(NULL, "value1", MJOPT_INT, &s.value1, "10");
+    mjOpt_Define(NULL, "value2", MJOPT_INT, &s.value2, "20");
+    mjOpt_Define(NULL, "value3", MJOPT_INT, &s.value3, NULL);
+    mjOpt_Define(NULL, "strval", MJOPT_STR, s.strval1, NULL);
+    mjOpt_Define(NULL, "strval2", MJOPT_STR, s.strval2, NULL);
+    mjOpt_Define(NULL, "strval3", MJOPT_STR, s.strval3, NULL);
 
     mjOpt_SetValue( NULL, "strval", "test3" );
     mjOpt_SetValue( NULL, "value1", "12345" );

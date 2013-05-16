@@ -6,18 +6,11 @@
 #include "mjconn.h"
 #include "mjlog.h"
 
-static int port;
-
 struct connPrivate {
     mjConn  conn1;
     mjConn  conn2;
 };
 typedef struct connPrivate* connPrivate;
-
-void Option_Init()
-{
-    mjOpt_Define( NULL, "port", MJOPT_INT, &port, "7879", "p", 1, "set port" );
-}
 
 void* On_Close( void* arg )
 {
@@ -68,9 +61,7 @@ void* Handler( void* arg )
 
 int main()
 {
-    Option_Init();
-
-    int sfd = mjSock_TcpServer(port);
+    int sfd = mjSock_TcpServer(7879);
     if ( sfd < 0 ) {
         printf( "mjSock_TcpServer error" );
         return 1;

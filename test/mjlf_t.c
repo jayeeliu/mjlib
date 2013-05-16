@@ -5,7 +5,7 @@
 #include "mjsock.h"
 #include "mjconnb.h"
 #include "mjcomm.h"
-#include "mjopt2.h"
+#include "mjopt.h"
 #include "mjproto_txt.h"
 
 struct server_data {
@@ -69,9 +69,9 @@ int main()
     int port;
     int threadNum;
 
-    mjOpt2_Define( NULL, "port", MJOPT_INT, &port, "7879" );
-    mjOpt2_Define( NULL, "threadnum", MJOPT_INT, &threadNum, "20" );
-    mjOpt2_ParseConf( "test.conf" );
+    mjOpt_Define( NULL, "port", MJOPT_INT, &port, "7879" );
+    mjOpt_Define( NULL, "threadnum", MJOPT_INT, &threadNum, "20" );
+    mjOpt_ParseConf( "test.conf" );
 
     int sfd = mjSock_TcpServer( port );
     if ( sfd < 0 ) {

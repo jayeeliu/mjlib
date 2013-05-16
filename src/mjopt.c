@@ -17,7 +17,7 @@ mjOpt_Set
 */
 static void mjOpt_Set( mjOpt opt, char* value )
 {
-   // set default value 
+    // set default value 
     if ( opt->type == MJOPT_INT ) {
         if ( !value ) {
             *( int* )( opt->value ) = 0;
@@ -40,7 +40,7 @@ mjOpt_Define
 ===================================================================
 */
 bool mjOpt_Define( char* section, char* key, int type, void* value,
-            char* defaultValue, char* cmdKey, int cmdKeyValue, char* helpString )
+            char* defaultValue )
 {
     // sanity check
     if ( section && strlen( section ) >= MAX_SECTION_LEN ) {
@@ -60,7 +60,7 @@ bool mjOpt_Define( char* section, char* key, int type, void* value,
         return false;
     }
     // create mjOpt struct
-    mjOpt opt = ( mjOpt ) calloc( 1, sizeof( struct mjOpt ) );
+    mjOpt opt = ( mjOpt ) calloc ( 1, sizeof( struct mjOpt ) );
     if ( !opt ) {
         MJLOG_ERR( "mjOpt alloc error" );
         return false;
@@ -77,16 +77,6 @@ bool mjOpt_Define( char* section, char* key, int type, void* value,
     opt->value  = value;
     // set default value 
     mjOpt_Set( opt, defaultValue );
-    // set cmdKey
-    if ( !cmdKey ) {
-        strcpy( opt->cmdKey, "" );
-        opt->cmdKeyValue    = 0;
-    } else {
-        strcpy( opt->cmdKey, cmdKey );
-        opt->cmdKeyValue    = cmdKeyValue == 0 ? 0 : 1;
-    }
-    // set help string
-    opt->helpString = helpString;
     // add to options list
     INIT_LIST_HEAD( &opt->node );
     list_add_tail( &opt->node, &options );
@@ -137,6 +127,7 @@ bool mjOpt_ParseConf( const char* fileName )
     mjStr line = mjStr_New();
     if ( !line ) {
         MJLOG_ERR( "mjStr_New error" );
+        mjIO_Delete( io );
         return false;
     }
     // set default section
@@ -156,6 +147,13 @@ bool mjOpt_ParseConf( const char* fileName )
             mjStr_Consume( line, 1 );
             mjStr_RConsume( line, 1 );
             mjStr_Strim( line );
+            // section can't be null
+            if ( line->length == 0 ) {
+                MJLOG_ERR( "section is null" );
+                mjIO_Delete( io );
+                mjStr_Delete( line );
+                return false;
+            }
             strcpy( section, line->data );
             continue;
         }
@@ -165,7 +163,9 @@ bool mjOpt_ParseConf( const char* fileName )
         if ( strList->length != 2 ) {
             MJLOG_ERR( "conf error" );
             mjStrList_Delete( strList );
-            break;
+            mjStr_Delete( line );
+            mjIO_Delete( io );
+            return false;
         }
         mjStr keyStr = mjStrList_Get( strList, 0 );
         mjStr valueStr = mjStrList_Get( strList, 1 );
@@ -181,84 +181,4 @@ bool mjOpt_ParseConf( const char* fileName )
     mjStr_Delete( line );
     mjIO_Delete( io );
     return true;
-}
-
-/*
-=================================================
-mjOpt_GetEntry
-    get options entry
-=================================================
-*/
-static mjOpt mjOpt_GetEntry( char* key )
-{
-    mjOpt entry = NULL;
-    list_for_each_entry( entry, &options, node ) {
-        if ( !strcmp( entry->cmdKey, "" ) ) continue;
-        if ( !strcmp( entry->cmdKey, key ) ) return entry;
-    }
-    return NULL;
-}
-
-/*
-==============================================
-mjOpt_ParseCmd
-    parse cmd
-==============================================
-*/
-bool mjOpt_ParseCmd( int argc, char* argv[] )
-{
-    int i = 1;
-    
-    while( i < argc ) {
-        // test cmd
-        char* tmp = argv[i];
-        if ( tmp[0] != '-' ) {
-            MJLOG_ERR( "ParseCmd error" );
-            return false;
-        }
-        // get cmd
-        tmp++;
-        if ( strlen( tmp ) == 0 ) {
-            MJLOG_ERR( "cmd is null" );
-            return false; 
-        }
-        // get entry from option list
-        mjOpt entry = mjOpt_GetEntry( tmp );
-        if ( !entry ) {
-            MJLOG_ERR( "no match entry" );
-            return false;
-        }
-        // set entry value 
-        if ( entry->cmdKeyValue == 0 ) {
-            if ( entry->type != MJOPT_INT ) {
-                MJLOG_ERR( "type error" );
-                return false;
-            }
-            mjOpt_Set( entry, "1" );
-        } else {
-            i++;
-            if ( i >= argc ) {
-                MJLOG_ERR( "no enough parameter" );
-                return false;
-            }
-            tmp = argv[i];
-            mjOpt_Set( entry, tmp );
-        }
-        i++;
-    }
-    return true;
-}
-
-void mjOpt_HelpString()
-{
-    mjOpt entry = NULL;
-    list_for_each_entry(entry, &options, node) {
-        if ( strcmp( entry->cmdKey, "" ) ) {
-            if ( !entry->cmdKeyValue ) {
-                printf( "\t-%s: %s\n", entry->cmdKey, entry->helpString );
-            } else {
-                printf( "\t-%s <value>: %s\n", entry->cmdKey, entry->helpString );
-            }
-        }
-    }
 }
