@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include "mjconn2.h"
-#include "mjev2.h"
+#include "mjev.h"
 #include "mjlog.h"
 
 static int stop = 0;
@@ -25,7 +25,7 @@ void* conn_write(void *arg)
 
 int main()
 {
-    mjEV2 ev = mjEV2_New();
+    mjEV ev = mjEV_New();
     int cfd = socket(AF_INET, SOCK_STREAM, 0);
     
     mjConn2 conn = mjConn2_New(ev, cfd);
@@ -33,9 +33,9 @@ int main()
     mjConn2_Connect(conn, "127.0.0.1", 7879, conn_write);
 
     while (!stop) {
-        mjEV2_Run(ev);
+        mjEV_Run(ev);
     }
-    mjEV2_Delete(ev);
+    mjEV_Delete(ev);
 
     return 0;
 }

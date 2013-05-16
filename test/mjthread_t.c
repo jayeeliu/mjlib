@@ -3,13 +3,13 @@
 
 #include <mjsock.h>
 #include <mjthread.h>
-#include <mjev2.h>
+#include <mjev.h>
 #include <mjconn2.h>
 
 #define WORKER_NUM 2
 
 struct LoopServer {
-    mjEV2        ev;
+    mjEV        ev;
     int         nfd[2];
     mjThread    thread;
 };
@@ -44,7 +44,7 @@ void* MyWorker( void* arg )
 {
     LoopServer server = ( LoopServer ) arg;
     
-    mjEV2_Run( server->ev );
+    mjEV_Run( server->ev );
     return NULL;
 }
 
@@ -53,9 +53,9 @@ int main()
     struct LoopServer server[WORKER_NUM];
 
     for ( int i = 0; i < WORKER_NUM; ++i ) {
-        server[i].ev = mjEV2_New();
+        server[i].ev = mjEV_New();
         pipe( server[i].nfd );
-        mjEV2_Add( server[i].ev, server[i].nfd[0], MJEV_READABLE, AcceptHandler, &server[i] );
+        mjEV_Add( server[i].ev, server[i].nfd[0], MJEV_READABLE, AcceptHandler, &server[i] );
         server[i].thread = mjThread_NewLoop( MyWorker, &server[i] );
     }
 

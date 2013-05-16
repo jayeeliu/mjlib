@@ -2,13 +2,13 @@
 #define _MJCONN_H
 
 #include "mjstr.h"
-#include "mjev2.h"
+#include "mjev.h"
 #include "mjthread.h"
 
 struct mjConn2 {
     int     fd;                             // fd 
     void*   server;                         // tcpserver for server side conn 
-    mjEV2   ev;
+    mjEV   ev;
 
     mjStr rbuf;                             // read buffer 
     mjStr wbuf;                             // write buffer
@@ -17,19 +17,19 @@ struct mjConn2 {
     int             connectType;            // connect type
     mjProc          ConnectCallback;        // ConnectCallback
     unsigned int    connectTimeout;         // connect timeout 
-    mjtevent2*      connectTimeoutEvent;    // connect timeout event
+    mjtevent*       connectTimeoutEvent;    // connect timeout event
 
     int             readType;               // readType
     mjProc          ReadCallBack;           // read callback 
     char*           delim;                  // the delim when readType is READUNTIL
     int             rbytes;                 // read data size when readType is READBYTES
     unsigned int    readTimeout;            // read timeout 
-    mjtevent2*      readTimeoutEvent;       // read timeout event 
+    mjtevent*       readTimeoutEvent;       // read timeout event 
 
     int             writeType;              // write type 
     mjProc          WriteCallBack;          // write callback 
     unsigned int    writeTimeout;           // write timeout
-    mjtevent2*      writeTimeoutEvent;      // write timeout event 
+    mjtevent*       writeTimeoutEvent;      // write timeout event 
 
     int error;                              //  some error happened 
     int closed;                             //  fd closed 
@@ -57,7 +57,7 @@ extern bool mjConn2_SetTimeout( mjConn2 conn, unsigned int readTimeout, unsigned
 extern bool mjConn2_SetPrivate( mjConn2 conn, void* private, mjProc FreePrivte );
 extern bool mjConn2_SetServer( mjConn2 conn, void* server );
 
-extern mjConn2  mjConn2_New( mjEV2 ev, int fd );
+extern mjConn2  mjConn2_New( mjEV ev, int fd );
 extern bool     mjConn2_Delete( mjConn2 conn );
 
 #endif

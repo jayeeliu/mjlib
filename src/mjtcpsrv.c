@@ -57,7 +57,7 @@ bool mjTcpSrv_Run( mjTcpSrv srv )
     }
     // enter loop
     while ( !srv->stop ) {
-        mjEV2_Run( srv->ev );
+        mjEV_Run( srv->ev );
         mjSig_ProcessQueue();
     }
     return true;
@@ -133,7 +133,7 @@ bool mjTcpSrv_SetStop( mjTcpSrv srv, int value )
 
 static bool mjTcpSrv_EnableAccept( mjTcpSrv srv )
 {
-    int ret = mjEV2_Add( srv->ev, srv->sfd, MJEV_READABLE,
+    int ret = mjEV_Add( srv->ev, srv->sfd, MJEV_READABLE,
                     mjTcpSrv_AcceptHandler, srv );
     if ( ret < 0 ) {
         MJLOG_ERR( "mjev add error" );
@@ -162,7 +162,7 @@ mjTcpSrv mjTcpSrv_New( int sfd )
     // server not stop
     srv->stop    = 0;
     // init server loop
-    srv->ev = mjEV2_New();
+    srv->ev = mjEV_New();
     if ( !srv->ev ) {
         MJLOG_ERR( "create ev error" );
         goto failout2;
@@ -184,7 +184,7 @@ mjTcpSrv mjTcpSrv_New( int sfd )
     return srv;
 
 failout3:
-    mjEV2_Delete( srv->ev );
+    mjEV_Delete( srv->ev );
 failout2:
     free( srv );
 failout1:
@@ -212,7 +212,7 @@ bool mjTcpSrv_Delete( mjTcpSrv srv )
         srv->FreePrivate( srv->private );
     }
 
-    mjEV2_Delete( srv->ev );
+    mjEV_Delete( srv->ev );
     mjSock_Close( srv->sfd );
     free( srv );
     return true;

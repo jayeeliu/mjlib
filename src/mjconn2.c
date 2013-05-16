@@ -44,9 +44,9 @@ mjConn2_DelReadEvent
 static void* mjConn2_DelReadEvent( mjConn2 conn )
 {
     // del read event
-    mjEV2_Del( conn->ev, conn->fd, MJEV_READABLE );
+    mjEV_Del( conn->ev, conn->fd, MJEV_READABLE );
     if ( conn->readTimeout ) {
-        mjEV2_DelTimer( conn->ev, conn->readTimeoutEvent ); // invalid timer event
+        mjEV_DelTimer( conn->ev, conn->readTimeoutEvent ); // invalid timer event
         conn->readTimeout       = 0;
         conn->readTimeoutEvent  = NULL;
     }
@@ -134,17 +134,17 @@ static bool mjConn2_AddReadEvent( mjConn2 conn ) {
         goto failout;
     }
     // add readevent
-    if ( mjEV2_Add( conn->ev, conn->fd, MJEV_READABLE, 
+    if ( mjEV_Add( conn->ev, conn->fd, MJEV_READABLE, 
             mjConn2_ReadEventCallBack, conn ) < 0 ) {
-        MJLOG_ERR( "mjEV2_Add error" );
+        MJLOG_ERR( "mjEV_Add error" );
         goto failout;
     }
     // add read timeout event
     if ( conn->readTimeout ) {
-        conn->readTimeoutEvent = mjEV2_AddTimer( conn->ev, 
+        conn->readTimeoutEvent = mjEV_AddTimer( conn->ev, 
             conn->readTimeout, mjConn2_TimeoutCallBack, conn );
         if ( !conn->readTimeoutEvent ) {
-            MJLOG_ERR( "mjEV2_AddTimer error" );
+            MJLOG_ERR( "mjEV_AddTimer error" );
             goto failout;
         }
     }
@@ -186,7 +186,7 @@ bool mjConn2_ReadBytes( mjConn2 conn, int len, mjProc CallBack ) {
         conn->readType = MJCONN_NONE;
         // run callback
         if ( conn->ReadCallBack ) {
-            mjEV2_AddPending( conn->ev, conn->ReadCallBack( conn ), conn );
+            mjEV_AddPending( conn->ev, conn->ReadCallBack( conn ), conn );
         }
         return true;
     }
@@ -273,10 +273,10 @@ mjConn2_DelWriteEvent
 */
 static void* mjConn2_DelWriteEvent( mjConn2 conn )
 {
-    mjEV2_Del( conn->ev, conn->fd, MJEV_WRITEABLE );
+    mjEV_Del( conn->ev, conn->fd, MJEV_WRITEABLE );
     // del write timeout event
     if ( conn->writeTimeout ) {
-        mjEV2_DelTimer( conn->ev, conn->writeTimeoutEvent );
+        mjEV_DelTimer( conn->ev, conn->writeTimeoutEvent );
         conn->writeTimeout      = 0;    
         conn->writeTimeoutEvent = NULL;
     }
@@ -324,18 +324,18 @@ static bool mjConn2_AddWriteEvent( mjConn2 conn )
         goto failout;
     }
     // add write event
-    if ( mjEV2_Add( conn->ev, conn->fd, MJEV_WRITEABLE, 
+    if ( mjEV_Add( conn->ev, conn->fd, MJEV_WRITEABLE, 
             mjConn2_WriteEventCallback, conn ) < 0 ) {
-        MJLOG_ERR( "mjEV2_Add error" );
+        MJLOG_ERR( "mjEV_Add error" );
         goto failout;
     }
     // AddWriteEvent can be call many times
     // When we call it twice, we can't change the callback
     if ( conn->writeTimeout && !conn->writeTimeoutEvent ) { 
-        conn->writeTimeoutEvent = mjEV2_AddTimer( conn->ev, 
+        conn->writeTimeoutEvent = mjEV_AddTimer( conn->ev, 
                 conn->writeTimeout, mjConn2_TimeoutCallBack, conn );
         if ( !conn->writeTimeoutEvent ) {
-            MJLOG_ERR( "mjEV2_AddTimer error" );
+            MJLOG_ERR( "mjEV_AddTimer error" );
             goto failout;
         }
     }
@@ -496,9 +496,9 @@ mjConn2_DelConnectEvent
 ==================================================================
 */
 static void* mjConn2_DelConnectEvent( mjConn2 conn ) {
-    mjEV2_Del( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE ); 
+    mjEV_Del( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE ); 
     if ( conn->connectTimeout ) {
-        mjEV2_DelTimer( conn->ev, conn->connectTimeoutEvent );
+        mjEV_DelTimer( conn->ev, conn->connectTimeoutEvent );
         conn->connectTimeout        = 0;
         conn->connectTimeoutEvent   = NULL;
     }
@@ -541,17 +541,17 @@ mjConn2_AddConnectEvent
 */
 static bool mjConn2_AddConnectEvent( mjConn2 conn ) {
     // add to eventloop
-    if ( mjEV2_Add( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE, 
+    if ( mjEV_Add( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE, 
                 mjConn2_ConnectEventCallback, conn ) < 0 )  {
-        MJLOG_ERR( "mjEV2_Add error" );
+        MJLOG_ERR( "mjEV_Add error" );
         goto failout;
     }
     // set connect timeout
     if ( conn->connectTimeout ) {
-        conn->connectTimeoutEvent = mjEV2_AddTimer( conn->ev, 
+        conn->connectTimeoutEvent = mjEV_AddTimer( conn->ev, 
                 conn->connectTimeout, mjConn2_TimeoutCallBack, conn );
         if ( !conn->connectTimeoutEvent ) {
-            MJLOG_ERR("mjEV2_AddTimer error");
+            MJLOG_ERR("mjEV_AddTimer error");
             goto failout;
         }
     }
@@ -595,7 +595,7 @@ bool mjConn2_Connect( mjConn2 conn, const char* ipaddr,
         // connect success
         conn->connectType = MJCONN_NONE;
         if ( conn->ConnectCallback ) {
-            mjEV2_AddPending( conn->ev, conn->ConnectCallback, conn );
+            mjEV_AddPending( conn->ev, conn->ConnectCallback, conn );
         }
         return true;
     }
@@ -628,7 +628,7 @@ mjConn2_New
     return NULL -- fail, other -- success
 ================================================
 */
-mjConn2 mjConn2_New( mjEV2 ev, int fd ) {
+mjConn2 mjConn2_New( mjEV ev, int fd ) {
     // event loop must not be null
     if ( !ev ) {
         MJLOG_ERR( "ev is null" );
@@ -674,19 +674,19 @@ bool mjConn2_Delete( mjConn2 conn ) {
     }
     // invalid connect timeout event
     if ( conn->connectTimeout ) {                            
-        mjEV2_DelTimer( conn->ev, conn->connectTimeoutEvent );
+        mjEV_DelTimer( conn->ev, conn->connectTimeoutEvent );
         conn->connectTimeout        = 0;
         conn->connectTimeoutEvent   = NULL;
     }
     // invalid read timeout event
     if ( conn->readTimeout ) {
-        mjEV2_DelTimer( conn->ev, conn->readTimeoutEvent ); 
+        mjEV_DelTimer( conn->ev, conn->readTimeoutEvent ); 
         conn->readTimeout       = 0;
         conn->readTimeoutEvent  = NULL;
     }
     // invalid write timeout event
     if ( conn->writeTimeout ) {
-        mjEV2_DelTimer( conn->ev, conn->writeTimeoutEvent );
+        mjEV_DelTimer( conn->ev, conn->writeTimeoutEvent );
         conn->writeTimeout      = 0;
         conn->writeTimeoutEvent = NULL;
     }
@@ -695,8 +695,8 @@ bool mjConn2_Delete( mjConn2 conn ) {
         conn->FreePrivte( conn->private );
     }
     // delete eventloop fd, pending proc
-    mjEV2_Del( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE );
-    mjEV2_DelPending( conn->ev, conn );
+    mjEV_Del( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE );
+    mjEV_DelPending( conn->ev, conn );
     mjSock_Close( conn->fd );
     return true;
 }

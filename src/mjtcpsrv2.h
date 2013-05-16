@@ -2,13 +2,13 @@
 #define MJTCPSRV2_H
 
 #include <stdbool.h>
-#include "mjev2.h"
+#include "mjev.h"
 #include "mjthreadpool.h"
 
 struct mjTcpSrv2 {
     int     sfd;
     int     stop;
-    mjEV2   ev;
+    mjEV    ev;
     mjProc  Routine;
     void*   mainServer;
    
@@ -20,7 +20,7 @@ typedef struct mjTcpSrv2* mjTcpSrv2;
 struct mjMainServer_AsyncData {
     int     finNotify_r;
     int     finNotify_w;
-    mjEV2   ev;
+    mjEV    ev;
     mjProc  workerRoutine;
     void*   rdata;
     mjProc  CallBack;
@@ -46,7 +46,7 @@ struct mjMainServer {
 typedef struct mjMainServer* mjMainServer;
 
 extern bool         mjMainServer_Async( mjMainServer srv, mjProc Routine, 
-                        void* rdata, mjEV2 ev, mjProc CallBack, void* cdata );
+                        void* rdata, mjEV ev, mjProc CallBack, void* cdata );
 extern bool         mjMainServer_Run( mjMainServer srv );
 extern mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, 
                         int workerThreadNum );

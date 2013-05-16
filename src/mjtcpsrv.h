@@ -2,12 +2,12 @@
 #define _MJTCPSRV_H
 
 #include <stdbool.h>
-#include "mjev2.h"
+#include "mjev.h"
 
 struct mjTcpSrv {
     int     sfd;
     int     stop;
-    mjEV2   ev;    
+    mjEV    ev;    
     mjProc  Handler;                // Handler when accept a connect
 
     mjProc  InitSrv;                // init Server proc
