@@ -115,8 +115,8 @@ static bool mjTcpSrv2_Delete( mjTcpSrv2 srv ) {
     return true;
 }
 
-static void* mjMainServer_AsyncFinCallBack( void* data ) {
-    mjMainServer_AsyncData asyncData = ( mjMainServer_AsyncData ) data;
+static void* mjMainSrv_AsyncFinCallBack( void* data ) {
+    mjMainSrv_AsyncData asyncData = ( mjMainSrv_AsyncData ) data;
     int finNotify_r     = asyncData->finNotify_r;
     int finNotify_w     = asyncData->finNotify_w;
     mjEV ev            = asyncData->ev;
@@ -136,13 +136,13 @@ static void* mjMainServer_AsyncFinCallBack( void* data ) {
 
 /*
 ===============================================================================
-mjMainServer_AsyncRoutine
+mjMainSrv_AsyncRoutine
     aync run routine
 ===============================================================================
 */
-static void* mjMainServer_AsyncRoutine( void* data ) {
+static void* mjMainSrv_AsyncRoutine( void* data ) {
     // get data from asyncData
-    mjMainServer_AsyncData asyncData = ( mjMainServer_AsyncData ) data;
+    mjMainSrv_AsyncData asyncData = ( mjMainSrv_AsyncData ) data;
     int finNotify_w         = asyncData->finNotify_w;
     mjProc workerRoutine    = asyncData->workerRoutine;
     void* rdata             = asyncData->rdata;
@@ -155,20 +155,20 @@ static void* mjMainServer_AsyncRoutine( void* data ) {
 
 /*
 ===============================================================================
-mjMainServer_Async
+mjMainSrv_Async
     run workerRoutine in threadpool, when finish call CallBack
 ===============================================================================
 */
-bool mjMainServer_Async( mjMainServer srv, mjProc workerRoutine, void* rdata,
+bool mjMainSrv_Async( mjMainSrv srv, mjProc workerRoutine, void* rdata,
             mjEV ev, mjProc CallBack, void* cdata ) {
     // sanity check
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
         return false;
     }
-    // alloc mjMainServer_AsyncData
-    mjMainServer_AsyncData asyncData = ( mjMainServer_AsyncData ) calloc ( 1,
-                sizeof( struct mjMainServer_AsyncData ) );
+    // alloc mjMainSrv_AsyncData
+    mjMainSrv_AsyncData asyncData = ( mjMainSrv_AsyncData ) calloc ( 1,
+                sizeof( struct mjMainSrv_AsyncData ) );
     if ( !asyncData ) {
         MJLOG_ERR( "AsycData alloc Error" );
         return false;
@@ -186,13 +186,13 @@ bool mjMainServer_Async( mjMainServer srv, mjProc workerRoutine, void* rdata,
         return false;
     }
     mjEV_Add( ev, notifyFd[0], MJEV_READABLE, 
-            mjMainServer_AsyncFinCallBack, asyncData );
+            mjMainSrv_AsyncFinCallBack, asyncData );
     asyncData->finNotify_r  = notifyFd[0];
     asyncData->finNotify_w  = notifyFd[1];
     // add routine to threadpool
     if ( !mjThreadPool_AddWork( srv->workerThreadPool, 
-            mjMainServer_AsyncRoutine, asyncData ) ) {
-        if ( !mjThread_RunOnce( mjMainServer_AsyncRoutine, asyncData ) ) {
+            mjMainSrv_AsyncRoutine, asyncData ) ) {
+        if ( !mjThread_RunOnce( mjMainSrv_AsyncRoutine, asyncData ) ) {
             MJLOG_ERR( "Oops async run Error" );
             // del notify event
             mjEV_Del( ev, notifyFd[0], MJEV_READABLE );
@@ -207,11 +207,11 @@ bool mjMainServer_Async( mjMainServer srv, mjProc workerRoutine, void* rdata,
 
 /*
 ===============================================================================
-mjMainServer_Run
+mjMainSrv_Run
     run main server. just for accept and dispatch
 ===============================================================================
 */
-bool mjMainServer_Run( mjMainServer srv ) {
+bool mjMainSrv_Run( mjMainSrv srv ) {
     // sanity check
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
@@ -243,14 +243,14 @@ bool mjMainServer_Run( mjMainServer srv ) {
 
 /*
 ================================================================================
-mjMainServer_New
+mjMainSrv_New
     create new mjserver struct
 ===============================================================================
 */
-mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, int workerThreadNum ) {
+mjMainSrv mjMainSrv_New( int sfd, mjProc serverRoutine, int workerThreadNum ) {
     // alloc server struct
-    mjMainServer srv = ( mjMainServer ) calloc ( 1, 
-            sizeof( struct mjMainServer ) );
+    mjMainSrv srv = ( mjMainSrv ) calloc ( 1, 
+            sizeof( struct mjMainSrv ) );
     if ( !srv ) {
         MJLOG_ERR( "mjserver create error" );
         return NULL;
@@ -273,7 +273,7 @@ mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, int workerThreadNu
         // set serverNotify
         if ( socketpair( AF_LOCAL, SOCK_STREAM, 0, fd ) ) {
             MJLOG_ERR( "socketpair error" );
-            mjMainServer_Delete( srv );
+            mjMainSrv_Delete( srv );
             return NULL;
         }
         srv->serverNotify[i] = fd[0];
@@ -281,7 +281,7 @@ mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, int workerThreadNu
         srv->server[i] = mjTcpSrv2_New( fd[1], srv->serverRoutine );
         if ( !srv->server[i] ) {
             MJLOG_ERR( "mjTcpSrv2 create error" );
-            mjMainServer_Delete( srv );
+            mjMainSrv_Delete( srv );
             return NULL;
         }
         srv->server[i]->mainServer = srv;
@@ -290,7 +290,7 @@ mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, int workerThreadNu
                 srv->server[i] );
         if ( !srv->serverThread[i] ) {
             MJLOG_ERR( "mjThread create error" );
-            mjMainServer_Delete( srv );
+            mjMainSrv_Delete( srv );
             return NULL;
         }
         // set cpu affinity
@@ -305,7 +305,7 @@ mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, int workerThreadNu
     srv->workerThreadPool = mjThreadPool_New( srv->workerThreadNum ); 
     if ( !srv->workerThreadPool ) {
         MJLOG_ERR( "threadpool create error" );
-        mjMainServer_Delete( srv );
+        mjMainSrv_Delete( srv );
         return NULL;
     }
     return srv;
@@ -313,11 +313,11 @@ mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, int workerThreadNu
 
 /*
 ===============================================================================
-mjMainServer_Delete
-    delete mjMainServer struct
+mjMainSrv_Delete
+    delete mjMainSrv struct
 ===============================================================================
 */
-bool mjMainServer_Delete( mjMainServer srv ) {
+bool mjMainSrv_Delete( mjMainSrv srv ) {
     // sanity check
     if ( !srv ) {
         MJLOG_ERR( "server is null" );

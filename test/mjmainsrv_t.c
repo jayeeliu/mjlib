@@ -18,7 +18,7 @@ static void* on_write( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
     mjConn_WriteS( conn, "Final Server Ready!!!\r\n", NULL );
-    mjMainServer_Async( ( ( mjTcpSrv2 )conn->server )->mainServer, calRoutine, NULL, 
+    mjMainSrv_Async( ( ( mjTcpSrv2 )conn->server )->mainServer, calRoutine, NULL, 
             conn->ev, on_close, conn );
     return NULL;
 }
@@ -38,12 +38,12 @@ int main()
         return -1;
     }
 
-    mjMainServer server = mjMainServer_New( sfd, Routine, 10 );
+    mjMainSrv server = mjMainSrv_New( sfd, Routine, 10 );
     if ( !server ) {
-        printf( "mjMainServer create error\n" );
+        printf( "mjMainSrv create error\n" );
         return -1;
     }
-    mjMainServer_Run( server );
-    mjMainServer_Delete( server );
+    mjMainSrv_Run( server );
+    mjMainSrv_Delete( server );
     return 0;
 }

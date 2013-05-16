@@ -17,7 +17,7 @@ struct mjTcpSrv2 {
 };
 typedef struct mjTcpSrv2* mjTcpSrv2;
 
-struct mjMainServer_AsyncData {
+struct mjMainSrv_AsyncData {
     int     finNotify_r;
     int     finNotify_w;
     mjEV    ev;
@@ -26,11 +26,11 @@ struct mjMainServer_AsyncData {
     mjProc  CallBack;
     void*   cdata;
 };
-typedef struct mjMainServer_AsyncData* mjMainServer_AsyncData;
+typedef struct mjMainSrv_AsyncData* mjMainSrv_AsyncData;
 
 #define MAX_SERVER_NUM  64
 
-struct mjMainServer {
+struct mjMainSrv {
     int             sfd;
     int             stop;
     
@@ -43,13 +43,13 @@ struct mjMainServer {
     mjTcpSrv2       server[MAX_SERVER_NUM];
     mjThread        serverThread[MAX_SERVER_NUM];
 };
-typedef struct mjMainServer* mjMainServer;
+typedef struct mjMainSrv* mjMainSrv;
 
-extern bool         mjMainServer_Async( mjMainServer srv, mjProc Routine, 
+extern bool         mjMainSrv_Async( mjMainSrv srv, mjProc Routine, 
                         void* rdata, mjEV ev, mjProc CallBack, void* cdata );
-extern bool         mjMainServer_Run( mjMainServer srv );
-extern mjMainServer mjMainServer_New( int sfd, mjProc serverRoutine, 
+extern bool         mjMainSrv_Run( mjMainSrv srv );
+extern mjMainSrv    mjMainSrv_New( int sfd, mjProc serverRoutine, 
                         int workerThreadNum );
-extern bool         mjMainServer_Delete( mjMainServer srv );
+extern bool         mjMainSrv_Delete( mjMainSrv srv );
 
 #endif
