@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "mjtcpsrv2.h"
-#include "mjconn2.h"
+#include "mjconn.h"
 #include "mjcomm.h"
 #include "mjsock.h"
 #include "mjsig.h"
@@ -31,13 +31,13 @@ static void* mjTcpSrv2_AcceptRoutine( void* arg ) {
         return NULL;
     }
     // create new mjconn
-    mjConn2 conn = mjConn2_New( srv->ev, cfd );
+    mjConn conn = mjConn_New( srv->ev, cfd );
     if ( !conn ) {
-        MJLOG_ERR( "mjConn2 create error" );
+        MJLOG_ERR( "mjConn create error" );
         mjSock_Close( cfd );
         return NULL;
     }
-    mjConn2_SetServer( conn, srv );
+    mjConn_SetServer( conn, srv );
     srv->Routine( conn );
     return NULL;
 }

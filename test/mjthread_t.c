@@ -4,7 +4,7 @@
 #include <mjsock.h>
 #include <mjthread.h>
 #include <mjev.h>
-#include <mjconn2.h>
+#include <mjconn.h>
 
 #define WORKER_NUM 2
 
@@ -17,15 +17,15 @@ typedef struct LoopServer* LoopServer;
 
 void* on_close( void* arg )
 {
-    mjConn2 conn = ( mjConn2 ) arg;
-    mjConn2_Delete( conn );
+    mjConn conn = ( mjConn ) arg;
+    mjConn_Delete( conn );
     return NULL;
 }
 
 void* on_read( void* arg )
 {
-    mjConn2 conn = ( mjConn2 ) arg;
-    mjConn2_WriteS( conn, "read OK!", on_close );
+    mjConn conn = ( mjConn ) arg;
+    mjConn_WriteS( conn, "read OK!", on_close );
     return NULL;
 }
 
@@ -34,9 +34,9 @@ void* AcceptHandler( void* arg )
     LoopServer server = ( LoopServer ) arg;
     int cfd;
     read( server->nfd[0], &cfd, sizeof( int ) );
-    mjConn2 conn = mjConn2_New( server->ev, cfd );
+    mjConn conn = mjConn_New( server->ev, cfd );
 
-    mjConn2_ReadUntil( conn, "\r\n\r\n", on_read );
+    mjConn_ReadUntil( conn, "\r\n\r\n", on_read );
     return NULL;
 }
 

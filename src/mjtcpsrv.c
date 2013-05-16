@@ -6,7 +6,7 @@
 #include "mjlog.h"
 #include "mjsock.h"
 #include "mjtcpsrv.h"
-#include "mjconn2.h"
+#include "mjconn.h"
 #include "mjsig.h"
 
 static void* mjTcpSrv_AcceptHandler( void* data )
@@ -26,14 +26,14 @@ static void* mjTcpSrv_AcceptHandler( void* data )
         return NULL;
     }
     // create new connection
-    mjConn2 conn = mjConn2_New( srv->ev, cfd );
+    mjConn conn = mjConn_New( srv->ev, cfd );
     if ( !conn ) {
-        MJLOG_ERR( "mjConn2 create error" );
+        MJLOG_ERR( "mjConn create error" );
         mjSock_Close( cfd );
         return NULL;
     }
     // set conn server
-    mjConn2_SetServer( conn, srv );
+    mjConn_SetServer( conn, srv );
     // run Handler, conn is parameter
     srv->Handler( conn );
     return NULL;

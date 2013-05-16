@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "mjtcpsrv2.h"
-#include "mjconn2.h"
+#include "mjconn.h"
 #include "mjsock.h"
 
 static void* on_close( void* arg )
 {
-    mjConn2 conn = ( mjConn2 ) arg;
-    mjConn2_Delete( conn );
+    mjConn conn = ( mjConn ) arg;
+    mjConn_Delete( conn );
     return NULL;
 }
 
@@ -16,8 +16,8 @@ static void* calRoutine( void* arg ) {
 
 static void* on_write( void* arg )
 {
-    mjConn2 conn = ( mjConn2 ) arg;
-    mjConn2_WriteS( conn, "Final Server Ready!!!\r\n", NULL );
+    mjConn conn = ( mjConn ) arg;
+    mjConn_WriteS( conn, "Final Server Ready!!!\r\n", NULL );
     mjMainServer_Async( ( ( mjTcpSrv2 )conn->server )->mainServer, calRoutine, NULL, 
             conn->ev, on_close, conn );
     return NULL;
@@ -25,8 +25,8 @@ static void* on_write( void* arg )
 
 static void* Routine( void* arg )
 {
-    mjConn2 conn = ( mjConn2 ) arg;
-    mjConn2_ReadUntil( conn, "\r\n\r\n", on_write);
+    mjConn conn = ( mjConn ) arg;
+    mjConn_ReadUntil( conn, "\r\n\r\n", on_write);
     return NULL;
 }
 

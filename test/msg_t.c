@@ -4,28 +4,28 @@
 #include "mjtcpsrv.h"
 #include "mjsock.h"
 #include "mjopt.h"
-#include "mjconn2.h"
+#include "mjconn.h"
 
 void* on_close( void* arg )
 {
-    mjConn2 conn = ( mjConn2 )arg;
-    mjConn2_Delete( conn );
+    mjConn conn = ( mjConn )arg;
+    mjConn_Delete( conn );
     return NULL;
 }
 
 void* on_read( void* arg )
 {
-    mjConn2 conn = ( mjConn2 )arg;
+    mjConn conn = ( mjConn )arg;
     mjStrList strList = mjStrList_New();
     mjStr_Split( conn->data, " ", strList );
     
     mjStr comm = mjStrList_Get( strList, 0 );    
     if ( !strcmp( comm->data, "get" ))  {
-        mjConn2_WriteS( conn, "get command run\n", on_close );
+        mjConn_WriteS( conn, "get command run\n", on_close );
     } else if ( !strcmp( comm->data, "put" ) ) {
-        mjConn2_WriteS( conn, "put command run\n", on_close );
+        mjConn_WriteS( conn, "put command run\n", on_close );
     } else {
-        mjConn2_WriteS( conn, "other command run\n", on_close );
+        mjConn_WriteS( conn, "other command run\n", on_close );
     }
 
     mjStrList_Delete( strList );
@@ -34,8 +34,8 @@ void* on_read( void* arg )
 
 void* Msg_Handler( void* arg )
 {
-    mjConn2 conn = ( mjConn2 )arg;
-    mjConn2_ReadUntil( conn, "\r\n", on_read );
+    mjConn conn = ( mjConn )arg;
+    mjConn_ReadUntil( conn, "\r\n", on_read );
     return NULL;
 }
 
