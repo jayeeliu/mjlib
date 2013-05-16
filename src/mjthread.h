@@ -22,17 +22,17 @@ struct mjThread {
     void*           private;        // holding private data, point to threadpool when in threadpool
     mjProc          FreePrivate;
 
-    int             type;
+    int             type;           // normal or loop thread
     int             closed;         // 1 when thread exit, otherwise 0
     int             shutDown;       // 1 when shutdown command has invoked, otherwise 0
 };
 typedef struct mjThread* mjThread;
 
 extern bool     mjThread_RunOnce( mjProc Routine, void* arg );
-
 extern bool     mjThread_AddWork( mjThread thread, mjProc Routine, void* arg );
 extern bool     mjThread_SetPrivate( mjThread thread, void* private, mjProc FreePrivate );
 extern bool     mjThread_SetPrePost( mjThread thread, mjProc PreRoutine, mjProc PostRoutine );
+
 extern mjThread mjThread_New();
 extern mjThread mjThread_NewLoop( mjProc Rountine, void* arg );
 extern bool     mjThread_Delete( mjThread thread );

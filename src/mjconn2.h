@@ -31,12 +31,6 @@ struct mjConn2 {
     unsigned int    writeTimeout;           // write timeout
     mjtevent2*      writeTimeoutEvent;      // write timeout event 
 
-    int         threadType;                 // thread type
-    mjProc      ThreadCallBack;             // thread callback function 
-    int         threadReadNotify;           // thread notify fd 
-    int         threadWriteNotify;          // thread notify write fd 
-    mjProc      ThreadRoutine;              // thread routine to be run in runasync
-
     int error;                              //  some error happened 
     int closed;                             //  fd closed 
 
@@ -55,8 +49,6 @@ extern bool mjConn2_Write( mjConn2 conn, mjStr buf, mjProc CallBack );
 extern bool mjConn2_BufWriteS( mjConn2 conn, char* buf );
 extern bool mjConn2_BufWrite( mjConn2 conn, mjStr buf );
 extern bool mjConn2_Flush( mjConn2 conn, mjProc CallBack );
-// thread func
-extern bool mjConn2_RunAsync( mjConn2 conn, mjProc Routine, mjProc CallBack );
 // conn func
 extern bool mjConn2_Connect( mjConn2 conn, const char* ipaddr, int port, mjProc CallBack );
 

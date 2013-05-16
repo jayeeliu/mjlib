@@ -10,14 +10,16 @@ static void* on_close( void* arg )
     return NULL;
 }
 
+static void* calRoutine( void* arg ) {
+    return NULL;
+}
+
 static void* on_write( void* arg )
 {
     mjConn2 conn = ( mjConn2 ) arg;
-//    long long sum=1;
-//    for(int i=1; i<100000; i++) {
-//        sum *= i;
-//    }
-    mjConn2_WriteS( conn, "Final Server Ready!!!\r\n", on_close );
+    mjConn2_WriteS( conn, "Final Server Ready!!!\r\n", NULL );
+    mjMainServer_Async( ( ( mjTcpSrv2 )conn->server )->mainServer, calRoutine, NULL, 
+            conn->ev, on_close, conn );
     return NULL;
 }
 
@@ -36,12 +38,12 @@ int main()
         return -1;
     }
 
-    mjServer server = mjServer_New( sfd, Routine );
+    mjMainServer server = mjMainServer_New( sfd, Routine, 10 );
     if ( !server ) {
-        printf( "mjServer create error\n" );
+        printf( "mjMainServer create error\n" );
         return -1;
     }
-    mjServer_Run( server );
-    mjServer_Delete( server );
+    mjMainServer_Run( server );
+    mjMainServer_Delete( server );
     return 0;
 }

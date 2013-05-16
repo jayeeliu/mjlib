@@ -426,97 +426,6 @@ bool mjConn2_Write( mjConn2 conn, mjStr buf, mjProc CallBack ) {
 }
 
 /*
-===============================================================
-mjConn2_ThreadFin
-    when thread finish, call this function
-===============================================================
-*/
-static void* mjConn2_ThreadFin( void* arg )
-{
-    mjConn2 conn = ( mjConn2 ) arg;
-    
-    // close pipe fd
-    mjEV2_Del( conn->ev, conn->threadReadNotify, MJEV_READABLE );
-    close( conn->threadReadNotify );
-    close( conn->threadWriteNotify );
-    conn->threadReadNotify = -1;
-    conn->threadWriteNotify = -1;
-
-    conn->ThreadRoutine = NULL;
-    // error happend in thread, exit
-    if ( conn->closed || conn->error ) {
-        MJLOG_ERR( "error happends in thread" );
-        mjConn2_Delete( conn );
-        return NULL;
-    }
-    // reset thread type
-    conn->threadType = MJCONN_NONE;
-    // call thread callback
-    if ( conn->ThreadCallBack ) conn->ThreadCallBack( conn );
-    return NULL;
-}
-
-/*
-==================================================
-mjConn2_Thread
-    main thread, call ThreadRoutine
-==================================================
-*/
-static void* mjConn2_Thread( void* arg )
-{
-    mjConn2 conn = ( mjConn2 ) arg;
-    // if error happend, set conn->error
-    if ( conn->ThreadRoutine ) {
-        conn->ThreadRoutine( conn );
-    }
-    // notify thread finish
-    write( conn->threadWriteNotify, "OK", 2 ); 
-    return NULL;
-}
-
-/*
-=====================================================================
-mjConn2_RunAsync
-    run async, we can't call any conn function in routine, only
-    change the data
-=====================================================================
-*/
-bool mjConn2_RunAsync( mjConn2 conn, mjProc Routine, mjProc CallBack ) {
-    // RunAsync can't re enter
-    if ( conn->threadType != MJCONN_NONE ) {
-        MJLOG_ERR( "threadType must be MJCONN_NONE" );
-        goto failout;
-    }
-    // must have callback
-    if ( !CallBack ) {
-        MJLOG_ERR( "proc is null" );
-        goto failout;
-    }
-    // create notify fd
-    int notify[2];
-    if ( pipe( notify ) < 0 ) {
-        MJLOG_ERR( "pipe error: %s", strerror( errno )  );
-        goto failout;
-    }
-    conn->threadReadNotify  = notify[0];
-    conn->threadWriteNotify = notify[1];
-    // set thread status
-    conn->threadType        = MJCONN_THREAD;
-    conn->ThreadCallBack    = CallBack;
-    conn->ThreadRoutine     = Routine;
-    // add thread notify to eventloop
-    mjEV2_Add( conn->ev, conn->threadReadNotify, MJEV_READABLE, mjConn2_ThreadFin, conn );
-    // create and run thread
-    mjThread_RunOnce( mjConn2_Thread, conn );
-    return true;
-
-failout:
-    MJLOG_ERR( "RunAsync Error" );
-    mjConn2_Delete( conn );
-    return false;
-}
-
-/*
 =============================================
 mjConn2_SetConnectTimeout
     set conn connect timeout
@@ -749,9 +658,6 @@ mjConn2 mjConn2_New( mjEV2 ev, int fd ) {
         mjSock_Close( fd );
         return NULL;
     }
-    // set connect status
-    conn->threadReadNotify  = -1;
-    conn->threadWriteNotify = -1;           // thread notify fd 
     return conn;
 }
 
@@ -788,9 +694,6 @@ bool mjConn2_Delete( mjConn2 conn ) {
     if ( conn->private && conn->FreePrivte ) { 
         conn->FreePrivte( conn->private );
     }
-    // close threadNotify
-    if ( conn->threadReadNotify != -1 ) close( conn->threadReadNotify );
-    if ( conn->threadWriteNotify != -1 ) close( conn->threadWriteNotify );
     // delete eventloop fd, pending proc
     mjEV2_Del( conn->ev, conn->fd, MJEV_READABLE | MJEV_WRITEABLE );
     mjEV2_DelPending( conn->ev, conn );

@@ -6,7 +6,6 @@ void* Routine( void* arg )
 {
     static int count = 0;
     printf("count: %4d\n", count++);
-    sleep(1);
     return NULL;
 }
 
@@ -24,9 +23,12 @@ void* PostRoutine( void* arg )
 
 int main()
 {
-    mjThread thread = mjThread_NewLoop( Routine, NULL );
-  
-    sleep( 5 ); 
+    mjThread thread = mjThread_New( Routine );
+ 
+    for ( int i = 0; i < 1000; i++ ) {
+        mjThread_AddWork( thread, Routine, NULL );
+    } 
+    sleep(30);
     mjThread_Delete( thread );
 
     return 0;
