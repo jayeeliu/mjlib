@@ -15,6 +15,7 @@ mjTcpSrv2_AcceptRoutine
     accept routine
 ===============================================================================
 */
+/*
 static void* mjTcpSrv2_AcceptRoutine( void* arg ) {
     mjTcpSrv2 srv = ( mjTcpSrv2 ) arg;
     // read new client socket
@@ -41,25 +42,27 @@ static void* mjTcpSrv2_AcceptRoutine( void* arg ) {
     srv->Routine( conn );
     return NULL;
 }
-
+*/
 /*
 ===============================================================================
 mjTcpSrv2_Run
     run server routine in threadloop
 ===============================================================================
 */
+/*
 static void* mjTcpSrv2_Run( void* arg ) {
     mjTcpSrv2 srv = ( mjTcpSrv2 ) arg;
     mjEV_Run( srv->ev );
     return NULL;
 }
-
+*/
 /*
 ===============================================================================
 mjTcpSrv2_New
     create new mjtcpsrv2 struct
 ===============================================================================
 */
+/*
 static mjTcpSrv2 mjTcpSrv2_New( int sfd, mjProc Routine ) {
     // alloc mjTcpSrv2 struct
     mjTcpSrv2 srv = ( mjTcpSrv2 ) calloc ( 1, sizeof( struct mjTcpSrv2 ) );
@@ -95,13 +98,14 @@ failout1:
     mjSock_Close( sfd );
     return NULL; 
 }
-
+*/
 /*
 ===============================================================================
 mjTcpSrv2_Delete
     delete mjtcpsrv2 struct
 ===============================================================================
 */
+/*
 static bool mjTcpSrv2_Delete( mjTcpSrv2 srv ) {
     // sanity check
     if ( !srv ) {
@@ -115,6 +119,7 @@ static bool mjTcpSrv2_Delete( mjTcpSrv2 srv ) {
     free( srv );
     return true;
 }
+*/
 
 /*
 ===============================================================================
@@ -285,7 +290,8 @@ mjMainSrv mjMainSrv_New( int sfd, mjProc serverRoutine, int workerThreadNum ) {
         }
         srv->serverNotify[i] = fd[0];
         // create new server struct and set mainServer
-        srv->server[i] = mjTcpSrv2_New( fd[1], srv->serverRoutine );
+        srv->server[i] = mjTcpSrv2_New( fd[1], srv->serverRoutine, 
+                                MJTCPSRV_INNER );
         if ( !srv->server[i] ) {
             MJLOG_ERR( "mjTcpSrv2 create error" );
             mjMainSrv_Delete( srv );
@@ -293,13 +299,14 @@ mjMainSrv mjMainSrv_New( int sfd, mjProc serverRoutine, int workerThreadNum ) {
         }
         srv->server[i]->mainServer = srv;
         // create new thread
-        srv->serverThread[i] = mjThread_NewLoop( mjTcpSrv2_Run, 
-                srv->server[i] );
+        srv->serverThread[i] = mjThread_New();
         if ( !srv->serverThread[i] ) {
             MJLOG_ERR( "mjThread create error" );
             mjMainSrv_Delete( srv );
             return NULL;
         }
+        mjThread_AddWork( srv->serverThread[i], mjTcpSrv2_Run, srv->server[i],
+                NULL, NULL, mjTcpSrv2_Delete, srv->server[i] );
         // set cpu affinity
         cpu_set_t cpuset;
         CPU_ZERO( &cpuset );

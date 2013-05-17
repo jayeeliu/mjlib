@@ -5,9 +5,6 @@
 #include <pthread.h>
 #include "mjproc.h"
 
-#define MJTHREAD_NORMAL 0
-#define MJTHREAD_LOOP   1
-
 struct mjThread {
     pthread_t       threadID;
     pthread_mutex_t threadLock;
@@ -15,26 +12,26 @@ struct mjThread {
     
     mjProc          Routine;
     void*           arg; 
-
     mjProc          PreRoutine;
+    void*           argPre;
     mjProc          PostRoutine;
+    void*           argPost;
     
     void*           private;        // holding private data, point to threadpool when in threadpool
     mjProc          FreePrivate;
 
-    int             type;           // normal or loop thread
     int             closed;         // 1 when thread exit, otherwise 0
     int             shutDown;       // 1 when shutdown command has invoked, otherwise 0
 };
 typedef struct mjThread* mjThread;
 
 extern bool     mjThread_RunOnce( mjProc Routine, void* arg );
-extern bool     mjThread_AddWork( mjThread thread, mjProc Routine, void* arg );
+extern bool     mjThread_AddWork( mjThread thread, mjProc Routine, void* arg,
+                    mjProc PreRoutine, void* argPre, 
+                    mjProc PostRoutine, void* argPost );
 extern bool     mjThread_SetPrivate( mjThread thread, void* private, mjProc FreePrivate );
-extern bool     mjThread_SetPrePost( mjThread thread, mjProc PreRoutine, mjProc PostRoutine );
 
 extern mjThread mjThread_New();
-extern mjThread mjThread_NewLoop( mjProc Rountine, void* arg );
 extern bool     mjThread_Delete( mjThread thread );
 
 #endif

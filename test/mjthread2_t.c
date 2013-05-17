@@ -26,7 +26,8 @@ int main()
     mjThread thread = mjThread_New( Routine );
  
     for ( int i = 0; i < 1000; i++ ) {
-        mjThread_AddWork( thread, Routine, NULL );
+        mjThread_AddWork( thread, Routine, NULL, 
+            NULL, NULL, NULL, NULL );
     } 
     sleep(30);
     mjThread_Delete( thread );

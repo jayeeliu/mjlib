@@ -4,7 +4,9 @@
 #include <stdbool.h>
 #include "mjev.h"
 #include "mjthreadpool.h"
+#include "mjtcpsrv2.h"
 
+/*
 struct mjTcpSrv2 {
     int     sfd;
     int     stop;
@@ -16,6 +18,7 @@ struct mjTcpSrv2 {
     mjProc  FreePrivate; 
 };
 typedef struct mjTcpSrv2* mjTcpSrv2;
+*/
 
 struct mjMainSrv_AsyncData {
     int     finNotify_r;

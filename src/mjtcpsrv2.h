@@ -19,12 +19,13 @@ struct mjTcpSrv2 {
 };
 typedef struct mjTcpSrv2* mjTcpSrv2;
 
-extern bool         mjTcpSrv2_Run( mjTcpSrv2 srv );
+extern void*        mjTcpSrv2_AcceptRoutine( void* arg );
+extern void*        mjTcpSrv2_Run( void* arg );
 extern bool         mjTcpSrv2_SetPrivate( mjTcpSrv2 srv, void* private,
                             mjProc FreePrivate );
 extern bool         mjTcpSrv2_SetStop( mjTcpSrv2 srv, int value );
 
 extern mjTcpSrv2    mjTcpSrv2_New( int sfd, mjProc Routine, int type );
-extern bool         mjTcpSrv2_Delete( mjTcpSrv2 srv );
+extern void*        mjTcpSrv2_Delete( void* arg );
 
 #endif

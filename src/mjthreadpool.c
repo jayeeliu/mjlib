@@ -5,6 +5,24 @@
 
 /*
 ===============================================================================
+mjThreadPool_ThreadFin
+    thread post routine
+    add thread to freelist
+===============================================================================
+*/
+static void* mjThreadPool_ThreadFin( void* arg ) {
+    // get thread entry struct
+    mjThread thread = ( mjThread ) arg;
+    mjThreadEntry entry = ( mjThreadEntry ) thread->private;
+    // add thread to free list 
+    pthread_mutex_lock( &entry->tPool->freeListLock );
+    list_add_tail( &entry->nodeList, &entry->tPool->freeList );
+    pthread_mutex_unlock( &entry->tPool->freeListLock ); 
+    return NULL;
+}
+
+/*
+===============================================================================
 mjThreadPool_AddWork
     add worker to thread pool
     return: 0 --- success, -1 --- fail
@@ -32,29 +50,12 @@ bool mjThreadPool_AddWork( mjThreadPool tPool, mjProc Routine, void* arg ) {
 	pthread_mutex_unlock( &tPool->freeListLock ); 
     if ( !entry ) return false;
     // dispatch work to thread
-    int ret = mjThread_AddWork( entry->thread, Routine, arg );
+    int ret = mjThread_AddWork( entry->thread, Routine, arg, NULL, NULL,
+                    mjThreadPool_ThreadFin, entry->thread );
     if ( !ret ) {
         MJLOG_ERR( "Oops AddWork Error, Thread Lost" );
     }
     return ret;
-}
-
-/*
-===============================================================================
-mjThreadPool_ThreadFin
-    thread post routine
-    add thread to freelist
-===============================================================================
-*/
-static void* mjThreadPool_ThreadFin( void* arg ) {
-    // get thread entry struct
-    mjThread thread = ( mjThread ) arg;
-    mjThreadEntry entry = ( mjThreadEntry ) thread->private;
-    // add thread to free list 
-    pthread_mutex_lock( &entry->tPool->freeListLock );
-    list_add_tail( &entry->nodeList, &entry->tPool->freeList );
-    pthread_mutex_unlock( &entry->tPool->freeListLock ); 
-    return NULL;
 }
 
 /*
@@ -88,8 +89,8 @@ mjThreadPool mjThreadPool_New( int maxThread ) {
         mjThread_SetPrivate( tPool->threads[i].thread, 
                     &tPool->threads[i], NULL );
         // set post proc
-        mjThread_SetPrePost( tPool->threads[i].thread, 
-                    NULL, mjThreadPool_ThreadFin );
+    //    mjThread_SetPrePost( tPool->threads[i].thread, 
+    //                NULL, mjThreadPool_ThreadFin );
     }
     return tPool; 
 } 

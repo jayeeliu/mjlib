@@ -35,7 +35,6 @@ void* AcceptHandler( void* arg )
     int cfd;
     read( server->nfd[0], &cfd, sizeof( int ) );
     mjConn conn = mjConn_New( server->ev, cfd );
-
     mjConn_ReadUntil( conn, "\r\n\r\n", on_read );
     return NULL;
 }
@@ -43,8 +42,10 @@ void* AcceptHandler( void* arg )
 void* MyWorker( void* arg )
 {
     LoopServer server = ( LoopServer ) arg;
-    
-    mjEV_Run( server->ev );
+   
+    while ( 1 ) { 
+        mjEV_Run( server->ev );
+    }
     return NULL;
 }
 
@@ -56,7 +57,9 @@ int main()
         server[i].ev = mjEV_New();
         pipe( server[i].nfd );
         mjEV_Add( server[i].ev, server[i].nfd[0], MJEV_READABLE, AcceptHandler, &server[i] );
-        server[i].thread = mjThread_NewLoop( MyWorker, &server[i] );
+        server[i].thread = mjThread_New();
+        mjThread_AddWork( server[i].thread, MyWorker, &server[i],
+                NULL, NULL, NULL, NULL );
     }
 
     int sfd = mjSock_TcpServer( 7879 );
