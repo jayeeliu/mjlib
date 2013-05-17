@@ -6,20 +6,6 @@
 #include "mjthreadpool.h"
 #include "mjtcpsrv2.h"
 
-/*
-struct mjTcpSrv2 {
-    int     sfd;
-    int     stop;
-    mjEV    ev;
-    mjProc  Routine;
-    void*   mainServer;
-   
-    void*   private;
-    mjProc  FreePrivate; 
-};
-typedef struct mjTcpSrv2* mjTcpSrv2;
-*/
-
 struct mjMainSrv_AsyncData {
     int     finNotify_r;
     int     finNotify_w;
