@@ -90,17 +90,15 @@ bool mjMainSrv_Async( mjMainSrv mainSrv, mjProc workerRoutine, void* rdata,
     asyncData->finNotify_r  = notifyFd[0];
     asyncData->finNotify_w  = notifyFd[1];
     // add routine to threadpool
-    if ( !mjThreadPool_AddWork( mainSrv->workerThreadPool, 
+    if ( !mjThreadPool_AddWorkPlus( mainSrv->workerThreadPool, 
             mjMainSrv_AsyncRoutine, asyncData ) ) {
-        if ( !mjThread_RunOnce( mjMainSrv_AsyncRoutine, asyncData ) ) {
-            MJLOG_ERR( "Oops async run Error" );
-            // del notify event
-            mjEV_Del( ev, notifyFd[0], MJEV_READABLE );
-            close( notifyFd[0] );
-            close( notifyFd[1] );
-            free( asyncData );
-            return false;
-        }
+        MJLOG_ERR( "Oops async run Error" );
+        // del notify event
+        mjEV_Del( ev, notifyFd[0], MJEV_READABLE );
+        close( notifyFd[0] );
+        close( notifyFd[1] );
+        free( asyncData );
+        return false;
     }
     return true;
 }

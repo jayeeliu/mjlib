@@ -24,12 +24,8 @@ static void* mjLF_Routine( void* arg ) {
         break;
     }
     // choose a new leader
-    int ret = mjThreadPool_AddWork( srv->tPool, mjLF_Routine, srv );
-    if ( !ret ) {
-        ret = mjThread_RunOnce( mjLF_Routine, srv );
-        if ( !ret ) {
-            MJLOG_ERR( "Oops No Leader, Too Bad!!!" );
-        }
+    if ( !mjThreadPool_AddWorkPlus( srv->tPool, mjLF_Routine, srv ) ) {
+        MJLOG_ERR( "Oops No Leader, Too Bad!!!" );
     }
     // change to worker
     if ( !srv->Routine ) {

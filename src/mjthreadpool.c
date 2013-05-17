@@ -60,6 +60,21 @@ bool mjThreadPool_AddWork( mjThreadPool tPool, mjProc Routine, void* arg ) {
 
 /*
 ===============================================================================
+mjThreadPool_AddWorkPlus
+    call mjThreadPool_AddWork, if failed, call mjThread_RunOnce
+===============================================================================
+*/
+bool mjThreadPool_AddWorkPlus( mjThreadPool tPool, 
+    mjProc Routine, void* arg ) {
+    // call mjThreadPool_AddWork
+    if ( !mjThreadPool_AddWork( tPool, Routine, arg ) ) {
+        return mjThread_RunOnce( Routine, arg );
+    }
+    return true;
+}
+
+/*
+===============================================================================
 mjThreadPool_New
     init new thread pool
     return: NOT NULL--- mjThreadPool struct, NULL --- fail
@@ -88,9 +103,6 @@ mjThreadPool mjThreadPool_New( int maxThread ) {
         // set mjThreadEntry as private data
         mjThread_SetPrivate( tPool->threads[i].thread, 
                     &tPool->threads[i], NULL );
-        // set post proc
-    //    mjThread_SetPrePost( tPool->threads[i].thread, 
-    //                NULL, mjThreadPool_ThreadFin );
     }
     return tPool; 
 } 

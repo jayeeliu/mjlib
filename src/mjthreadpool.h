@@ -25,7 +25,10 @@ struct mjThreadPool {
 };
 typedef struct mjThreadPool*  mjThreadPool;
 
-extern bool             mjThreadPool_AddWork( mjThreadPool tPool, mjProc Routine, void* arg );
+extern bool             mjThreadPool_AddWork( mjThreadPool tPool, 
+                                    mjProc Routine, void* arg );
+extern bool             mjThreadPool_AddWorkPlus( mjThreadPool tPool, 
+                                    mjProc Routine, void* arg );
 extern mjThreadPool     mjThreadPool_New( int maxThread );
 extern bool             mjThreadPool_Delete( mjThreadPool tPool );
 

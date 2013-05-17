@@ -30,7 +30,7 @@ extern bool         mjTcpSrv_SetSrvProc( mjTcpSrv srv, mjProc InitSrv,
                             mjProc ExitSrv );
 extern bool         mjTcpSrv_SetStop( mjTcpSrv srv, int value );
 
-extern mjTcpSrv    mjTcpSrv_New( int sfd, mjProc Routine, int type );
+extern mjTcpSrv     mjTcpSrv_New( int sfd, mjProc Routine, int type );
 extern void*        mjTcpSrv_Delete( void* arg );
 
 #endif
