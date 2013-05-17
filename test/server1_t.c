@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "mjtcpsrv.h"
+#include "mjtcpsrv2.h"
 #include "mjsock.h"
 #include "mjopt.h"
 #include "mjconn.h"
@@ -67,14 +67,13 @@ int main()
         return 1;
     }
 
-    mjTcpSrv server = mjTcpSrv_New( sfd );
+    mjTcpSrv2 server = mjTcpSrv2_New( sfd, Handler, MJTCPSRV_STANDALONE ); 
     if ( !server ) {
-        printf( "mjTcpSrv_New error" );
+        printf( "mjTcpSrv2_New error" );
         return 1;
     }
 
-    mjTcpSrv_SetHandler( server, Handler );
-    mjTcpSrv_Run( server );
-    mjTcpSrv_Delete( server );
+    mjTcpSrv2_Run( server );
+    mjTcpSrv2_Delete( server );
     return 0;
 }

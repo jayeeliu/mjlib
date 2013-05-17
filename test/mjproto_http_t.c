@@ -6,7 +6,7 @@
 #include "mjconn.h"
 #include "mjhttprsp.h"
 #include "mjproto_http.h"
-#include "mjtcpsrv.h"
+#include "mjtcpsrv2.h"
 #include "mjsock.h"
 
 static int count = 0;
@@ -16,7 +16,7 @@ struct timeval tv1, tv2;
 static void* on_finish(void *arg)
 {
     mjConn conn = (mjConn)arg;
-    //if ( count >= 99999 ) mjTcpSrv_SetStop( conn->server, 1);
+    //if ( count >= 99999 ) mjTcpSrv2_SetStop( conn->server, 1);
     mjConn_Delete(conn);
     
     gettimeofday( &tv2, NULL );
@@ -99,17 +99,16 @@ int main()
         return 1;
     }
 
-    mjTcpSrv server = mjTcpSrv_New( sfd );
+    mjTcpSrv2 server = mjTcpSrv2_New( sfd, http_Worker, MJTCPSRV_STANDALONE );
     if ( !server ) {
         printf( "Error create tcpserver\n" );
         return 1;
     }
 
-    mjTcpSrv_SetPrivate( server, urls, NULL ); 
-    mjTcpSrv_SetSrvProc( server, http_InitSrv, http_ExitSrv );
-    mjTcpSrv_SetHandler( server, http_Worker );
-    mjTcpSrv_Run( server );
+    mjTcpSrv2_SetPrivate( server, urls, NULL ); 
+    mjTcpSrv2_SetSrvProc( server, http_InitSrv, http_ExitSrv );
+    mjTcpSrv2_Run( server );
 
-    mjTcpSrv_Delete( server );
+    mjTcpSrv2_Delete( server );
     return 0;
 }

@@ -13,6 +13,9 @@ struct mjTcpSrv2 {
     mjEV    ev;             // event loop
     mjProc  Routine;        // server routine
     void*   mainServer;     // used in inner mode, point to mainServer
+
+    mjProc  InitSrv;        // init Server proc
+    mjProc  ExitSrv;        // exit Server proc
    
     void*   private;        // private data
     mjProc  FreePrivate; 
@@ -23,6 +26,8 @@ extern void*        mjTcpSrv2_AcceptRoutine( void* arg );
 extern void*        mjTcpSrv2_Run( void* arg );
 extern bool         mjTcpSrv2_SetPrivate( mjTcpSrv2 srv, void* private,
                             mjProc FreePrivate );
+extern bool         mjTcpSrv2_SetSrvProc( mjTcpSrv2 srv, mjProc InitSrv,
+                            mjProc ExitSrv );
 extern bool         mjTcpSrv2_SetStop( mjTcpSrv2 srv, int value );
 
 extern mjTcpSrv2    mjTcpSrv2_New( int sfd, mjProc Routine, int type );

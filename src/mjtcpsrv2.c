@@ -62,6 +62,8 @@ void* mjTcpSrv2_Run( void* arg ) {
         return NULL;
     }
     mjTcpSrv2 srv = ( mjTcpSrv2 ) arg;
+    // call init Proc
+    if ( srv->InitSrv ) srv->InitSrv( srv );
     // enter loop
     while ( !srv->stop ) {
         mjEV_Run( srv->ev );
@@ -86,6 +88,25 @@ bool mjTcpSrv2_SetPrivate( mjTcpSrv2 srv, void* private,
     }
     srv->private     = private;
     srv->FreePrivate = FreePrivate;
+    return true;
+}
+
+/*
+===============================================================================
+mjTcpSrv_SetSrvProc
+    set server init and exit proc. called when server begin and exit.
+    srv is the parameter
+===============================================================================
+*/
+bool mjTcpSrv2_SetSrvProc( mjTcpSrv2 srv, mjProc InitSrv,
+                mjProc ExitSrv ) {
+    // sanity check
+    if ( !srv ) {
+        MJLOG_ERR( "server is null" );
+        return false;
+    }
+    srv->InitSrv = InitSrv;
+    srv->ExitSrv = ExitSrv;
     return true;
 }
 
@@ -167,6 +188,8 @@ void* mjTcpSrv2_Delete( void* arg ) {
         MJLOG_ERR( "server is null" );
         return NULL;
     }
+    // call exit proc
+    if ( srv->ExitSrv ) srv->ExitSrv( srv );
     // free private
     if ( srv->private && srv->FreePrivate ) srv->FreePrivate( srv->private );
     mjEV_Delete( srv->ev );

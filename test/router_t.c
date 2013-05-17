@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mjsock.h"
-#include "mjtcpsrv.h"
+#include "mjtcpsrv2.h"
 #include "mjconn.h"
 #include "mjlog.h"
 
@@ -64,10 +64,9 @@ int main()
         return 1;
     }
 
-    mjTcpSrv server = mjTcpSrv_New( sock );
+    mjTcpSrv2 server = mjTcpSrv2_New( sock, RouterHandler, MJTCPSRV_STANDALONE );
 
-    mjTcpSrv_SetHandler( server, RouterHandler );
-    mjTcpSrv_Run( server );
-    mjTcpSrv_Delete( server );
+    mjTcpSrv2_Run( server );
+    mjTcpSrv2_Delete( server );
     return 0;
 }
