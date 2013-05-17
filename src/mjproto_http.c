@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
-#include "mjtcpsrv2.h"
+#include "mjtcpsrv.h"
 #include "mjlog.h"
 #include "mjconn.h"
 #include "mjproto_http.h"
@@ -10,7 +10,7 @@ static void* on_header( void* arg )
 {
     mjConn conn = ( mjConn )arg;
     mjHttpData httpData = ( mjHttpData )conn->private;
-    mjTcpSrv2 server = ( mjTcpSrv2 )conn->server;
+    mjTcpSrv server = ( mjTcpSrv )conn->server;
     struct mjHttpUrl* urls = ( struct mjHttpUrl* ) server->private;
    
     //alloc request and response struct 
@@ -108,7 +108,7 @@ http_InitSrv
 */
 void* http_InitSrv( void* arg )
 {
-    mjTcpSrv2 srv = ( mjTcpSrv2 )arg;
+    mjTcpSrv srv = ( mjTcpSrv )arg;
     struct mjHttpUrl* urls = srv->private;
     if ( !urls ) {
         MJLOG_ERR( "Oops urls is null" );
@@ -134,7 +134,7 @@ http_ExitSrv
 */
 void* http_ExitSrv( void* arg )
 {
-    mjTcpSrv2 srv = ( mjTcpSrv2 )arg;
+    mjTcpSrv srv = ( mjTcpSrv )arg;
     struct mjHttpUrl* urls = srv->private;
     if ( !urls ) {
         MJLOG_ERR( "Oops urls is null" );

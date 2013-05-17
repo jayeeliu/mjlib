@@ -178,10 +178,10 @@ mjMainSrv mjMainSrv_New( int sfd, mjProc serverRoutine, int workerThreadNum ) {
         }
         mainSrv->serverNotify[i] = fd[0];
         // create new server struct and set mainServer
-        mainSrv->server[i] = mjTcpSrv2_New( fd[1], mainSrv->serverRoutine, 
+        mainSrv->server[i] = mjTcpSrv_New( fd[1], mainSrv->serverRoutine, 
                                 MJTCPSRV_INNER );
         if ( !mainSrv->server[i] ) {
-            MJLOG_ERR( "mjTcpSrv2 create error" );
+            MJLOG_ERR( "mjTcpSrv create error" );
             mjMainSrv_Delete( mainSrv );
             return NULL;
         }
@@ -193,8 +193,8 @@ mjMainSrv mjMainSrv_New( int sfd, mjProc serverRoutine, int workerThreadNum ) {
             mjMainSrv_Delete( mainSrv );
             return NULL;
         }
-        mjThread_AddWork( mainSrv->serverThread[i], mjTcpSrv2_Run, mainSrv->server[i],
-                NULL, NULL, mjTcpSrv2_Delete, mainSrv->server[i] );
+        mjThread_AddWork( mainSrv->serverThread[i], mjTcpSrv_Run, mainSrv->server[i],
+                NULL, NULL, mjTcpSrv_Delete, mainSrv->server[i] );
         // set cpu affinity
         cpu_set_t cpuset;
         CPU_ZERO( &cpuset );
@@ -225,11 +225,11 @@ bool mjMainSrv_Delete( mjMainSrv mainSrv ) {
         MJLOG_ERR( "server is null" );
         return false;
     }
-    // free fd and mjTcpSrv2
+    // free fd and mjTcpSrv
     for ( int i = 0; i < mainSrv->serverNum; i++ ) {
         // free server and server thread
         if ( mainSrv->serverThread[i] ) {
-            mjTcpSrv2_SetStop( mainSrv->server[i], 1 );
+            mjTcpSrv_SetStop( mainSrv->server[i], 1 );
             mjThread_Delete( mainSrv->serverThread[i] );
         }
         if ( mainSrv->serverNotify[i] ) {

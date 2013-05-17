@@ -6,7 +6,7 @@
 #define MJTCPSRV_STANDALONE 0
 #define MJTCPSRV_INNER      1
 
-struct mjTcpSrv2 {
+struct mjTcpSrv {
     int     sfd;            // socket, accept for standalone, read for inner
     int     stop;           // server stop
     int     type;           // tcpsrv type, standalone or inner
@@ -20,17 +20,17 @@ struct mjTcpSrv2 {
     void*   private;        // private data
     mjProc  FreePrivate; 
 };
-typedef struct mjTcpSrv2* mjTcpSrv2;
+typedef struct mjTcpSrv* mjTcpSrv;
 
-extern void*        mjTcpSrv2_AcceptRoutine( void* arg );
-extern void*        mjTcpSrv2_Run( void* arg );
-extern bool         mjTcpSrv2_SetPrivate( mjTcpSrv2 srv, void* private,
+extern void*        mjTcpSrv_AcceptRoutine( void* arg );
+extern void*        mjTcpSrv_Run( void* arg );
+extern bool         mjTcpSrv_SetPrivate( mjTcpSrv srv, void* private,
                             mjProc FreePrivate );
-extern bool         mjTcpSrv2_SetSrvProc( mjTcpSrv2 srv, mjProc InitSrv,
+extern bool         mjTcpSrv_SetSrvProc( mjTcpSrv srv, mjProc InitSrv,
                             mjProc ExitSrv );
-extern bool         mjTcpSrv2_SetStop( mjTcpSrv2 srv, int value );
+extern bool         mjTcpSrv_SetStop( mjTcpSrv srv, int value );
 
-extern mjTcpSrv2    mjTcpSrv2_New( int sfd, mjProc Routine, int type );
-extern void*        mjTcpSrv2_Delete( void* arg );
+extern mjTcpSrv    mjTcpSrv_New( int sfd, mjProc Routine, int type );
+extern void*        mjTcpSrv_Delete( void* arg );
 
 #endif

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "mjev.h"
 #include "mjthreadpool.h"
-#include "mjtcpsrv2.h"
+#include "mjtcpsrv.h"
 
 struct mjMainSrv_AsyncData {
     int     finNotify_r;
@@ -29,7 +29,7 @@ struct mjMainSrv {
     mjProc          serverRoutine;
     int             serverNum;
     int             serverNotify[MAX_SERVER_NUM];
-    mjTcpSrv2       server[MAX_SERVER_NUM];
+    mjTcpSrv        server[MAX_SERVER_NUM];
     mjThread        serverThread[MAX_SERVER_NUM];
 };
 typedef struct mjMainSrv* mjMainSrv;

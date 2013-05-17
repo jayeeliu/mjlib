@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "mjtcpsrv2.h"
+#include "mjtcpsrv.h"
 #include "mjsock.h"
 #include "mjopt.h"
 #include "mjconn.h"
@@ -47,14 +47,14 @@ int main( int argc, char* argv[] )
         return 1;
     }
 
-    mjTcpSrv2 srv = mjTcpSrv2_New( sfd, Msg_Handler, MJTCPSRV_STANDALONE );
+    mjTcpSrv srv = mjTcpSrv_New( sfd, Msg_Handler, MJTCPSRV_STANDALONE );
     if ( !srv ) {
         printf( "server create error" );
         close( sfd );
         return 1;
     }
 
-    mjTcpSrv2_Run( srv );
-    mjTcpSrv2_Delete( srv );
+    mjTcpSrv_Run( srv );
+    mjTcpSrv_Delete( srv );
     return 0;
 }
