@@ -17,9 +17,9 @@ static void* calRoutine( void* arg ) {
 static void* on_write( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
-    mjConn_WriteS( conn, "Final Server Ready!!!\r\n", on_close );
-//    mjMainSrv_Async( ( ( mjTcpSrv2 )conn->server )->mainServer, calRoutine, NULL, 
-//            conn->ev, on_close, conn );
+    mjConn_WriteS( conn, "Final Server Ready!!!\r\n", NULL );
+    mjMainSrv_Async( ( ( mjTcpSrv2 )conn->server )->mainServer, calRoutine, NULL, 
+            conn->ev, on_close, conn );
     return NULL;
 }
 
