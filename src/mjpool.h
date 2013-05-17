@@ -12,7 +12,6 @@ typedef struct mjPool*  mjPool;
 
 extern void*    mjPool_Alloc( mjPool pool );
 extern bool     mjPool_Free( mjPool pool, void* elem );
-
 extern mjPool   mjPool_New();                   // create a new mjpool
 extern bool     mjPool_Delete( mjPool pool );   // destory mjpool
 

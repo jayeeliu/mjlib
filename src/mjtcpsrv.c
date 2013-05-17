@@ -67,9 +67,7 @@ void* mjTcpSrv_Run( void* arg ) {
     // enter loop
     while ( !srv->stop ) {
         mjEV_Run( srv->ev );
-        if ( srv->type == MJTCPSRV_STANDALONE ) {
-            mjSig_ProcessQueue();
-        }
+        if ( srv->type == MJTCPSRV_STANDALONE ) mjSig_ProcessQueue();
     }
     return NULL;
 }
@@ -162,8 +160,10 @@ mjTcpSrv mjTcpSrv_New( int sfd, mjProc Routine, int type ) {
         goto failout3;
     }
     // set signal
-    mjSig_Init();
-    mjSig_Register( SIGPIPE, SIG_IGN );
+    if ( type == MJTCPSRV_STANDALONE ) {
+        mjSig_Init();
+        mjSig_Register( SIGPIPE, SIG_IGN );
+    }
     return srv;
 
 failout3:

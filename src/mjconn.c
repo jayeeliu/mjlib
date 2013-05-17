@@ -19,8 +19,7 @@
 #define MJCONN_READUNTIL    2
 #define MJCONN_READ         3
 #define MJCONN_WRITE        10
-#define MJCONN_THREAD       100
-#define MJCONN_CONN         1000
+#define MJCONN_CONN         100
 
 /*
 =================================================
@@ -563,10 +562,10 @@ failout:
 }
 
 /*
-============================================================
+===============================================================================
 mjConn_Connect
     connect to host async
-============================================================
+===============================================================================
 */
 bool mjConn_Connect( mjConn conn, const char* ipaddr, 
             int port, mjProc CallBack ) {
