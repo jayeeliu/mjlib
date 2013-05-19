@@ -35,7 +35,6 @@ typedef struct mjpending {
 } mjpending;
 
 #define MJEV_MAXFD          60000
-#define PENDING_LIST_LEN    1024
 
 // mjev struct
 struct mjEV {
