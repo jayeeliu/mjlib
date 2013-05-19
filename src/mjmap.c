@@ -40,6 +40,12 @@ static mjitem mjitem_new( const char *key, mjStr value ) {
     return item;
 }
 
+/*
+===============================================================================
+mjitem_delete
+    delete mjitem
+===============================================================================
+*/
 static bool mjitem_delete( mjitem item ) {
     // sanity check
     if ( !item ) {
@@ -99,6 +105,12 @@ static unsigned int genhashvalue( const void* key, int len )
     return (unsigned int)h;
 }
 
+/*
+===============================================================================
+mjmap_search
+    search item
+===============================================================================
+*/
 static mjitem mjmap_search( mjmap map, const char* key ) {
     // get hash value and index
     unsigned int hashvalue = genhashvalue( ( void* )key, strlen( key ) );
@@ -141,9 +153,12 @@ int mjMap_Add( mjmap map, const char* key, mjStr value ) {
     return 0;
 }
 
-/**
- * delete one element from mjmap
- */
+/*
+===============================================================================
+mjMap_Del
+    delete one element from mjmap
+===============================================================================
+*/
 int mjMap_Del( mjmap map, const char* key ) {
     mjitem item = mjmap_search( map, key );
     if ( !item ) {
@@ -152,7 +167,6 @@ int mjMap_Del( mjmap map, const char* key ) {
     }
     list_del( &item->listNode );
     hlist_del( &item->mapNode );
-    
     mjitem_delete( item );
     return 0;
 }
@@ -173,10 +187,10 @@ mjStr mjMap_Get( mjmap map, const char* key ) {
 }
 
 /*
-==================================================
+===============================================================================
 mjmap_GetNext
     get next mjitem value 
-==================================================
+===============================================================================
 */
 mjitem mjmap_GetNext( mjmap map, mjitem item ) {
     // list is empty
