@@ -24,6 +24,7 @@ void* on_write1(void *data)
     mjConn_WriteS(conn, "OK, TCPSERVER READY!!!\n", on_close);
     return NULL;
 }
+
 void* myhandler(void *data)
 {
     mjConn conn = (mjConn)data;

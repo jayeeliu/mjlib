@@ -1,5 +1,5 @@
-#ifndef __MJTCPSRV2_H
-#define __MJTCPSRV2_H
+#ifndef _MJTCPSRV_H
+#define _MJTCPSRV_H
 
 #include "mjev.h"
 
