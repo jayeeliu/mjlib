@@ -250,11 +250,11 @@ bool mjConnB_SetPrivate( mjConnB conn, void* private, mjProc FreePrivate ) {
 static struct mjConnB _conn[MAX_FD];
 
 /*
-=========================================================
+===============================================================================
 mjConnB_New
     input socket fd, output mjConnB struct
     return NULL -- fail, other -- success
-=========================================================
+===============================================================================
 */
 mjConnB mjConnB_New( int fd ) {
     // sanity check

@@ -6,10 +6,10 @@
 #include "mjsig.h"
 
 /*
-===============================================
+===============================================================================
 mjLF_Routine
     Routine Run
-===============================================
+===============================================================================
 */
 static void* mjLF_Routine( void* arg ) {
     mjLF srv = ( mjLF ) arg;
@@ -17,15 +17,12 @@ static void* mjLF_Routine( void* arg ) {
     // leader run this
     while ( 1 ) {
         cfd = mjSock_Accept( srv->sfd );
-        if ( cfd < 0 ) {
-            MJLOG_ERR("mjSock_Accept Error");
-            continue;
-        }
+        if ( cfd < 0 ) continue;
         break;
     }
     // choose a new leader
     if ( !mjThreadPool_AddWorkPlus( srv->tPool, mjLF_Routine, srv ) ) {
-        MJLOG_ERR( "Oops No Leader, Too Bad!!!" );
+        MJLOG_ERR( "Oops No Leader, Too Bad, Server Down!!!" );
     }
     // change to worker
     if ( !srv->Routine ) {
@@ -41,15 +38,16 @@ static void* mjLF_Routine( void* arg ) {
     }
     mjConnB_SetServer( conn, srv );
     mjConnB_SetTimeout( conn, srv->readTimeout, srv->writeTimeout );
+    // run server routine
     srv->Routine( conn );
     return NULL; 
 }
 
 /*
-=======================================================================
+===============================================================================
 mjLF_SetPrivate
     set server private data
-=======================================================================
+===============================================================================
 */
 bool mjLF_SetPrivate( mjLF srv, void* private, mjProc FreePrivate ) {
     if ( !srv ) {
@@ -62,10 +60,10 @@ bool mjLF_SetPrivate( mjLF srv, void* private, mjProc FreePrivate ) {
 }
 
 /*
-==============================================
+===============================================================================
 mjLF_SetStop
     set server stop
-==============================================
+===============================================================================
 */
 bool mjLF_SetStop( mjLF srv, int value ) {
     if ( !srv ) {
@@ -77,26 +75,26 @@ bool mjLF_SetStop( mjLF srv, int value ) {
 }
 
 /*
-==================================================================
+===============================================================================
 mjLF_SetTimeout
     set server timeout
-==================================================================
+===============================================================================
 */
 bool mjLF_SetTimeout( mjLF srv, int readTimeout, int writeTimeout ) {
     if ( !srv ) {
         MJLOG_ERR( "srv is null" );
         return false;
     }
-    srv->readTimeout = readTimeout;
-    srv->writeTimeout = writeTimeout;
+    srv->readTimeout    = readTimeout;
+    srv->writeTimeout   = writeTimeout;
     return true;
 }
 
 /*
-====================================
+===============================================================================
 mjLF_Run
     run leader follow server
-====================================
+===============================================================================
 */
 void mjLF_Run( mjLF srv ) {
     if ( !srv ) return;
@@ -107,12 +105,13 @@ void mjLF_Run( mjLF srv ) {
 }
 
 /*
-==========================================================
+===============================================================================
 mjLF_New
     create mjLF struct
-==========================================================
+===============================================================================
 */
 mjLF mjLF_New( mjProc Routine, int maxThread, int sfd ) {
+    // alloc mjLF struct
     mjLF srv = ( mjLF ) calloc( 1, sizeof( struct mjLF ) );
     if ( !srv ) {
         MJLOG_ERR( "server create errror" );
@@ -129,8 +128,7 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int sfd ) {
     srv->sfd     = sfd;
     srv->Routine = Routine;
     // add new worker 
-    bool ret = mjThreadPool_AddWork( srv->tPool, mjLF_Routine, srv );
-    if ( !ret ) {
+    if ( !mjThreadPool_AddWork( srv->tPool, mjLF_Routine, srv ) ) {
         MJLOG_ERR( "mjthreadpool addwork" );
         mjThreadPool_Delete( srv->tPool );
         free( srv );
@@ -143,19 +141,17 @@ mjLF mjLF_New( mjProc Routine, int maxThread, int sfd ) {
 }
 
 /*
-==========================================
+===============================================================================
 mjLF_Delete
     Delete server
-==========================================
+===============================================================================
 */
 bool mjLF_Delete( mjLF srv ) {
     if ( !srv ) {
         MJLOG_ERR( "server is null" );
         return false;
     }
-    if ( srv->private && srv->FreePrivate ) {
-        srv->FreePrivate( srv->private );
-    }
+    if ( srv->private && srv->FreePrivate ) srv->FreePrivate( srv->private );
     // delete thread pool
     mjThreadPool_Delete( srv->tPool );
     free( srv );

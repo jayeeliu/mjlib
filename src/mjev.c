@@ -298,8 +298,7 @@ void mjEV_Run( mjEV ev ) {
     if ( list_empty( &ev->pendingHead ) ) return;
     struct list_head savedPendingHead;
     INIT_LIST_HEAD( &savedPendingHead );
-    list_splice( &ev->pendingHead, &savedPendingHead );
-    INIT_LIST_HEAD( &ev->pendingHead );
+    list_splice_init( &ev->pendingHead, &savedPendingHead );
     // run pending proc
     mjpending* entry;
     mjpending* tmp;
