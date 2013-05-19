@@ -11,8 +11,8 @@
 struct mjHttpReq {
     int     methodType;     // method type
     mjStr   location;       // request location
-    mjmap   parameter;      // request parameter
-    mjmap   reqHeader;
+    mjMap   parameter;      // request parameter
+    mjMap   reqHeader;
 };
 typedef struct mjHttpReq* mjHttpReq;
 

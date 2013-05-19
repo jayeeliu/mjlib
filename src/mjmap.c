@@ -8,15 +8,15 @@
 
 /*
 ===============================================================================
-mjitem_new
-    create new mjitem struct
+mjItem_new
+    create new mjItem struct
 ===============================================================================
 */
-static mjitem mjitem_new( const char *key, mjStr value ) {
-    // alloc mjitem
-    mjitem item = ( mjitem ) calloc ( 1, sizeof( struct mjitem ) );
+static mjItem mjItem_new( const char *key, mjStr value ) {
+    // alloc mjItem
+    mjItem item = ( mjItem ) calloc ( 1, sizeof( struct mjItem ) );
     if ( !item ) {
-        MJLOG_ERR( "mjitem calloc error" );
+        MJLOG_ERR( "mjItem calloc error" );
         return NULL;
     }
     // set key and value 
@@ -42,11 +42,11 @@ static mjitem mjitem_new( const char *key, mjStr value ) {
 
 /*
 ===============================================================================
-mjitem_delete
-    delete mjitem
+mjItem_delete
+    delete mjItem
 ===============================================================================
 */
-static bool mjitem_delete( mjitem item ) {
+static bool mjItem_delete( mjItem item ) {
     // sanity check
     if ( !item ) {
         MJLOG_ERR( "item is null" );
@@ -107,16 +107,16 @@ static unsigned int genhashvalue( const void* key, int len )
 
 /*
 ===============================================================================
-mjmap_search
+mjMap_search
     search item
 ===============================================================================
 */
-static mjitem mjmap_search( mjmap map, const char* key ) {
+static mjItem mjMap_search( mjMap map, const char* key ) {
     // get hash value and index
     unsigned int hashvalue = genhashvalue( ( void* )key, strlen( key ) );
     unsigned int index = hashvalue % map->len;
     // search entry
-    mjitem item = NULL;
+    mjItem item = NULL;
     struct hlist_node *entry;
     hlist_for_each_entry( item, entry, &map->elem[index], mapNode ) { 
         if ( strcmp( item->key->data, key ) == 0 ) return item;
@@ -127,23 +127,23 @@ static mjitem mjmap_search( mjmap map, const char* key ) {
 /*
 ===============================================================================
 mjMap_Add
-    add key and value to mjmap
+    add key and value to mjMap
     return  -1 --- error
             -2 --- already exists
              0 --- success
 ===============================================================================
 */
-int mjMap_Add( mjmap map, const char* key, mjStr value ) {
+int mjMap_Add( mjMap map, const char* key, mjStr value ) {
     // get hash value and index
     unsigned int hashvalue = genhashvalue( ( void* )key, strlen( key ) );
     unsigned int index = hashvalue % map->len;
     // search entry
-    mjitem item = mjmap_search( map, key );
+    mjItem item = mjMap_search( map, key );
     if ( item ) return -2;
-    // generator a new mjitem
-    item = mjitem_new( key, value );
+    // generator a new mjItem
+    item = mjItem_new( key, value );
     if ( !item ) {
-        MJLOG_ERR( "mjitem_new error" );
+        MJLOG_ERR( "mjItem_new error" );
         return -1;
     }
     // add to list
@@ -156,18 +156,18 @@ int mjMap_Add( mjmap map, const char* key, mjStr value ) {
 /*
 ===============================================================================
 mjMap_Del
-    delete one element from mjmap
+    delete one element from mjMap
 ===============================================================================
 */
-int mjMap_Del( mjmap map, const char* key ) {
-    mjitem item = mjmap_search( map, key );
+int mjMap_Del( mjMap map, const char* key ) {
+    mjItem item = mjMap_search( map, key );
     if ( !item ) {
         MJLOG_ERR( "mjMap_Del none" );
         return -1;
     }
     list_del( &item->listNode );
     hlist_del( &item->mapNode );
-    mjitem_delete( item );
+    mjItem_delete( item );
     return 0;
 }
 
@@ -177,26 +177,26 @@ mjMap_Get
     get mjStr from key
 ===============================================================================
 */
-mjStr mjMap_Get( mjmap map, const char* key ) {
+mjStr mjMap_Get( mjMap map, const char* key ) {
     // sanity check
     if ( !map || !key ) return NULL;
     // search mjtime 
-    mjitem item = mjmap_search( map, key );
+    mjItem item = mjMap_search( map, key );
     if ( !item ) return NULL;
     return item->value;
 }
 
 /*
 ===============================================================================
-mjmap_GetNext
-    get next mjitem value 
+mjMap_GetNext
+    get next mjItem value 
 ===============================================================================
 */
-mjitem mjmap_GetNext( mjmap map, mjitem item ) {
+mjItem mjMap_GetNext( mjMap map, mjItem item ) {
     // list is empty
     if ( list_empty( &map->listHead ) ) return NULL;
     if ( item == NULL ) {
-        item = list_first_entry( &map->listHead, struct mjitem, listNode );
+        item = list_first_entry( &map->listHead, struct mjItem, listNode );
         return item;
     }
     // get next entry
@@ -208,18 +208,18 @@ mjitem mjmap_GetNext( mjmap map, mjitem item ) {
 /*
 ===============================================================================
 mjMap_New
-    create new mjmap
+    create new mjMap
 ===============================================================================
 */
-mjmap mjMap_New( int mapsize ) {
+mjMap mjMap_New( int mapsize ) {
     // create map struct
-    mjmap map = ( mjmap ) calloc( 1, sizeof( struct mjmap ) + 
+    mjMap map = ( mjMap ) calloc( 1, sizeof( struct mjMap ) + 
                         mapsize * sizeof( struct hlist_node ) );
     if ( !map ) {
-        MJLOG_ERR( "mjmap calloc error" );
+        MJLOG_ERR( "mjMap calloc error" );
         return NULL;
     }
-    // set mjmap fields
+    // set mjMap fields
     map->len        = mapsize;
     // init list
     INIT_LIST_HEAD( &map->listHead );
@@ -231,20 +231,20 @@ mjmap mjMap_New( int mapsize ) {
 /*
 ===============================================================================
 mjMap_Delete
-    delete mjmap
+    delete mjMap
 ===============================================================================
 */
-bool mjMap_Delete( mjmap map ) {
+bool mjMap_Delete( mjMap map ) {
     // sanity check
     if ( !map ) return false;
-    // get and clean mjitem
+    // get and clean mjItem
     for ( int i = 0; i < map->len; i++ ) {
-        mjitem item = NULL;
+        mjItem item = NULL;
         struct hlist_node *entry, *next;
         hlist_for_each_entry_safe( item, entry, next, &map->elem[i], 
                         mapNode ) {
             hlist_del( &item->mapNode );
-            mjitem_delete( item );
+            mjItem_delete( item );
         }
     }
     free( map );

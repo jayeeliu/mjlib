@@ -32,14 +32,14 @@ mjStr mjHttpRsp_HeaderToStr( mjHttpRsp rsp )
         MJLOG_ERR( "mjStr_New error" );
         return NULL;
     }
-    mjitem item = mjmap_GetNext( rsp->rspheader, NULL );
+    mjItem item = mjMap_GetNext( rsp->rspheader, NULL );
     while ( item ) {
         mjStr_Cat( str, item->key );
         mjStr_CatS( str, ": " );
         mjStr_Cat( str, item->value ); 
         mjStr_CatS( str, "\r\n" );
     
-        item = mjmap_GetNext( rsp->rspheader, item );
+        item = mjMap_GetNext( rsp->rspheader, item );
     }
     return str;
 }
