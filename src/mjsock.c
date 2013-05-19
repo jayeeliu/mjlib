@@ -14,12 +14,12 @@
 
 #define DEFAULT_BACKLOG	4096
 
-
 int mjSock_TcpSocket()
 {
     int fd = socket( AF_INET, SOCK_STREAM, 0 );
     return fd;
 }
+
 /*
 ======================================
 mjSock_TcpServer
@@ -96,36 +96,34 @@ int mjSock_Accept(int sfd)
 }
 
 /*
-======================================================
+===============================================================================
 mjSock_SetBlocking
     set socket to blocing
     return -1 -- failed, 0 -- success
-======================================================
+===============================================================================
 */
-int mjSock_SetBlocking( int fd, int blocking )
-{
+int mjSock_SetBlocking( int fd, int blocking ) {
+    // get current flag
     int flags;
     if ( ( flags = fcntl( fd, F_GETFL, 0 ) ) < 0 ) {
         MJLOG_ERR( "fcntl F_GETFL error" );
         return -1;
     }
-
+    // set new flags;
     if ( blocking ) {
         flags &= ~O_NONBLOCK;
     } else {
         flags |= O_NONBLOCK;
     }
-
+    // set nonblock
     if ( fcntl( fd, F_SETFL, flags ) < 0 ) {
         MJLOG_ERR( "fcntl F_SETFL error" );  
         return -1;
     }
-
     return 0;
 }
 
 
-int mjSock_Close(int sfd)
-{
-    return close(sfd);
+int mjSock_Close( int sfd ) {
+    return close( sfd );
 }

@@ -12,7 +12,6 @@ int main()
     mjStrList result = mjStrList_New();
     
     mjReg_Search(reg, "abc-123, def-234", result);
-
     for (int i = 0; i < 10; i++) {
         mjStr str = mjStrList_Get( result, i );
         if ( str ) {
