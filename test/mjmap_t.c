@@ -18,9 +18,9 @@ int main()
     mjStr_CopyS(str, "value4");
     mjMap_Add(map, "key4", str );
 
-    mjMap_Del( map, "key4" );
-    mjMap_Del( map, "key2" );
-    mjMap_Del( map, "key1" );
+//    mjMap_Del( map, "key4" );
+//    mjMap_Del( map, "key2" );
+//    mjMap_Del( map, "key1" );
 
     mjitem item = mjmap_GetNext( map, NULL );
     while ( item ) {

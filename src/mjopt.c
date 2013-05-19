@@ -15,8 +15,7 @@ mjOpt_Set
     set value
 =====================================================
 */
-static void mjOpt_Set( mjOpt opt, char* value )
-{
+static void mjOpt_Set( mjOpt opt, char* value ) {
     // set default value 
     if ( opt->type == MJOPT_INT ) {
         if ( !value ) {
@@ -34,14 +33,13 @@ static void mjOpt_Set( mjOpt opt, char* value )
 }
 
 /*
-===================================================================
+===============================================================================
 mjOpt_Define
     set option define
-===================================================================
+===============================================================================
 */
 bool mjOpt_Define( char* section, char* key, int type, void* value,
-            char* defaultValue )
-{
+            char* defaultValue ) {
     // sanity check
     if ( section && strlen( section ) >= MAX_SECTION_LEN ) {
         MJLOG_ERR( "section is too long" );
@@ -84,16 +82,16 @@ bool mjOpt_Define( char* section, char* key, int type, void* value,
 }
 
 /*
-==============================================================
+===============================================================================
 mjOpt_SetValue
     set option value
-==============================================================
+===============================================================================
 */
-bool mjOpt_SetValue( char* section, char* key, char* value )
-{
+bool mjOpt_SetValue( char* section, char* key, char* value ) {
+    // set default section
     char* global = "global";
     if ( !section ) section = global;
-
+    // get and set value
     mjOpt entry = NULL;
     list_for_each_entry( entry, &options, node ) {
         if ( !strcmp( section, entry->section ) &&
@@ -108,13 +106,12 @@ bool mjOpt_SetValue( char* section, char* key, char* value )
 }
 
 /*
-===============================================
+===============================================================================
 mjOpt_ParseConf
     parse conf file
-===============================================
+===============================================================================
 */
-bool mjOpt_ParseConf( const char* fileName )
-{
+bool mjOpt_ParseConf( const char* fileName ) {
     char section[MAX_SECTION_LEN];
     char key[MAX_KEY_LEN];
     char value[MAX_VALUE_LEN];
