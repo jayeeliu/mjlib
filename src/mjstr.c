@@ -56,7 +56,7 @@ bool mjStr_CopyS( mjStr sa, const char* s )
     return mjStr_CopyB( sa, s, strlen( s ) );
 }
 
-bool mjStr_CatB(mjStr sa, char *s, unsigned int n)
+bool mjStr_CatB(mjStr sa, const char *s, unsigned int n)
 {
   if ( !sa->data ) return mjStr_CopyB( sa, s, n );       /* sa is null, copy from s */
   if ( !mjStr_ReadyPlus(sa, n + 1)) return false;    /* extend if needed */
@@ -72,7 +72,7 @@ bool mjStr_Cat(mjStr sato, mjStr safrom)
     return mjStr_CatB(sato, safrom->data, safrom->length);
 }
 
-bool mjStr_CatS(mjStr sa, char *s)
+bool mjStr_CatS(mjStr sa, const char *s)
 {
     return mjStr_CatB(sa, s, strlen(s));
 }
@@ -256,35 +256,41 @@ bool mjStr_ToUpper( mjStr str )
 }
 
 /*
-=========================================================
-mjStr_New 
-    create new mjStr
-=========================================================
+===============================================================================
+mjStr_Init
+    init mjstr
+===============================================================================
 */
-mjStr mjStr_New()
-{
-    mjStr ret = ( mjStr ) calloc ( 1, sizeof( struct mjStr ) );
-    if ( !ret ) return NULL;
-
-    ret->data   = NULL;
-    ret->length = 0;        // no used, now 
-    ret->total  = 0;        // total size 
-    
-    return ret;
+bool mjStr_Init( mjStr str ) {
+    str->data   = NULL;
+    str->length = 0;
+    str->total  = 0;
+    return true;
 }
 
 /*
-===================================
+===============================================================================
+mjStr_New 
+    create new mjStr
+===============================================================================
+*/
+mjStr mjStr_New() {
+    mjStr str = ( mjStr ) calloc ( 1, sizeof( struct mjStr ) );
+    if ( !str ) return NULL;
+    return str;
+}
+
+/*
+===============================================================================
 mjStr_Delete
     free mjStr
-===================================
+===============================================================================
 */
-void mjStr_Delete( mjStr x )
-{
-    if ( !x ) return;
-
-    free( x->data );
-    free( x );
+bool mjStr_Delete( mjStr str ) {
+    if ( !str ) return false;
+    free( str->data );
+    free( str );
+    return true;
 }
 
 static bool mjStrList_Ready( mjStrList strList, unsigned int n )

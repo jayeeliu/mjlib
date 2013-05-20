@@ -6,13 +6,13 @@
 #include "mjthread.h"
 
 struct mjConn {
-    int     fd;                             // fd 
-    void*   server;                         // tcpserver for server side conn 
-    mjEV    ev;
+    int             fd;                     // fd 
+    void*           server;                 // tcpserver for server side conn 
+    mjEV            ev;
 
-    mjStr rbuf;                             // read buffer 
-    mjStr wbuf;                             // write buffer
-    mjStr data;                             // data get from rbuf
+    mjStr           rbuf;                   // read buffer 
+    mjStr           wbuf;                   // write buffer
+    mjStr           data;                   // data get from rbuf
 
     int             connectType;            // connect type
     mjProc          ConnectCallback;        // ConnectCallback
@@ -31,11 +31,11 @@ struct mjConn {
     unsigned int    writeTimeout;           // write timeout
     mjtevent*       writeTimeoutEvent;      // write timeout event 
 
-    int error;                              //  some error happened 
-    int closed;                             //  fd closed 
+    int             error;                  //  some error happened 
+    int             closed;                 //  fd closed 
 
-    mjProc  FreePrivte;                     // free private callback 
-    void*   private;                        //  user conn private data 
+    mjProc          FreePrivte;             // free private callback 
+    void*           private;                //  user conn private data 
 };
 typedef struct mjConn* mjConn;
 

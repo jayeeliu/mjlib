@@ -8,11 +8,11 @@
 
 /*
 ===============================================================================
-mjItem_new
+mjItem_New
     create new mjItem struct
 ===============================================================================
 */
-static mjItem mjItem_new( const char* key, char* value ) {
+static mjItem mjItem_New( const char* key, const char* value ) {
     // alloc mjItem
     mjItem item = ( mjItem ) calloc ( 1, sizeof( struct mjItem ) );
     if ( !item ) {
@@ -30,8 +30,8 @@ static mjItem mjItem_new( const char* key, char* value ) {
         return NULL;
     }
     // set key and value
-    mjStr_CopyS( item->key, ( char* )key );
-    mjStr_CopyS( item->value, ( char* )value );
+    mjStr_CopyS( item->key, key );
+    mjStr_CopyS( item->value, value );
     // init list
     INIT_LIST_HEAD( &item->listNode );
     // init map list
@@ -42,11 +42,11 @@ static mjItem mjItem_new( const char* key, char* value ) {
 
 /*
 ===============================================================================
-mjItem_delete
+mjItem_Delete
     delete mjItem
 ===============================================================================
 */
-static bool mjItem_delete( mjItem item ) {
+static bool mjItem_Delete( mjItem item ) {
     // sanity check
     if ( !item ) {
         MJLOG_ERR( "item is null" );
@@ -146,7 +146,7 @@ mjMap_AddS
              0 --- success
 ===============================================================================
 */
-int mjMap_AddS( mjMap map, const char* key, char* value ) {
+int mjMap_AddS( mjMap map, const char* key, const char* value ) {
     // get hash value and index
     unsigned int hashvalue = genhashvalue( ( void* )key, strlen( key ) );
     unsigned int index = hashvalue % map->len;
@@ -154,9 +154,9 @@ int mjMap_AddS( mjMap map, const char* key, char* value ) {
     mjItem item = mjMap_search( map, key );
     if ( item ) return -2;
     // generator a new mjItem
-    item = mjItem_new( key, value );
+    item = mjItem_New( key, value );
     if ( !item ) {
-        MJLOG_ERR( "mjItem_new error" );
+        MJLOG_ERR( "mjItem_New error" );
         return -1;
     }
     // add to list
@@ -180,7 +180,7 @@ int mjMap_Del( mjMap map, const char* key ) {
     }
     list_del( &item->listNode );
     hlist_del( &item->mapNode );
-    mjItem_delete( item );
+    mjItem_Delete( item );
     return 0;
 }
 
@@ -257,7 +257,7 @@ bool mjMap_Delete( mjMap map ) {
         hlist_for_each_entry_safe( item, entry, next, &map->elem[i], 
                         mapNode ) {
             hlist_del( &item->mapNode );
-            mjItem_delete( item );
+            mjItem_Delete( item );
         }
     }
     free( map );

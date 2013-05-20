@@ -24,8 +24,8 @@ extern bool     mjStr_Copy( mjStr sato, mjStr safrom );
 extern bool     mjStr_CopyS( mjStr sa, const char *s );
 extern bool     mjStr_CopyB( mjStr sa, const char *s, unsigned int n );
 extern bool     mjStr_Cat( mjStr sato, mjStr safrom );
-extern bool     mjStr_CatS( mjStr sa, char *s );
-extern bool     mjStr_CatB( mjStr sa, char *s, unsigned int n );
+extern bool     mjStr_CatS( mjStr sa, const char *s );
+extern bool     mjStr_CatB( mjStr sa, const char *s, unsigned int n );
 extern int      mjStr_Consume( mjStr x, unsigned int len );
 extern int      mjStr_RConsume( mjStr x, unsigned int len );
 extern int      mjStr_Search( mjStr x, const char *split );
@@ -37,8 +37,10 @@ extern void     mjStr_RStrim( mjStr x );
 extern bool     mjStr_ToLower( mjStr str );
 extern bool     mjStr_ToUpper( mjStr str );
 
+extern bool     mjStr_Init( mjStr str );
+extern bool     mjStr_DeInit( mjStr str );
 extern mjStr    mjStr_New();
-extern void     mjStr_Delete( mjStr x );
+extern bool     mjStr_Delete( mjStr x );
 // function for mjStrList
 extern bool         mjStrList_Add( mjStrList strList, mjStr str );
 extern bool         mjStrList_AddS( mjStrList strList, char* str );
