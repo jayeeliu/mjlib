@@ -8,20 +8,20 @@
 #define MAX_FIELD_LEN   10
 
 /*
-=================================================================
+===============================================================================
 mjHttpReq_New
     create new mjHttpReq struct
-=================================================================
+===============================================================================
 */
-mjHttpReq mjHttpReq_New( mjStr data )
-{
+mjHttpReq mjHttpReq_New( mjStr data ) {
     // sanity check
     if ( !data ) {
         MJLOG_ERR( "data is null" );
         return NULL;
     }
     // create mjHttpReq struct
-    mjHttpReq request = ( mjHttpReq ) calloc ( 1, sizeof( struct mjHttpReq ) );
+    mjHttpReq request = ( mjHttpReq ) calloc ( 1, 
+                    sizeof( struct mjHttpReq ) );
     if ( !request ) {
         MJLOG_ERR( "mjHttpReq alloc error" );
         return NULL;
@@ -82,13 +82,12 @@ failout1:
 }
 
 /*
-================================================
+===============================================================================
 mjHttpReq_Delete
     delete mjHttpReq struct
-================================================
+===============================================================================
 */
-bool mjHttpReq_Delete( mjHttpReq request )
-{
+bool mjHttpReq_Delete( mjHttpReq request ) {
     // sanity check
     if ( !request ) return false;
     // free struct

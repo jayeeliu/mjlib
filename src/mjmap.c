@@ -12,7 +12,7 @@ mjItem_new
     create new mjItem struct
 ===============================================================================
 */
-static mjItem mjItem_new( const char *key, mjStr value ) {
+static mjItem mjItem_new( const char* key, char* value ) {
     // alloc mjItem
     mjItem item = ( mjItem ) calloc ( 1, sizeof( struct mjItem ) );
     if ( !item ) {
@@ -31,7 +31,7 @@ static mjItem mjItem_new( const char *key, mjStr value ) {
     }
     // set key and value
     mjStr_CopyS( item->key, ( char* )key );
-    mjStr_Copy( item->value, value );
+    mjStr_CopyS( item->value, ( char* )value );
     // init list
     INIT_LIST_HEAD( &item->listNode );
     // init map list
@@ -127,13 +127,26 @@ static mjItem mjMap_search( mjMap map, const char* key ) {
 /*
 ===============================================================================
 mjMap_Add
-    add key and value to mjMap
+    add key and value to mjMap, call mjMap_AddS
     return  -1 --- error
             -2 --- already exists
              0 --- success
 ===============================================================================
 */
 int mjMap_Add( mjMap map, const char* key, mjStr value ) {
+    return mjMap_AddS( map, key, value->data );
+}
+
+/*
+===============================================================================
+mjMap_AddS
+    add key and value to mjMap, call mjMap_AddS
+    return  -1 --- error
+            -2 --- already exists
+             0 --- success
+===============================================================================
+*/
+int mjMap_AddS( mjMap map, const char* key, char* value ) {
     // get hash value and index
     unsigned int hashvalue = genhashvalue( ( void* )key, strlen( key ) );
     unsigned int index = hashvalue % map->len;

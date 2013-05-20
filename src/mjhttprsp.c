@@ -4,62 +4,60 @@
 #include "mjhttprsp.h"
 
 /*
-=================================================================
+===============================================================================
 mjHttpRsp_AddHeader
     add header to http response
-=================================================================
+===============================================================================
 */
-bool mjHttpRsp_AddHeader( mjHttpRsp rsp, char* name, char* value )
-{
+bool mjHttpRsp_AddHeader( mjHttpRsp rsp, char* name, char* value ) {
+    // sanity check
     if ( !rsp ) return false;
-
-    mjStr tmp = mjStr_New();
-    if ( !tmp ) {
-        MJLOG_ERR( "mjStr_New error" );
-        return false;
-    }
-
-    mjStr_CopyS( tmp, value );
-    mjMap_Add( rsp->rspheader, name, tmp );
-    mjStr_Delete( tmp );
+    // add value to header
+    mjMap_AddS( rsp->rspHeader, name, value );
     return true;
 }
 
-mjStr mjHttpRsp_HeaderToStr( mjHttpRsp rsp )
-{
+/*
+===============================================================================
+mjHttpRsp_HeaderToStr
+    change http header to string, alloc and return mjStr
+===============================================================================
+*/
+mjStr mjHttpRsp_HeaderToStr( mjHttpRsp rsp ) {
+    // alloc new mjStr
     mjStr str = mjStr_New();
     if ( !str ) {
         MJLOG_ERR( "mjStr_New error" );
         return NULL;
     }
-    mjItem item = mjMap_GetNext( rsp->rspheader, NULL );
+    // iter the mjmap
+    mjItem item = mjMap_GetNext( rsp->rspHeader, NULL );
     while ( item ) {
         mjStr_Cat( str, item->key );
         mjStr_CatS( str, ": " );
         mjStr_Cat( str, item->value ); 
         mjStr_CatS( str, "\r\n" );
-    
-        item = mjMap_GetNext( rsp->rspheader, item );
+        item = mjMap_GetNext( rsp->rspHeader, item );
     }
     return str;
 }
 
 /*
-==========================================================
+===============================================================================
 mjHttpRsp_New
     create new mjHttpRsp struct
-==========================================================
+===============================================================================
 */
-mjHttpRsp mjHttpRsp_New()
-{
+mjHttpRsp mjHttpRsp_New() {
+    // alloc mjHttpRsp struct
     mjHttpRsp rsp = ( mjHttpRsp ) calloc( 1, sizeof( struct mjHttpRsp ) );
     if ( !rsp ) {
         MJLOG_ERR( "calloc error" );
         return NULL;
     }
-
-    rsp->rspheader = mjMap_New( 128 );
-    if ( !rsp->rspheader ) {
+    // alloc new mjMap
+    rsp->rspHeader = mjMap_New( 128 );
+    if ( !rsp->rspHeader ) {
         MJLOG_ERR( "mjMap_New error" );
         free( rsp );
         return NULL;
@@ -67,13 +65,17 @@ mjHttpRsp mjHttpRsp_New()
     return rsp;
 }
 
-bool mjHttpRsp_Delete( mjHttpRsp rsp )
-{
+/*
+===============================================================================
+mjHttpRsp_Delete
+    delete mjHttpRsp struct
+===============================================================================
+*/
+bool mjHttpRsp_Delete( mjHttpRsp rsp ) {
+    // sanity check
     if ( !rsp ) return false;
-    
-    if ( rsp->rspheader ) {
-        mjMap_Delete( rsp ->rspheader );
-    }
+    // relase rspHeader
+    if ( rsp->rspHeader ) mjMap_Delete( rsp ->rspHeader );
     free( rsp );
     return true;
 }

@@ -4,7 +4,7 @@
 #include "mjmap.h"
 
 struct mjHttpRsp {
-    mjMap rspheader;
+    mjMap rspHeader;
 };
 typedef struct mjHttpRsp* mjHttpRsp;
 

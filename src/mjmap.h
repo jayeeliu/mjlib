@@ -20,6 +20,7 @@ struct mjMap {
 typedef struct mjMap* mjMap;
 
 extern int      mjMap_Add( mjMap map, const char* key, mjStr value );
+extern int      mjMap_AddS( mjMap map, const char* key, char* value );
 extern int      mjMap_Del( mjMap map, const char* key );
 extern mjStr    mjMap_Get( mjMap map, const char* key );
 extern mjItem   mjMap_GetNext( mjMap map, mjItem item );

@@ -17,6 +17,7 @@ int main()
 
     mjStr_CopyS(str, "value4");
     mjMap_Add(map, "key4", str );
+    mjMap_AddS(map, "key5", "value5");
 
 //    mjMap_Del( map, "key4" );
 //    mjMap_Del( map, "key2" );
