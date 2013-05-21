@@ -219,8 +219,7 @@ int mjStr_Cmp(mjStr str1, mjStr str2)
     }
 }
 
-bool mjStr_ToLower( mjStr str )
-{
+bool mjStr_ToLower( mjStr str ) {
     if ( !str ) {
         MJLOG_ERR( "str is null" );
         return false;
@@ -235,18 +234,17 @@ bool mjStr_ToLower( mjStr str )
 }
 
 /*
-=========================================================
+===============================================================================
 mjStr_Capitablize
     change mjstr to capitable
-=========================================================
+===============================================================================
 */
-bool mjStr_ToUpper( mjStr str )
-{
+bool mjStr_ToUpper( mjStr str ) {
     if ( !str ) {
         MJLOG_ERR( "str is Null" );
         return false;
     }
-
+    // change string
     for( int i = 0; i < str->length; i++ ) {
         if ( str->data[i] >= 'a' && str->data[i] <= 'z' ) {
             str->data[i] -= 32;
@@ -262,9 +260,22 @@ mjStr_Init
 ===============================================================================
 */
 bool mjStr_Init( mjStr str ) {
+    if ( !str ) return false;
     str->data   = NULL;
     str->length = 0;
     str->total  = 0;
+    return true;
+}
+
+/*
+===============================================================================
+mjStr_DeInit
+    deinit mjstr
+===============================================================================
+*/
+bool mjStr_DeInit( mjStr str ) {
+    if ( !str ) return false;
+    free( str->data );
     return true;
 }
 
