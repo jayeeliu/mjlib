@@ -4,10 +4,10 @@
 #include "mjstr.h"
 
 /*
-=====================================================
+===============================================================================
 mjStr_Ready
     alloc enough size for mjString
-=====================================================
+===============================================================================
 */
 static bool mjStr_Ready( mjStr x, unsigned int n )
 {
@@ -177,7 +177,7 @@ mjStr_Split
 */
 bool mjStr_Split( mjStr x, const char* split, mjStrList strList )
 {
-    // santy check
+    // sanity check
     if ( !x || !strList ) return false;
 
     int start   = 0;
@@ -196,13 +196,12 @@ bool mjStr_Split( mjStr x, const char* split, mjStrList strList )
 }
 
 /*
-======================================================
+===============================================================================
 mjStr_Cmp
     compare two mjStr
-======================================================
+===============================================================================
 */
-int mjStr_Cmp(mjStr str1, mjStr str2)
-{
+int mjStr_Cmp(mjStr str1, mjStr str2) {
     if (str1 == NULL && str2 == NULL) return 0;
     if (str1 == NULL && str2 != NULL) return -1;
     if (str1 != NULL && str2 == NULL) return 1;
@@ -219,12 +218,18 @@ int mjStr_Cmp(mjStr str1, mjStr str2)
     }
 }
 
+/*
+===============================================================================
+mjStr_ToLower
+    change mjstr to lower
+===============================================================================
+*/
 bool mjStr_ToLower( mjStr str ) {
     if ( !str ) {
         MJLOG_ERR( "str is null" );
         return false;
     }
-
+    // change string
     for( int i = 0; i < str->length; i++) {
         if ( str->data[i] >='A' && str->data[i] <= 'Z' ) {
             str->data[i] += 32;
@@ -235,7 +240,7 @@ bool mjStr_ToLower( mjStr str ) {
 
 /*
 ===============================================================================
-mjStr_Capitablize
+mjStr_ToUpper
     change mjstr to capitable
 ===============================================================================
 */

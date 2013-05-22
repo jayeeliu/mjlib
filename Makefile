@@ -7,6 +7,7 @@ all:
 	cd deps/libjpw; make
 	cd src;	make
 	cd test; make
+	cd example; make
 test:
 	cd test; make
 install:
@@ -15,4 +16,5 @@ clean:
 	cd deps/libjpw; make clean
 	cd src; make clean
 	cd test; make clean
+	cd example; make clean
 	rm -rf build
