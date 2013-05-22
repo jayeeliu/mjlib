@@ -13,6 +13,7 @@ void* On_Close( void* arg ) {
 void* On_Connect( void* arg ) {
     mjConn conn = ( mjConn ) arg;
     mjConn_WriteS( conn, "OK\r\n", NULL );
+    mjConn_WriteS( conn, "OK2\r\n", NULL );
     mjConn_ReadUntil( conn, "\r\n\r\n", On_Close );
     return NULL;
 }
