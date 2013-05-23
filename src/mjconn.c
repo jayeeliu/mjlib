@@ -224,8 +224,10 @@ bool mjConn_ReadUntil( mjConn conn, char* delim, mjProc CallBack )
         mjStr_Consume( conn->rbuf, pos + strlen( conn->delim ) );
         // read finish set readType to NONE, run callback
         conn->readType = MJCONN_NONE;
-        // callback must be the last statement, callback maybe run another read or write
-        if ( conn->ReadCallBack ) conn->ReadCallBack( conn );
+        // run read callback
+        if ( conn->ReadCallBack ) {
+            mjEV_AddPending( conn->ev, conn->ReadCallBack( conn ), conn );
+        }
         return true;
     }
     // add read event to event loop 
@@ -258,7 +260,9 @@ bool mjConn_Read( mjConn conn, mjProc CallBack )
         mjStr_CopyB( conn->data, conn->rbuf->data, conn->rbuf->length );
         mjStr_Consume( conn->rbuf, conn->rbuf->length );
         conn->readType  = MJCONN_NONE;
-        if ( conn->ReadCallBack ) conn->ReadCallBack( conn );
+        if ( conn->ReadCallBack ) {
+            mjEV_AddPending( conn->ev, conn->ReadCallBack( conn ), conn );
+        }
         return 0;
     }
     return mjConn_AddReadEvent( conn );
@@ -621,11 +625,11 @@ static mjStr mjConn_SetBuffer( mjStr defVal ) {
 }
 
 /*
-=================================================
+===============================================================================
 mjConn_New
     create mjConn
     return NULL -- fail, other -- success
-================================================
+===============================================================================
 */
 mjConn mjConn_New( mjEV ev, int fd ) {
     // event loop must not be null
@@ -661,10 +665,10 @@ mjConn mjConn_New( mjEV ev, int fd ) {
 }
 
 /*
-============================================
+===============================================================================
 mjConn_Delete
     delete mjConn struct
-============================================
+===============================================================================
 */
 bool mjConn_Delete( mjConn conn ) {
     if ( !conn ) {
