@@ -31,11 +31,13 @@ struct mjConn {
     unsigned int    writeTimeout;           // write timeout
     mjtevent*       writeTimeoutEvent;      // write timeout event 
 
-    int             error;                  //  some error happened 
-    int             closed;                 //  fd closed 
+    mjProc          CloseProc;              // conn close proc
+
+    int             error;                  // some error happened 
+    int             closed;                 // fd closed 
 
     mjProc          FreePrivte;             // free private callback 
-    void*           private;                //  user conn private data 
+    void*           private;                // user conn private data 
 };
 typedef struct mjConn* mjConn;
 

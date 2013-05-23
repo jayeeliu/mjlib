@@ -614,10 +614,10 @@ bool mjConn_Connect( mjConn conn, const char* ipaddr,
 static struct mjConn _conn[MAX_FD];
 
 /*
-==================================================
+===============================================================================
 mjConn_SetBuffer
     used by mjConn_New for init buffer
-==================================================
+===============================================================================
 */
 static mjStr mjConn_SetBuffer( mjStr defVal ) {
     if ( defVal ) return defVal;
