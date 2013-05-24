@@ -31,8 +31,6 @@ struct mjConn {
     unsigned int    writeTimeout;           // write timeout
     mjtevent*       writeTimeoutEvent;      // write timeout event 
 
-    mjProc          CloseProc;              // conn close proc
-
     int             error;                  // some error happened 
     int             closed;                 // fd closed 
 

@@ -1,21 +1,10 @@
-#ifndef MJMAINSRV_H
-#define MJMAINSRV_H
+#ifndef _MJMAINSRV_H
+#define _MJMAINSRV_H
 
 #include <stdbool.h>
 #include "mjev.h"
 #include "mjthreadpool.h"
 #include "mjtcpsrv.h"
-
-struct mjMainSrv_AsyncData {
-    int     finNotify_r;
-    int     finNotify_w;
-    mjEV    ev;
-    mjProc  workerRoutine;
-    void*   rdata;
-    mjProc  CallBack;
-    void*   cdata;
-};
-typedef struct mjMainSrv_AsyncData* mjMainSrv_AsyncData;
 
 #define MAX_SERVER_NUM  64
 

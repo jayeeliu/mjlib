@@ -9,6 +9,17 @@
 #include "mjsig.h"
 #include "mjlog.h"
 
+struct mjMainSrv_AsyncData {
+    int     finNotify_r;
+    int     finNotify_w;
+    mjEV    ev;
+    mjProc  workerRoutine;
+    void*   rdata;
+    mjProc  CallBack;
+    void*   cdata;
+};
+typedef struct mjMainSrv_AsyncData* mjMainSrv_AsyncData;
+
 /*
 ===============================================================================
 mjMainSrv_AsyncFinCallBack

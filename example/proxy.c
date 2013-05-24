@@ -39,7 +39,7 @@ void* On_CleanTarget( void* arg ) {
 
 void* On_TargetConnect( void* arg ) {
     mjConn target = ( mjConn ) arg;
-    mjConn_WriteS( ( (Proxy) target->private )->master, "Connect OK", NULL );
+ //   mjConn_WriteS( ( (Proxy) target->private )->master, "Connect OK\r\n", NULL );
     return NULL;
 }
 
@@ -64,7 +64,7 @@ void* On_Connect( void* arg ) {
         return NULL;
     }
     proxy->master = master;
-    mjConn_SetPrivate( master, proxy, NULL );
+    mjConn_SetPrivate( master, proxy, On_CleanMaster );
     mjConn_ReadUntil( master, "\r\n\r\n", On_Read );
     // connect to target
     int cfd = mjSock_TcpSocket();
