@@ -14,14 +14,10 @@ void* Routine( void* arg )
 int main()
 {
     int count = 0;
-    mjThreadPool tPool = mjThreadPool_New( 10 );
+    mjThreadPool tPool = mjThreadPool_New( 0 );
 
     for(int i=0; i<100; i++) {
-        bool ret = mjThreadPool_AddWork( tPool, Routine, NULL );
-        if ( !ret ) {
-            mjThread_RunOnce( Routine, NULL );
-            count++;
-        }
+      mjThreadPool_AddWorkPlus( tPool, Routine, NULL );
     }
 
     sleep(1);

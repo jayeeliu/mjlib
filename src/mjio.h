@@ -4,9 +4,9 @@
 #include "mjstr.h"
 
 struct mjIO {
-    const char* fileName;
-    int         fd;
-    mjStr       buffer;
+  const char* fileName;
+  int         fd;
+  mjStr       rbuf;
 };
 typedef struct mjIO* mjIO;
 
