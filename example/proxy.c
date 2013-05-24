@@ -38,7 +38,7 @@ void* On_CleanTarget( void* arg ) {
 }
 
 void* On_TargetConnect( void* arg ) {
-    mjConn target = ( mjConn ) arg;
+ //   mjConn target = ( mjConn ) arg;
  //   mjConn_WriteS( ( (Proxy) target->private )->master, "Connect OK\r\n", NULL );
     return NULL;
 }
