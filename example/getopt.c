@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     Usage(argv[0]);
     return 1;
   }
-    
+  
   printf("filename1:%s\n", argv[optind++]);
   printf("filename2:%s\n", argv[optind++]);
   return 0;
