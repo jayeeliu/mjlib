@@ -18,6 +18,41 @@ static mjSortItem mjSortItem_New(long long key, void *value) {
 
 /*
 ===============================================================================
+mjSortItem_Delete
+  delete mjsortitem
+===============================================================================
+*/
+static bool mjSortItem_Delete(mjSortItem item) {
+  if (!item) return false;
+  free(item);
+  return true;
+}
+
+/*
+===============================================================================
+mjSort_Search
+  search key in mjsort
+===============================================================================
+*/
+void* mjSort_Search(mjSort sort, long long key) {
+  struct rb_node* node = sort->treeRoot.rb_node;
+  while (node) {
+    mjSortItem testItem = rb_entry(node, struct mjSortItem, node);
+    long long testKey = testItem->key;
+    if (testKey > key) {
+      node = node->rb_left;
+      continue;
+    } else if (testKey < key) {
+      node = node->rb_right;
+      continue;
+    }
+    return testItem->value;
+  }
+  return NULL;
+}
+
+/*
+===============================================================================
 mjSort_Insert
   insert key and value into rbtree
 ===============================================================================
@@ -30,20 +65,21 @@ bool mjSort_Insert(mjSort sort, long long key, void *value) {
     return false;
   }
   // get position into newNode and parent
-  struct rb_node **newNode = &(sort->treeRoot.rb_node);
+  struct rb_node **newNode = &sort->treeRoot.rb_node;
   struct rb_node *parent = NULL;
   while (*newNode) {
-    mjSortItem testItem = container_of(*newNode, struct mjSortItem, node);
+    mjSortItem testItem = rb_entry(*newNode, struct mjSortItem, node);
     long long testKey = testItem->key;
     parent = *newNode;
-    if (testKey < item->key) {
+    if (testKey > item->key) {
       newNode = &((*newNode)->rb_left);
       continue;
-    } else if (testKey > item->key) {
+    } else if (testKey < item->key) {
       newNode = &((*newNode)->rb_right);
       continue;
     }
-    break; 
+    mjSortItem_Delete(item);
+    return false;
   }
   // insert into rbtree
   rb_link_node(&item->node, parent, newNode);
@@ -72,6 +108,12 @@ mjSort_Delete
 */
 bool mjSort_Delete(mjSort sort) {
   if (!sort) return false;
+  for (struct rb_node* node = rb_first(&sort->treeRoot); node;
+        node = rb_first(&sort->treeRoot)) {
+    mjSortItem item = rb_entry(node, struct mjSortItem, node);
+    rb_erase(node, &sort->treeRoot);
+    mjSortItem_Delete(item); 
+  }
   free(sort);
   return true;
 } 
