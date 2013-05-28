@@ -20,12 +20,12 @@ struct mjPQ {
 };
 typedef struct mjPQ* mjPQ;
 
-extern long long    mjPQ_GetMinKey( mjPQ pq );
-extern void*        mjPQ_GetMinValue( mjPQ pq );
-extern bool         mjPQ_Insert( mjPQ pq, long long key, void* value );
-extern void         mjPQ_DelMin( mjPQ pq );
+extern long long    mjPQ_GetMinKey(mjPQ pq);
+extern void*        mjPQ_GetMinValue(mjPQ pq);
+extern bool         mjPQ_Insert(mjPQ pq, long long key, void* value);
+extern void         mjPQ_DelMin(mjPQ pq);
 
 extern mjPQ mjPQ_New();
-extern void mjPQ_Delete( mjPQ pq );
+extern bool mjPQ_Delete(mjPQ pq);
 
 #endif
