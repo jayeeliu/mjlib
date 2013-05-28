@@ -16,6 +16,7 @@ struct mjSort {
 };
 typedef struct mjSort *mjSort;
 
+extern bool   mjSort_Erase(mjSort sort, long long key);
 extern bool   mjSort_Insert(mjSort sort, long long key, void *value);
 extern void*  mjSort_Search(mjSort sort, long long key);
 extern mjSort mjSort_New();

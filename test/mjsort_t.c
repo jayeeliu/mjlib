@@ -7,6 +7,9 @@ int main() {
   mjSort_Insert(sort, 5, "value 5");
   mjSort_Insert(sort, 30, "value 30");
   mjSort_Insert(sort, 10, "value 10--2");
+  mjSort_Erase(sort, 20);
+  mjSort_Erase(sort, 30);
+  mjSort_Erase(sort, 10);
 
   for (struct rb_node* node = rb_first(&sort->treeRoot); node;
         node = rb_next(node)) {

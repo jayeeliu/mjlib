@@ -30,11 +30,11 @@ static bool mjSortItem_Delete(mjSortItem item) {
 
 /*
 ===============================================================================
-mjSort_Search
-  search key in mjsort
+mjSort_SearchItem
+  search key in mjsort return sortitem 
 ===============================================================================
 */
-void* mjSort_Search(mjSort sort, long long key) {
+static mjSortItem mjSort_SearchItem(mjSort sort, long long key) {
   struct rb_node* node = sort->treeRoot.rb_node;
   while (node) {
     mjSortItem testItem = rb_entry(node, struct mjSortItem, node);
@@ -46,8 +46,20 @@ void* mjSort_Search(mjSort sort, long long key) {
       node = node->rb_right;
       continue;
     }
-    return testItem->value;
+    return testItem;
   }
+  return NULL;
+}
+
+/*
+===============================================================================
+mjSort_Search
+  search key in mjsort
+===============================================================================
+*/
+void* mjSort_Search(mjSort sort, long long key) {
+  mjSortItem item = mjSort_SearchItem(sort, key);
+  if (item) return item->value;
   return NULL;
 }
 
@@ -84,6 +96,20 @@ bool mjSort_Insert(mjSort sort, long long key, void *value) {
   // insert into rbtree
   rb_link_node(&item->node, parent, newNode);
   rb_insert_color(&item->node, &sort->treeRoot);
+  return true;
+}
+
+/*
+===============================================================================
+mjSort_Erase
+  erase one key
+===============================================================================
+*/
+bool mjSort_Erase(mjSort sort, long long key) {
+  mjSortItem item = mjSort_SearchItem(sort, key);
+  if (!item) return false;
+  rb_erase(&item->node, &sort->treeRoot);
+  mjSortItem_Delete(item);
   return true;
 }
 
