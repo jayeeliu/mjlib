@@ -13,11 +13,11 @@ struct mjProtoTxtData {
 };
 
 typedef struct PROTO_TXT_ROUTINE {
-  const char* cmd;
+  const char  *cmd;
   mjProc      Routine;
 } PROTO_TXT_ROUTINE;
 
-extern bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, 
+extern bool   mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, 
                     mjConnB conn);
 
 #endif
