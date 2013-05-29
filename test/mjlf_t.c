@@ -12,38 +12,38 @@ struct server_data {
   char id[1024];
 };
 
-void* GetRoutine(void* arg)
-{
-  struct mjProtoTxtData* cmdData = 
-        (struct mjProtoTxtData*) arg;
+void* GetRoutine(void* arg) {
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
   mjConnB_WriteS(cmdData->conn, "Get Called\r\n");
   return NULL; 
 } 
 
-void* PutRoutine(void* arg)
-{
-  struct mjProtoTxtData* cmdData = 
-        (struct mjProtoTxtData*) arg;
+void* PutRoutine(void* arg) {
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
   mjConnB_WriteS(cmdData->conn, "Put Called\r\n");
   return NULL;
 }
 
-void* StatRoutine(void* arg)
-{
-  struct mjProtoTxtData* cmdData = 
-        (struct mjProtoTxtData*) arg;
+void* StatRoutine(void* arg) {
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
   mjConnB_WriteS(cmdData->conn, "OK Here\r\n");
   return NULL;
 }
 
-void* TestRoutine(void* arg)
-{
-  struct mjProtoTxtData* cmdData = 
-        (struct mjProtoTxtData*) arg;
+void* TestRoutine(void* arg) {
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
   mjConnB conn = cmdData->conn;
   mjLF  srv  = conn->server;
   struct server_data* s_data = srv->private;
   mjConnB_WriteS(cmdData->conn, s_data->id);
+  return NULL;
+}
+
+void* QuitRoutine(void* arg) {
+  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  mjConnB conn = cmdData->conn;
+  mjConnB_WriteS(cmdData->conn, "Quit\r\n");
+  conn->closed = 1;
   return NULL;
 }
 
@@ -52,20 +52,20 @@ PROTO_TXT_ROUTINE routineList[] = {
   {"put", PutRoutine},
   {"test", TestRoutine},
   {"stat", StatRoutine},
+  {"quit", QuitRoutine},
 };
 
-void* Routine(void* arg)
-{
+void* Routine(void* arg) {
   mjConnB conn = (mjConnB) arg;
-  mjTxt_RunCmd(routineList, 
-    sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn);
+  while (!conn->closed && !conn->error) {
+    mjTxt_RunCmd(routineList, 
+        sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn);
+  }
   mjConnB_Delete(conn);
   return NULL;
 }
 
-
-int main()
-{
+int main() {
   int port;
   int threadNum;
 

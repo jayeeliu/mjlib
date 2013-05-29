@@ -15,6 +15,9 @@ struct mjConnB {
   void        *server;      // server the conn belongs to
   mjProc      FreePrivate;  // free private data callback 
   void        *private;     // private data
+
+  int         error;        // error flag
+  int         closed;       // closed flag
 };  
 typedef struct mjConnB* mjConnB;
 
