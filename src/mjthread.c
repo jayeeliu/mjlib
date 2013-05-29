@@ -98,8 +98,7 @@ mjThread_SetPrivate
   set private data and freeprivate Proc
 ===============================================================================
 */
-bool mjThread_SetPrivate(mjThread thread, void* private, 
-      mjProc FreePrivate) {
+bool mjThread_SetPrivate(mjThread thread, void* private, mjProc FreePrivate) {
   if (!thread) {
     MJLOG_ERR("thread is null");
     return false;
