@@ -15,18 +15,29 @@ struct mjMainSrv {
   int           workerThreadNum;
   mjThreadPool  workerThreadPool;
 
-  mjProc        serverRoutine;
-  int           serverNum;
-  int           serverNotify[MAX_SERVER_NUM];
-  mjTcpSrv      server[MAX_SERVER_NUM];
-  mjThread      serverThread[MAX_SERVER_NUM];
+  mjProc        srvRoutine;
+  int           srvNum;
+  int           srvNotify[MAX_SERVER_NUM];
+  mjTcpSrv      srv[MAX_SERVER_NUM];
+  mjThread      srvThread[MAX_SERVER_NUM];
+
+  mjProc        InitSrv;
+  mjProc        ExitSrv;
+
+  void          *private;
+  mjProc        FreePrivate;
 };
 typedef struct mjMainSrv* mjMainSrv;
 
 extern bool       mjMainSrv_Async(mjMainSrv srv, mjProc Routine, 
-                      void* rdata, mjEV ev, mjProc CallBack, void* cdata);
+                      void *rdata, mjEV ev, mjProc CallBack, void *cdata);
 extern bool       mjMainSrv_Run(mjMainSrv srv);
-extern mjMainSrv  mjMainSrv_New(int sfd, mjProc serverRoutine, 
+extern bool       mjMainSrv_SetPrivate(mjMainSrv srv, void *private,
+                      mjProc FreePrivate);
+extern bool       mjMainSrv_SetSrvProc(mjMainSrv srv, mjProc InitSrv, 
+                      mjProc ExitSrv);
+
+extern mjMainSrv  mjMainSrv_New(int sfd, mjProc srvRoutine, 
                       int workerThreadNum);
 extern bool       mjMainSrv_Delete(mjMainSrv srv);
 
