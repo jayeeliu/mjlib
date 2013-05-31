@@ -17,14 +17,7 @@ static void *on_header(void *arg) {
   mjConn conn = (mjConn) arg;
   mjHttpData httpData = (mjHttpData) conn->private;
   mjTcpSrv srv = (mjTcpSrv) conn->server;
-  mjMainSrv mainSrv = srv->mainSrv;
-  struct mjHttpUrl *urls = NULL;
-  // check main server or tcpserver
-  if (!mainSrv) {
-    urls = (struct mjHttpUrl*) srv->private;
-  } else {
-    urls = (struct mjHttpUrl*) mainSrv->private; 
-  }
+  struct mjHttpUrl *urls = (struct mjHttpUrl*) srv->private;
   // alloc request and response struct 
   httpData->request = mjHttpReq_New(conn->data);
   if (!httpData->request) {
@@ -112,10 +105,6 @@ http_InitSrv
 ===============================================================================
 */
 static void* http_InitSrv(struct mjHttpUrl *urls) {
-  if (!urls) {
-    MJLOG_ERR("Oops urls is null");
-    return NULL;
-  }
   // create mjreg
   for (int i = 0; urls[i].url != NULL; i++) {
     urls[i].reg = mjReg_New(urls[i].url);
@@ -128,13 +117,30 @@ static void* http_InitSrv(struct mjHttpUrl *urls) {
 }
 
 void* http_InitTcpSrv(void *arg) {
+  // sanity
   mjTcpSrv srv = (mjTcpSrv) arg;
+  if (!srv->private) return NULL;
+  // init mjreg
   return http_InitSrv((struct mjHttpUrl*) srv->private);
 }
 
 void* http_InitMainSrv(void *arg) {
+  // sanity check
   mjMainSrv mainSrv = (mjMainSrv) arg;
-  return http_InitSrv((struct mjHttpUrl*) mainSrv->private);
+  struct mjHttpUrl *urls = (struct mjHttpUrl*) mainSrv->private;
+  if (!urls) return NULL;
+  // get urls count;
+  int count = 0;
+  for (; urls[count].url != NULL; count++);
+  // get urls for each tcpserver
+  for (int i = 0; i < mainSrv->srvNum; i++) {
+    struct mjHttpUrl *newUrls = (struct mjHttpUrl*) malloc( 
+        sizeof(struct mjHttpUrl) * (count + 1));
+    memcpy(newUrls, urls, sizeof(struct mjHttpUrl) * (count + 1));
+    mjTcpSrv_SetPrivate(mainSrv->srv[i], newUrls, NULL);  
+    http_InitSrv(mainSrv->srv[i]->private);
+  }
+  return NULL;
 }
 
 /*
@@ -163,7 +169,11 @@ void* http_ExitTcpSrv(void *arg) {
 
 void* http_ExitMainSrv(void* arg) {
   mjMainSrv mainSrv = (mjMainSrv) arg;
-  return http_ExitSrv(mainSrv->private);
+  for (int i = 0; i < mainSrv->srvNum; i++) {
+    http_ExitSrv(mainSrv->srv[i]->private);
+    free(mainSrv->srv[i]->private);
+  }
+  return NULL;
 }
 
 /*

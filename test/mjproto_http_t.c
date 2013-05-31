@@ -74,6 +74,7 @@ struct mjHttpUrl urls[] = {
 };
 
 int main() {
+  // create new tcpsrver socket
   int sfd = mjSock_TcpServer(7879);
   if (sfd < 0) {
     printf("Error create server socket\n");
