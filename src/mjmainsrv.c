@@ -131,6 +131,8 @@ bool mjMainSrv_Run(mjMainSrv mainSrv) {
   CPU_ZERO(&cpuset);
   CPU_SET(0, &cpuset);
   pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  // run InitSrv
+  if (mainSrv->InitSrv) mainSrv->InitSrv(mainSrv);
   // accept and dispatch
   static int dispatchServer = 0;
   while (!mainSrv->stop) {
@@ -270,6 +272,11 @@ bool mjMainSrv_Delete(mjMainSrv mainSrv) {
   // free worker threadpool
   if (mainSrv->workerThreadPool) {
     mjThreadPool_Delete(mainSrv->workerThreadPool);
+  }
+  // run Exit Server
+  if (mainSrv->ExitSrv) mainSrv->ExitSrv(mainSrv);
+  if (mainSrv->private && mainSrv->FreePrivate) {
+    mainSrv->FreePrivate(mainSrv->private);
   }
   free(mainSrv);
   return true;
