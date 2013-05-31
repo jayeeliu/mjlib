@@ -27,8 +27,10 @@ struct mjHttpUrl {
 };
 
 extern void*  http_Worker(void *arg);
-extern void*  http_InitSrv(void *arg);
-extern void*  http_ExitSrv(void *arg);
+extern void*  http_InitTcpSrv(void *arg);
+extern void*  http_InitMainSrv(void *arg);
+extern void*  http_ExitTcpSrv(void *arg);
+extern void*  http_ExitMainSrv(void *arg);
 extern mjStr  FileToStr(const char *fileName);
 
 #endif

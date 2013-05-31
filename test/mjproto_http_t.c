@@ -87,7 +87,7 @@ int main() {
   }
 
   mjTcpSrv_SetPrivate(server, urls, NULL); 
-  mjTcpSrv_SetSrvProc(server, http_InitSrv, http_ExitSrv);
+  mjTcpSrv_SetSrvProc(server, http_InitTcpSrv, http_ExitTcpSrv);
   mjTcpSrv_Run(server);
   mjTcpSrv_Delete(server);
   return 0;

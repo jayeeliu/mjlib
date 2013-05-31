@@ -18,7 +18,7 @@ static void* on_write( void* arg )
 {
     mjConn conn = ( mjConn ) arg;
     mjConn_WriteS( conn, "Final Server Ready!!!\r\n", NULL );
-    mjMainSrv_Async( ( ( mjTcpSrv )conn->server )->mainServer, calRoutine, NULL, 
+    mjMainSrv_Async( ( ( mjTcpSrv )conn->server )->mainSrv, calRoutine, NULL, 
             conn->ev, on_close, conn );
     return NULL;
 }

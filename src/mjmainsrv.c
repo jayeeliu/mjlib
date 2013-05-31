@@ -180,6 +180,18 @@ bool mjMainSrv_SetSrvProc(mjMainSrv srv, mjProc InitSrv, mjProc ExitSrv) {
 
 /*
 ===============================================================================
+mjMainSrv_SetStop
+  set main server stop value
+===============================================================================
+*/
+bool mjMainSrv_SetStop(mjMainSrv srv, int value) {
+  if (!srv) return false;
+  srv->stop = (value == 0) ? 0 : 1;
+  return true;
+}
+
+/*
+===============================================================================
 mjMainSrv_New
   create new mjsrv struct
 ===============================================================================
@@ -212,7 +224,7 @@ mjMainSrv mjMainSrv_New(int sfd, mjProc srvRoutine, int workerThreadNum) {
       return NULL;
     }
     mainSrv->srvNotify[i] = fd[0];
-    // create new srv struct and set mainServer
+    // create new srv struct and set mainSrv
     mainSrv->srv[i] = mjTcpSrv_New(fd[1], mainSrv->srvRoutine, 
                 MJTCPSRV_INNER);
     if (!mainSrv->srv[i]) {
@@ -220,7 +232,7 @@ mjMainSrv mjMainSrv_New(int sfd, mjProc srvRoutine, int workerThreadNum) {
       mjMainSrv_Delete(mainSrv);
       return NULL;
     }
-    mainSrv->srv[i]->mainServer = mainSrv;
+    mainSrv->srv[i]->mainSrv = mainSrv;
     // create new thread
     mainSrv->srvThread[i] = mjThread_New();
     if (!mainSrv->srvThread[i]) {

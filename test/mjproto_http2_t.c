@@ -86,9 +86,10 @@ int main() {
     return 1;
   }
 
-  mjTcpSrv_SetPrivate(server, urls, NULL); 
-  mjTcpSrv_SetSrvProc(server, http_InitSrv, http_ExitSrv);
-  mjTcpSrv_Run(server);
-  mjTcpSrv_Delete(server);
+  mjMainSrv_SetPrivate(server, urls, NULL); 
+  // TODO: is it ok? to share urls in all tcpserver
+  mjMainSrv_SetSrvProc(server, http_InitMainSrv, http_ExitMainSrv);
+  mjMainSrv_Run(server);
+  mjMainSrv_Delete(server);
   return 0;
 }

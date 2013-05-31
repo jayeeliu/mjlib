@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include "mjmainsrv.h"
 #include "mjtcpsrv.h"
 #include "mjlog.h"
 #include "mjconn.h"
@@ -15,8 +16,15 @@ on_header
 static void *on_header(void *arg) {
   mjConn conn = (mjConn) arg;
   mjHttpData httpData = (mjHttpData) conn->private;
-  mjTcpSrv server = (mjTcpSrv) conn->server;
-  struct mjHttpUrl *urls = (struct mjHttpUrl*) server->private;
+  mjTcpSrv srv = (mjTcpSrv) conn->server;
+  mjMainSrv mainSrv = srv->mainSrv;
+  struct mjHttpUrl *urls = NULL;
+  // check main server or tcpserver
+  if (!mainSrv) {
+    urls = (struct mjHttpUrl*) srv->private;
+  } else {
+    urls = (struct mjHttpUrl*) mainSrv->private; 
+  }
   // alloc request and response struct 
   httpData->request = mjHttpReq_New(conn->data);
   if (!httpData->request) {
@@ -103,9 +111,7 @@ http_InitSrv
   create mjreg
 ===============================================================================
 */
-void* http_InitSrv(void *arg) {
-  mjTcpSrv srv = (mjTcpSrv) arg;
-  struct mjHttpUrl *urls = srv->private;
+static void* http_InitSrv(struct mjHttpUrl *urls) {
   if (!urls) {
     MJLOG_ERR("Oops urls is null");
     return NULL;
@@ -121,6 +127,16 @@ void* http_InitSrv(void *arg) {
   return NULL;
 }
 
+void* http_InitTcpSrv(void *arg) {
+  mjTcpSrv srv = (mjTcpSrv) arg;
+  return http_InitSrv((struct mjHttpUrl*) srv->private);
+}
+
+void* http_InitMainSrv(void *arg) {
+  mjMainSrv mainSrv = (mjMainSrv) arg;
+  return http_InitSrv((struct mjHttpUrl*) mainSrv->private);
+}
+
 /*
 ===============================================================================
 http_ExitSrv
@@ -128,9 +144,7 @@ http_ExitSrv
   delete mjreg
 ===============================================================================
 */
-void* http_ExitSrv(void *arg) {
-  mjTcpSrv srv = (mjTcpSrv) arg;
-  struct mjHttpUrl *urls = srv->private;
+static void* http_ExitSrv(struct mjHttpUrl *urls) {
   if (!urls) {
     MJLOG_ERR("Oops urls is null");
     return NULL;
@@ -140,6 +154,16 @@ void* http_ExitSrv(void *arg) {
     if (!urls[i].reg) mjReg_Delete(urls[i].reg);
   }
   return NULL;
+}
+
+void* http_ExitTcpSrv(void *arg) {
+  mjTcpSrv srv = (mjTcpSrv) arg;
+  return http_ExitSrv(srv->private);
+}
+
+void* http_ExitMainSrv(void* arg) {
+  mjMainSrv mainSrv = (mjMainSrv) arg;
+  return http_ExitSrv(mainSrv->private);
 }
 
 /*
