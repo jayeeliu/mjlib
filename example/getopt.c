@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-void Usage(char* cmd) {
+void Usage(char *cmd) {
   fprintf(stderr,
     "Usage: %s [-a value] [-b] [-c] [-d] <filename1> <filename2>\n", cmd);
 }

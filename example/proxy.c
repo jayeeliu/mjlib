@@ -57,7 +57,7 @@ void* On_Read(void* arg) {
   return NULL;
 }
 
-void* On_Connect(void* arg) {
+void* On_Connect(void *arg) {
   mjConn master = (mjConn) arg;
   // alloc proxy struct and set master conn
   Proxy proxy = (Proxy) calloc(1, sizeof(struct Proxy));
