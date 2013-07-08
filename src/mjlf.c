@@ -106,7 +106,7 @@ void mjLF_Run(mjLF srv) {
 /*
 ===============================================================================
 mjLF_New
-  create mjLF struct
+  create mjLF struct, create threadpool and run first leader
 ===============================================================================
 */
 mjLF mjLF_New(int sfd, mjProc Routine, int maxThread) {
