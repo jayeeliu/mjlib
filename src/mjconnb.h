@@ -16,8 +16,7 @@ struct mjConnB {
   mjProc      FreePrivate;  // free private data callback 
   void        *private;     // private data
 
-  int         error;        // error flag
-  int         closed;       // closed flag
+  int         closed;       // peer has closed flag
 };  
 typedef struct mjConnB* mjConnB;
 

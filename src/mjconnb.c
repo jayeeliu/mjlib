@@ -64,8 +64,7 @@ static int mjConnB_ReadToBuf(mjConnB conn, mjStr data) {
         MJLOG_ERR("read timeout");
         ret = -2;
       }
-      conn->error = 1;
-      // other error, ret = -1, break
+      conn->closed = 1;
       break;         
     }
     // read close, break, copy data to rbuf
@@ -165,7 +164,7 @@ int mjConnB_WriteB(mjConnB conn, char *buf , int length) {
   if (ret == -1) {
     MJLOG_ERR("mjConnB Write Error");
     if (errno == EAGAIN || errno == EWOULDBLOCK) ret = -2;
-    conn->error = 1;
+    conn->closed = 1;
   }
   if (!ret) {
     MJLOG_ERR("nothing write");
@@ -298,7 +297,6 @@ mjConnB mjConnB_New(int fd) {
   // init server
   conn->server        = NULL;
   // init flag
-  conn->error         = 0;
   conn->closed        = 0;
   // init private
   conn->FreePrivate   = NULL;

@@ -25,6 +25,7 @@ static void* mjLF_Routine(void* arg) {
   }
   // change to worker
   if (!srv->Routine) {
+    MJLOG_ERR("No Routine Set, Exit!");
     close(cfd);
     return NULL;
   }
