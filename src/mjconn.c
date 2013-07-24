@@ -176,9 +176,9 @@ bool mjConn_ReadBytes(mjConn conn, int len, mjProc CallBack) {
     return false;
   }
   // set read type
-  conn->readType    = MJCONN_READBYTES;    
-  conn->rbytes    = len;
-  conn->ReadCallBack  = CallBack;
+  conn->readType        = MJCONN_READBYTES;    
+  conn->rbytes          = len;
+  conn->ReadCallBack    = CallBack;
   // check rbuf
   if (conn->rbytes <= conn->rbuf->length) { 
     // copy rbytes to data
