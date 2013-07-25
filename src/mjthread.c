@@ -23,7 +23,7 @@ ThreadRoutine:
   used for short caculate task
 ===============================================================================
 */
-static void* Normal_routine(void* data) {
+static void* mjthread_normal_routine(void* data) {
   // arg can't be null
   mjThread  thread = (mjThread) data;
   mjProc    PreRoutine, PostRoutine, Routine;
@@ -111,7 +111,7 @@ bool mjthread_set_private(mjThread thread, void* private, mjProc FreePrivate) {
 /*
 ===============================================================================
 mjthread_new
-  create new thread, run Normal_routine
+  create new thread, run mjthread_normal_routine
 ===============================================================================
 */
 mjThread mjthread_new() {
@@ -124,7 +124,7 @@ mjThread mjthread_new() {
   // init fields 
   pthread_mutex_init(&thread->thread_lock, NULL);
   pthread_cond_init(&thread->thread_ready, NULL);
-  pthread_create(&thread->thread_id, NULL, Normal_routine, thread);
+  pthread_create(&thread->thread_id, NULL, mjthread_normal_routine, thread);
   return thread;
 }
 

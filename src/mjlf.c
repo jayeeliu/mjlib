@@ -7,11 +7,11 @@
 
 /*
 ===============================================================================
-mjLF_Routine
+mjlf_routine
   Routine Run
 ===============================================================================
 */
-static void* mjLF_Routine(void* arg) {
+static void* mjlf_routine(void* arg) {
   mjLF srv = (mjLF) arg;
   int cfd;
   // leader run this
@@ -19,7 +19,7 @@ static void* mjLF_Routine(void* arg) {
     cfd = mjSock_Accept(srv->sfd);
     if (cfd < 0) continue;
     // choose a new leader
-    if (mjThreadPool_AddWorkPlus(srv->tPool, mjLF_Routine, srv)) break;
+    if (mjThreadPool_AddWorkPlus(srv->tPool, mjlf_routine, srv)) break;
     MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
     close(cfd);
   }
@@ -37,7 +37,7 @@ static void* mjLF_Routine(void* arg) {
     return NULL;
   }
   mjconnb_SetServer(conn, srv);
-  mjconnb_SetTimeout(conn, srv->readTimeout, srv->writeTimeout);
+  mjconnb_SetTimeout(conn, srv->read_timeout, srv->write_timeout);
   // run server routine
   srv->Routine(conn);
   return NULL; 
@@ -80,13 +80,13 @@ mjLF_SetTimeout
   set server timeout
 ===============================================================================
 */
-bool mjLF_SetTimeout(mjLF srv, int readTimeout, int writeTimeout) {
+bool mjLF_SetTimeout(mjLF srv, int read_timeout, int write_timeout) {
   if (!srv) {
     MJLOG_ERR("srv is null");
     return false;
   }
-  srv->readTimeout  = readTimeout;
-  srv->writeTimeout = writeTimeout;
+  srv->read_timeout  = read_timeout;
+  srv->write_timeout = write_timeout;
   return true;
 }
 
@@ -110,7 +110,7 @@ mjLF_New
   create mjLF struct, create threadpool and run first leader
 ===============================================================================
 */
-mjLF mjLF_New(int sfd, mjProc Routine, int maxThread) {
+mjLF mjLF_New(int sfd, mjProc Routine, int max_thread) {
   // alloc mjLF struct
   mjLF srv = (mjLF) calloc(1, sizeof(struct mjLF));
   if (!srv) {
@@ -118,7 +118,7 @@ mjLF mjLF_New(int sfd, mjProc Routine, int maxThread) {
     return NULL;
   }
   // init new pool
-  srv->tPool = mjThreadPool_New(maxThread);
+  srv->tPool = mjThreadPool_New(max_thread);
   if (!srv->tPool) {
     MJLOG_ERR("mjthreadpool create error");
     free(srv);
@@ -128,7 +128,7 @@ mjLF mjLF_New(int sfd, mjProc Routine, int maxThread) {
   srv->sfd      = sfd;
   srv->Routine  = Routine;
   // add new worker 
-  if (!mjThreadPool_AddWork(srv->tPool, mjLF_Routine, srv)) {
+  if (!mjThreadPool_AddWork(srv->tPool, mjlf_routine, srv)) {
     MJLOG_ERR("mjthreadpool addwork");
     mjThreadPool_Delete(srv->tPool);
     free(srv);

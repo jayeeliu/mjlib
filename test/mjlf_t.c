@@ -43,7 +43,7 @@ void* QuitRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
   mjconnb conn = cmdData->conn;
   mjconnb_WriteS(cmdData->conn, "Quit\r\n");
-  conn->closed = 1;
+  conn->closed = true;
   return NULL;
 }
 
@@ -58,8 +58,8 @@ PROTO_TXT_ROUTINE routineList[] = {
 void* Routine(void* arg) {
   mjconnb conn = (mjconnb) arg;
   while (!conn->closed && !conn->timeout) {
-    mjTxt_RunCmd(routineList, 
-        sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn);
+    mjTxt_RunCmd(routineList, sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), 
+      conn);
   }
   mjconnb_Delete(conn);
   return NULL;
