@@ -264,9 +264,9 @@ int WorkerRun( int minProcs, int maxProcs, int sfd, workproc* proc )
         }
         *( workerStatus ) = WORKER_BUSY;
 
-        mjConnB conn = mjConnB_New( cfd );
+        mjconnb conn = mjconnb_New( cfd );
         if ( !conn ) {
-            MJLOG_ERR( "mjConnB create error" );
+            MJLOG_ERR( "mjconnb create error" );
             close( cfd );
             continue;
         }
@@ -274,7 +274,7 @@ int WorkerRun( int minProcs, int maxProcs, int sfd, workproc* proc )
         // run process 
         proc( conn ); 
         // destroy conn
-        mjConnB_Delete( conn );
+        mjconnb_Delete( conn );
     }
     mjSock_Close( sfd );
 

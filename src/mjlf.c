@@ -30,14 +30,14 @@ static void* mjLF_Routine(void* arg) {
     return NULL;
   }
   // create new conn 
-  mjConnB conn = mjConnB_New(cfd);
+  mjconnb conn = mjconnb_New(cfd);
   if (!conn) {
-    MJLOG_ERR("create mjConnB error");
+    MJLOG_ERR("create mjconnb error");
     close(cfd);
     return NULL;
   }
-  mjConnB_SetServer(conn, srv);
-  mjConnB_SetTimeout(conn, srv->readTimeout, srv->writeTimeout);
+  mjconnb_SetServer(conn, srv);
+  mjconnb_SetTimeout(conn, srv->readTimeout, srv->writeTimeout);
   // run server routine
   srv->Routine(conn);
   return NULL; 

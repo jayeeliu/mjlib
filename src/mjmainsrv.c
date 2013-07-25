@@ -234,7 +234,7 @@ mjMainSrv mjMainSrv_New(int sfd, mjProc srvRoutine, int workerThreadNum) {
     }
     mainSrv->srv[i]->mainSrv = mainSrv;
     // create new thread
-    mainSrv->srvThread[i] = mjThread_New();
+    mainSrv->srvThread[i] = mjthread_new();
     if (!mainSrv->srvThread[i]) {
       MJLOG_ERR("mjThread create error");
       mjMainSrv_Delete(mainSrv);
@@ -246,7 +246,7 @@ mjMainSrv mjMainSrv_New(int sfd, mjProc srvRoutine, int workerThreadNum) {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     CPU_SET(i, &cpuset);
-    pthread_setaffinity_np(mainSrv->srvThread[i]->threadID, 
+    pthread_setaffinity_np(mainSrv->srvThread[i]->thread_id, 
         sizeof(cpu_set_t), &cpuset);
   }
   // update threadpool
@@ -277,7 +277,7 @@ bool mjMainSrv_Delete(mjMainSrv mainSrv) {
     // free srv and srv thread
     if (mainSrv->srvThread[i]) {
       mjTcpSrv_SetStop(mainSrv->srv[i], 1);
-      mjThread_Delete(mainSrv->srvThread[i]);
+      mjthread_delete(mainSrv->srvThread[i]);
     }
     if (mainSrv->srvNotify[i]) mjSock_Close(mainSrv->srvNotify[i]);
   }

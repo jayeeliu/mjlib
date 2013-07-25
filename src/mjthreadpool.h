@@ -17,8 +17,8 @@ typedef struct mjThreadEntry* mjThreadEntry;
 
 // threadpool struct
 struct mjThreadPool {
-  pthread_mutex_t       freeListLock;   // lock for threadList  
-  struct list_head      freeList;       // task list 
+  pthread_mutex_t       freelist_lock;   // lock for threadList  
+  struct list_head      freelist;       // task list 
   int                   shutDown;       // shutdown this thread pool?
   int                   maxThread;
   struct mjThreadEntry  threads[0];

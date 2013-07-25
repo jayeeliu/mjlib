@@ -14,35 +14,35 @@ struct server_data {
 
 void* GetRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB_WriteS(cmdData->conn, "Get Called\r\n");
+  mjconnb_WriteS(cmdData->conn, "Get Called\r\n");
   return NULL; 
 } 
 
 void* PutRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB_WriteS(cmdData->conn, "Put Called\r\n");
+  mjconnb_WriteS(cmdData->conn, "Put Called\r\n");
   return NULL;
 }
 
 void* StatRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB_WriteS(cmdData->conn, "OK Here\r\n");
+  mjconnb_WriteS(cmdData->conn, "OK Here\r\n");
   return NULL;
 }
 
 void* TestRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB conn = cmdData->conn;
+  mjconnb conn = cmdData->conn;
   mjLF  srv  = conn->server;
   struct server_data* s_data = srv->private;
-  mjConnB_WriteS(cmdData->conn, s_data->id);
+  mjconnb_WriteS(cmdData->conn, s_data->id);
   return NULL;
 }
 
 void* QuitRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjConnB conn = cmdData->conn;
-  mjConnB_WriteS(cmdData->conn, "Quit\r\n");
+  mjconnb conn = cmdData->conn;
+  mjconnb_WriteS(cmdData->conn, "Quit\r\n");
   conn->closed = 1;
   return NULL;
 }
@@ -56,12 +56,12 @@ PROTO_TXT_ROUTINE routineList[] = {
 };
 
 void* Routine(void* arg) {
-  mjConnB conn = (mjConnB) arg;
+  mjconnb conn = (mjconnb) arg;
   while (!conn->closed && !conn->timeout) {
     mjTxt_RunCmd(routineList, 
         sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn);
   }
-  mjConnB_Delete(conn);
+  mjconnb_Delete(conn);
   return NULL;
 }
 

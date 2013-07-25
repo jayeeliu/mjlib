@@ -5,7 +5,7 @@
 #include "mjstr.h"
 #include "mjproc.h"
 
-struct mjConnB {
+struct mjconnb {
   int         fd;           // fd to control
   mjStr       rbuf;         // read read buffer 
 
@@ -21,22 +21,22 @@ struct mjConnB {
   bool        error;        // peer error  
   bool        closed;       // peer closed
 };  
-typedef struct mjConnB* mjConnB;
+typedef struct mjconnb* mjconnb;
 
-extern int    mjConnB_Read(mjConnB conn, mjStr data);
-extern int    mjConnB_ReadBytes(mjConnB conn, mjStr data, int len);
-extern int    mjConnB_ReadUntil(mjConnB conn, const char* delim, mjStr data);
-extern int    mjConnB_Write(mjConnB conn, mjStr data);
-extern int    mjConnB_WriteB(mjConnB conn, char* buf, int length);
-extern int    mjConnB_WriteS(mjConnB conn, char* buf);
+extern int    mjconnb_Read(mjconnb conn, mjStr data);
+extern int    mjconnb_ReadBytes(mjconnb conn, mjStr data, int len);
+extern int    mjconnb_ReadUntil(mjconnb conn, const char* delim, mjStr data);
+extern int    mjconnb_Write(mjconnb conn, mjStr data);
+extern int    mjconnb_WriteB(mjconnb conn, char* buf, int length);
+extern int    mjconnb_WriteS(mjconnb conn, char* buf);
 
-extern bool   mjConnB_SetPrivate(mjConnB conn, void* private, mjProc FreePrivate);
-extern bool   mjConnB_SetServer(mjConnB conn, void* server);
-extern bool   mjConnB_SetTimeout(mjConnB conn, unsigned int readTimeout, 
-                unsigned int writeTimeout);
+extern bool   mjconnb_SetPrivate(mjconnb conn, void* private, mjProc FreePrivate);
+extern bool   mjconnb_SetServer(mjconnb conn, void* server);
+extern bool   mjconnb_SetTimeout(mjconnb conn, unsigned int read_timeout, 
+                unsigned int write_timeout);
 
-extern mjConnB  mjConnB_Connect(const char* addr, int port, unsigned int timeout);
-extern mjConnB  mjConnB_New(int fd);
-extern bool     mjConnB_Delete(mjConnB conn);
+extern mjconnb  mjconnb_Connect(const char* addr, int port, unsigned int timeout);
+extern mjconnb  mjconnb_New(int fd);
+extern bool     mjconnb_Delete(mjconnb conn);
 
 #endif

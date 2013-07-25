@@ -8,14 +8,14 @@ mjTxt_RunCmd
   run txt protocol command
 ===============================================================================
 */
-bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn) {
+bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
   // sanity check
   if (!conn) {
     MJLOG_ERR("conn is null");
     return false;
   }
   if (!routineList) {
-    mjConnB_WriteS(conn, "+ no command list\r\n");
+    mjconnb_WriteS(conn, "+ no command list\r\n");
     return false;
   } 
   // read data
@@ -24,12 +24,12 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn) {
     MJLOG_ERR("data create error");
     return false;  
   }
-  int ret = mjConnB_ReadUntil(conn, "\r\n", data);
+  int ret = mjconnb_ReadUntil(conn, "\r\n", data);
   if (ret == -2) {
-    mjConnB_WriteS(conn, "+ read timetout\r\n");
+    mjconnb_WriteS(conn, "+ read timetout\r\n");
     goto failout1;
   } else if (ret < 0) {
-    mjConnB_WriteS(conn, "+ read error\r\n");
+    mjconnb_WriteS(conn, "+ read error\r\n");
     goto failout1;
   } else if (ret == 0) {
     MJLOG_ERR("peer closed");
@@ -43,7 +43,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn) {
   }
   mjStr_Split(data, " ", strList);
   if (strList->length < 2) {
-    mjConnB_WriteS(conn, "+ command error\r\n");
+    mjconnb_WriteS(conn, "+ command error\r\n");
     goto failout2;
   }
   // get tag and cmd
@@ -65,7 +65,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjConnB conn) {
     mjStr_Delete(data);
     return true;
   }  
-  mjConnB_WriteS(conn, "+ wrong command\r\n");
+  mjconnb_WriteS(conn, "+ wrong command\r\n");
   // release resource
 failout2:
   mjStrList_Delete(strList);

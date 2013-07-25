@@ -9,7 +9,7 @@ struct mjProtoTxtData {
   mjStr     tag;
   mjStr     cmd;
   mjStrList arg;
-  mjConnB   conn;
+  mjconnb   conn;
 };
 
 typedef struct PROTO_TXT_ROUTINE {
@@ -18,6 +18,6 @@ typedef struct PROTO_TXT_ROUTINE {
 } PROTO_TXT_ROUTINE;
 
 extern bool   mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, 
-                    mjConnB conn);
+                    mjconnb conn);
 
 #endif

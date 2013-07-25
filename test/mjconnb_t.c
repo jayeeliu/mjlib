@@ -41,19 +41,19 @@ int main()
             continue;
         }
         
-        mjConnB conn = mjConnB_New( cfd );
+        mjconnb conn = mjconnb_New( cfd );
         if (conn == NULL) {
-            printf("can't create mjConnB struct\n");
+            printf("can't create mjconnb struct\n");
             break;
         }
         mjStr data = mjStr_New();
-        mjConnB_ReadUntil(conn, "\r\n\r\n", data); 
+        mjconnb_ReadUntil(conn, "\r\n\r\n", data); 
 
         mjStr_CopyS(data, "END");
-        mjConnB_Write(conn, data);
+        mjconnb_Write(conn, data);
    
         mjStr_Delete(data);
-        mjConnB_Delete(conn);
+        mjconnb_Delete(conn);
   
         break;
     }

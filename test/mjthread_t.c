@@ -57,7 +57,7 @@ int main()
         server[i].ev = mjEV_New();
         pipe( server[i].nfd );
         mjEV_Add( server[i].ev, server[i].nfd[0], MJEV_READABLE, AcceptHandler, &server[i] );
-        server[i].thread = mjThread_New();
+        server[i].thread = mjthread_new();
         mjThread_AddWork( server[i].thread, MyWorker, &server[i],
                 NULL, NULL, NULL, NULL );
     }
@@ -71,7 +71,7 @@ int main()
     }
 
     for ( int i = 0; i < WORKER_NUM; ++i ) {
-        mjThread_Delete( server[i].thread );
+        mjthread_delete( server[i].thread );
     }
 
     return 0;

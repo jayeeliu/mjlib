@@ -14,9 +14,9 @@ static void* mjThreadPool_ThreadFin(void* arg) {
   mjThread thread = (mjThread) arg;
   mjThreadEntry entry = (mjThreadEntry) thread->private;
   // add thread to free list 
-  pthread_mutex_lock(&entry->tPool->freeListLock);
-  list_add_tail(&entry->nodeList, &entry->tPool->freeList);
-  pthread_mutex_unlock(&entry->tPool->freeListLock); 
+  pthread_mutex_lock(&entry->tPool->freelist_lock);
+  list_add_tail(&entry->nodeList, &entry->tPool->freelist);
+  pthread_mutex_unlock(&entry->tPool->freelist_lock); 
   return NULL;
 }
 
@@ -38,15 +38,15 @@ bool mjThreadPool_AddWork(mjThreadPool tPool, mjProc Routine, void* arg) {
     return false;
   }
   // no free thread
-  if (list_empty(&tPool->freeList)) return false;
+  if (list_empty(&tPool->freelist)) return false;
   // get free thread
-  pthread_mutex_lock(&tPool->freeListLock); 
-  mjThreadEntry entry  = list_first_entry(&tPool->freeList, 
+  pthread_mutex_lock(&tPool->freelist_lock); 
+  mjThreadEntry entry  = list_first_entry(&tPool->freelist, 
           struct mjThreadEntry, nodeList);
   if (entry) {
     list_del_init(&entry->nodeList);
   }
-  pthread_mutex_unlock(&tPool->freeListLock); 
+  pthread_mutex_unlock(&tPool->freelist_lock); 
   if (!entry) return false;
   // dispatch work to thread
   int ret = mjThread_AddWork(entry->thread, Routine, arg, NULL, NULL,
@@ -89,17 +89,17 @@ mjThreadPool mjThreadPool_New(int maxThread) {
   }
   // init field
   tPool->maxThread  = maxThread;
-  pthread_mutex_init(&tPool->freeListLock, NULL); 
-  INIT_LIST_HEAD(&tPool->freeList); 
+  pthread_mutex_init(&tPool->freelist_lock, NULL); 
+  INIT_LIST_HEAD(&tPool->freelist); 
   // init thread
   for (int i = 0; i < tPool->maxThread; i++) {
     tPool->threads[i].tPool = tPool;
     INIT_LIST_HEAD(&tPool->threads[i].nodeList);
-    list_add_tail(&tPool->threads[i].nodeList, &tPool->freeList);
+    list_add_tail(&tPool->threads[i].nodeList, &tPool->freelist);
     // create new thread
-    tPool->threads[i].thread = mjThread_New();
+    tPool->threads[i].thread = mjthread_new();
     // set mjThreadEntry as private data
-    mjThread_SetPrivate(tPool->threads[i].thread, &tPool->threads[i], NULL);
+    mjthread_set_private(tPool->threads[i].thread, &tPool->threads[i], NULL);
   }
   return tPool; 
 } 
@@ -121,10 +121,10 @@ bool mjThreadPool_Delete(mjThreadPool tPool) {
   tPool->shutDown = 1; 
   // free all thread
   for (int i = 0; i < tPool->maxThread; i++) {
-    mjThread_Delete(tPool->threads[i].thread);
+    mjthread_delete(tPool->threads[i].thread);
   }
   // free mutex
-  pthread_mutex_destroy(&tPool->freeListLock);
+  pthread_mutex_destroy(&tPool->freelist_lock);
   // free memory
   free(tPool);
   return true; 
