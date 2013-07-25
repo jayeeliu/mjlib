@@ -57,7 +57,7 @@ PROTO_TXT_ROUTINE routineList[] = {
 
 void* Routine(void* arg) {
   mjConnB conn = (mjConnB) arg;
-  while (!conn->closed) {
+  while (!conn->closed && !conn->timeout) {
     mjTxt_RunCmd(routineList, 
         sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn);
   }

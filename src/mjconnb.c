@@ -11,10 +11,11 @@
 #include "mjlog.h"
 #include "mjsock.h"
 
-#define MJCONNB_NONE    0
-#define MJCONNB_READ    1
-#define MJCONNB_READBYTES   2 
-#define MJCONNB_READUNTIL   3
+#define MJCONNB_NONE      0
+#define MJCONNB_READ      1
+#define MJCONNB_READBYTES 2 
+#define MJCONNB_READUNTIL 3
+
 #define BUF_SIZE      4096
 
 /*
@@ -62,15 +63,17 @@ static int mjConnB_ReadToBuf(mjConnB conn, mjStr data) {
       // read timeout, set ret and break
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         MJLOG_ERR("read timeout");
+        conn->timeout = true;
         ret = -2;
+      } else {
+        conn->error = true;
       }
-      conn->closed = 1;
       break;         
     }
     // read close, break, copy data to rbuf
     if (ret == 0) {
       MJLOG_ERR("conn close");
-      conn->closed = 1;
+      conn->closed = true;
       break;
     }
     // read ok put data to rbuf, try again
@@ -94,7 +97,7 @@ int mjConnB_Read(mjConnB conn, mjStr data) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
-  conn->readtype  =   MJCONNB_READ;
+  conn->readtype = MJCONNB_READ;
   return mjConnB_ReadToBuf(conn, data);
 }
 
@@ -164,7 +167,7 @@ int mjConnB_WriteB(mjConnB conn, char *buf , int length) {
   if (ret == -1) {
     MJLOG_ERR("mjConnB Write Error");
     if (errno == EAGAIN || errno == EWOULDBLOCK) ret = -2;
-    conn->closed = 1;
+    conn->error = true;
   }
   if (!ret) {
     MJLOG_ERR("nothing write");
@@ -289,18 +292,18 @@ mjConnB mjConnB_New(int fd) {
       return NULL;
     }
   }
-  conn->rbuf->length  = 0;
+  conn->rbuf->length = 0;
   // init read
-  conn->readtype      = MJCONNB_NONE;
-  conn->delim         = NULL;
-  conn->rbytes        = -1;
+  conn->readtype  = MJCONNB_NONE;
+  conn->delim     = NULL;
+  conn->rbytes    = -1;
   // init server
-  conn->server        = NULL;
+  conn->server  = NULL;
   // init flag
-  conn->closed        = 0;
+  conn->timeout = conn->error = conn->closed = false;
   // init private
-  conn->FreePrivate   = NULL;
-  conn->private       = NULL;
+  conn->FreePrivate = NULL;
+  conn->private     = NULL;
   return conn;
 }
 

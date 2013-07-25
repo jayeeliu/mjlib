@@ -1,6 +1,7 @@
 #ifndef _MJCONNB_H
 #define _MJCONNB_H
 
+#include <stdbool.h>
 #include "mjstr.h"
 #include "mjproc.h"
 
@@ -16,7 +17,9 @@ struct mjConnB {
   mjProc      FreePrivate;  // free private data callback 
   void        *private;     // private data
 
-  int         closed;       // peer has closed flag
+  bool        timeout;      // peer timeout
+  bool        error;        // peer error  
+  bool        closed;       // peer closed
 };  
 typedef struct mjConnB* mjConnB;
 
