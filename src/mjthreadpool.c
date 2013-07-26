@@ -33,7 +33,7 @@ bool mjThreadPool_AddWork(mjThreadPool tPool, mjProc Routine, void* arg) {
     MJLOG_ERR("mjthread pool is null");
     return false;
   }
-  if (tPool->shutDown) {
+  if (tPool->shutdown) {
     MJLOG_WARNING("mjthreadpool is shutdown");
     return false;
   }
@@ -79,27 +79,28 @@ mjThreadPool_New
   return: NOT NULL--- mjThreadPool struct, NULL --- fail
 ===============================================================================
 */
-mjThreadPool mjThreadPool_New(int maxThread) {
+mjThreadPool mjThreadPool_New(int max_thread) {
   // alloc threadpool struct
   mjThreadPool tPool = (mjThreadPool) calloc(1, sizeof(struct mjThreadPool) + 
-      maxThread * sizeof(struct mjThreadEntry));
+      max_thread * sizeof(struct mjThreadEntry));
   if (!tPool) {
     MJLOG_ERR("mjThreadPool alloc error");
     return NULL;
   }
   // init field
-  tPool->maxThread  = maxThread;
+  tPool->max_thread  = max_thread;
   pthread_mutex_init(&tPool->freelist_lock, NULL); 
   INIT_LIST_HEAD(&tPool->freelist); 
   // init thread
-  for (int i = 0; i < tPool->maxThread; i++) {
-    tPool->threads[i].tPool = tPool;
-    INIT_LIST_HEAD(&tPool->threads[i].nodeList);
-    list_add_tail(&tPool->threads[i].nodeList, &tPool->freelist);
+  for (int i = 0; i < tPool->max_thread; i++) {
+    tPool->threads_entry[i].tPool = tPool;
+    INIT_LIST_HEAD(&tPool->threads_entry[i].nodeList);
+    list_add_tail(&tPool->threads_entry[i].nodeList, &tPool->freelist);
     // create new thread
-    tPool->threads[i].thread = mjthread_new();
+    tPool->threads_entry[i].thread = mjthread_new();
     // set mjThreadEntry as private data
-    mjthread_set_private(tPool->threads[i].thread, &tPool->threads[i], NULL);
+    mjthread_set_private(tPool->threads_entry[i].thread, 
+        &tPool->threads_entry[i], NULL);
   }
   return tPool; 
 } 
@@ -117,11 +118,11 @@ bool mjThreadPool_Delete(mjThreadPool tPool) {
     return false;
   }
   // can't call it twice
-  if (tPool->shutDown) return false;
-  tPool->shutDown = 1; 
+  if (tPool->shutdown) return false;
+  tPool->shutdown = 1; 
   // free all thread
-  for (int i = 0; i < tPool->maxThread; i++) {
-    mjthread_delete(tPool->threads[i].thread);
+  for (int i = 0; i < tPool->max_thread; i++) {
+    mjthread_delete(tPool->threads_entry[i].thread);
   }
   // free mutex
   pthread_mutex_destroy(&tPool->freelist_lock);

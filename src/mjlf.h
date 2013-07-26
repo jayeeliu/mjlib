@@ -1,5 +1,5 @@
-#ifndef __MJLF_H
-#define __MJLF_H
+#ifndef _MJLF_H
+#define _MJLF_H
 
 #include <stdbool.h>
 #include "mjthreadpool.h"
