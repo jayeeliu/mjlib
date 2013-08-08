@@ -212,7 +212,7 @@ mjconnb_SetTimeout
         0  -- success
 ===============================================================================
 */
-bool mjconnb_SetTimeout(mjconnb conn, unsigned int readTimeout, 
+bool mjconnb_set_timeout(mjconnb conn, unsigned int readTimeout, 
       unsigned int writeTimeout) {
   // sanity check
   if (!conn) {

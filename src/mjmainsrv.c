@@ -234,14 +234,14 @@ mjMainSrv mjMainSrv_New(int sfd, mjProc srvRoutine, int workerThreadNum) {
     }
     mainSrv->srv[i]->mainSrv = mainSrv;
     // create new thread
-    mainSrv->srvThread[i] = mjthread_new();
+    mainSrv->srvThread[i] = mjthread_new(NULL, NULL, mjTcpSrv_Delete, mainSrv->srv[i]);
     if (!mainSrv->srvThread[i]) {
       MJLOG_ERR("mjThread create error");
       mjMainSrv_Delete(mainSrv);
       return NULL;
     }
-    mjThread_AddWork(mainSrv->srvThread[i], mjTcpSrv_Run, mainSrv->srv[i],
-        NULL, NULL, mjTcpSrv_Delete, mainSrv->srv[i]);
+    mjthread_set_private(mainSrv->srvThread[i], mainSrv->srv[i]);
+    mjThread_AddWork(mainSrv->srvThread[i], mjTcpSrv_Run, mainSrv->srv[i]);
     // set cpu affinity
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);

@@ -57,9 +57,8 @@ int main()
         server[i].ev = mjEV_New();
         pipe( server[i].nfd );
         mjEV_Add( server[i].ev, server[i].nfd[0], MJEV_READABLE, AcceptHandler, &server[i] );
-        server[i].thread = mjthread_new();
-        mjThread_AddWork( server[i].thread, MyWorker, &server[i],
-                NULL, NULL, NULL, NULL );
+        server[i].thread = mjthread_new(NULL, NULL, NULL, NULL);
+        mjThread_AddWork( server[i].thread, MyWorker, &server[i], NULL, NULL );
     }
 
     int sfd = mjSock_TcpServer( 7879 );

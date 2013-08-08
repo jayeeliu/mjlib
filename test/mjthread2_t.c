@@ -21,16 +21,13 @@ void* PostRoutine(void* arg)
     return NULL;
 }
 
-int main()
-{
-    mjThread thread = mjthread_new(Routine);
- 
-    for (int i = 0; i < 1000; i++) {
-        mjThread_AddWork(thread, Routine, NULL, 
-            NULL, NULL, NULL, NULL);
-    } 
-    sleep(30);
-    mjthread_delete(thread);
+int main() {
+  mjThread thread = mjthread_new(PreRoutine, NULL, PostRoutine, NULL);
+  for (int i = 0; i < 1000; i++) {
+    mjThread_AddWork(thread, Routine, NULL, NULL, NULL);
+  } 
+  sleep(3);
+  mjthread_delete(thread);
 
-    return 0;
+  return 0;
 }

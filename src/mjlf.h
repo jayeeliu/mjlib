@@ -5,12 +5,12 @@
 #include "mjthreadpool.h"
 
 struct mjLF {
-  int           sfd;
+  int           sfd;            // server socket
   int           stop;
-  mjThreadPool  tPool; 
+  mjThreadPool  tPool;          // thread pool 
   mjProc        Routine;
 
-  int           read_timeout;    // read write timeout
+  int           read_timeout;   // read write timeout
   int           write_timeout;
 
   void*         private;        // private data

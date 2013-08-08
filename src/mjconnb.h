@@ -32,7 +32,7 @@ extern int    mjconnb_WriteS(mjconnb conn, char* buf);
 
 extern bool   mjconnb_SetPrivate(mjconnb conn, void* private, mjProc FreePrivate);
 extern bool   mjconnb_SetServer(mjconnb conn, void* server);
-extern bool   mjconnb_SetTimeout(mjconnb conn, unsigned int read_timeout, 
+extern bool   mjconnb_set_timeout(mjconnb conn, unsigned int read_timeout, 
                 unsigned int write_timeout);
 
 extern mjconnb  mjconnb_Connect(const char* addr, int port, unsigned int timeout);

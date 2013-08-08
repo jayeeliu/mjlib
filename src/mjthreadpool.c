@@ -4,15 +4,17 @@
 
 /*
 ===============================================================================
-mjThreadPool_ThreadFin
-  thread post routine
-  add thread to freelist
+mjThreadPool_Routine
+  run mjthreadpool
 ===============================================================================
 */
-static void* mjThreadPool_ThreadFin(void* arg) {
+static void* mjThreadPool_Routine(void* arg) {
   // get thread entry struct
-  mjThread thread = (mjThread) arg;
-  mjThreadEntry entry = (mjThreadEntry) thread->private;
+  mjThreadEntry entry = (mjThreadEntry) arg;
+  // call Routine
+  entry->Routine(entry->arg);
+  entry->Routine = NULL;
+  entry->arg = NULL;
   // add thread to free list 
   pthread_mutex_lock(&entry->tPool->freelist_lock);
   list_add_tail(&entry->nodeList, &entry->tPool->freelist);
@@ -45,12 +47,13 @@ bool mjThreadPool_AddWork(mjThreadPool tPool, mjProc Routine, void* arg) {
           struct mjThreadEntry, nodeList);
   if (entry) {
     list_del_init(&entry->nodeList);
+    entry->Routine = Routine;
+    entry->arg = arg;
   }
   pthread_mutex_unlock(&tPool->freelist_lock); 
   if (!entry) return false;
   // dispatch work to thread
-  int ret = mjThread_AddWork(entry->thread, Routine, arg, NULL, NULL,
-          mjThreadPool_ThreadFin, entry->thread);
+  int ret = mjThread_AddWork(entry->thread, mjThreadPool_Routine, entry);
   if (!ret) {
     MJLOG_ERR("Oops AddWork Error, Thread Lost");
   }
@@ -79,30 +82,29 @@ mjThreadPool_New
   return: NOT NULL--- mjThreadPool struct, NULL --- fail
 ===============================================================================
 */
-mjThreadPool mjThreadPool_New(int max_thread) {
+mjThreadPool mjThreadPool_New(int max_thread, mjProc Init_Routine,
+    mjProc Exit_Routine) {
   // alloc threadpool struct
-  mjThreadPool tPool = (mjThreadPool) calloc(1, sizeof(struct mjThreadPool) + 
+  mjThreadPool tpool = (mjThreadPool) calloc(1, sizeof(struct mjThreadPool) + 
       max_thread * sizeof(struct mjThreadEntry));
-  if (!tPool) {
+  if (!tpool) {
     MJLOG_ERR("mjThreadPool alloc error");
     return NULL;
   }
   // init field
-  tPool->max_thread  = max_thread;
-  pthread_mutex_init(&tPool->freelist_lock, NULL); 
-  INIT_LIST_HEAD(&tPool->freelist); 
+  tpool->max_thread  = max_thread;
+  pthread_mutex_init(&tpool->freelist_lock, NULL); 
+  INIT_LIST_HEAD(&tpool->freelist); 
   // init thread
-  for (int i = 0; i < tPool->max_thread; i++) {
-    tPool->threads_entry[i].tPool = tPool;
-    INIT_LIST_HEAD(&tPool->threads_entry[i].nodeList);
-    list_add_tail(&tPool->threads_entry[i].nodeList, &tPool->freelist);
+  for (int i = 0; i < tpool->max_thread; i++) {
+    tpool->threads_entry[i].tPool = tpool;
+    INIT_LIST_HEAD(&tpool->threads_entry[i].nodeList);
+    list_add_tail(&tpool->threads_entry[i].nodeList, &tpool->freelist);
     // create new thread
-    tPool->threads_entry[i].thread = mjthread_new();
-    // set mjThreadEntry as private data
-    mjthread_set_private(tPool->threads_entry[i].thread, 
-        &tPool->threads_entry[i], NULL);
+    tpool->threads_entry[i].thread = mjthread_new(Init_Routine, Exit_Routine, 
+        NULL, &tpool->threads_entry[i]);
   }
-  return tPool; 
+  return tpool; 
 } 
 
 /* 
