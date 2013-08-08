@@ -13,13 +13,13 @@ static void* mjthread_once_routine(void* arg) {
   // create and detach thread
   mjthread thread = (mjthread) arg;
   if (thread->Init_Routine) {
-    thread->local = thread->Init_Routine(thread->local);
+    thread->local = thread->Init_Routine(thread);
   }
   if (thread->Routine) {
-    thread->Routine(thread->local);
+    thread->Routine(thread);
   }
   if (thread->Exit_Routine) {
-    thread->Exit_Routine(thread->local);
+    thread->Exit_Routine(thread);
   }
   free(thread);
   return NULL;
@@ -32,7 +32,7 @@ mjthread_new_once
 ===============================================================================
 */
 bool mjthread_new_once(mjProc Init_Routine, mjProc Exit_Routine, 
-    mjProc Routine, void* local) {
+    void* local, mjProc Routine, void* arg) {
   // alloc mjthread struct
   mjthread thread = (mjthread) calloc(1, sizeof(struct mjthread));
   if (!thread) {
@@ -40,13 +40,14 @@ bool mjthread_new_once(mjProc Init_Routine, mjProc Exit_Routine,
     return false;
   }
   thread->Init_Routine = Init_Routine;
-  thread->Routine = Routine;
   thread->Exit_Routine = Exit_Routine;
   thread->local = local;
+  thread->Routine = Routine;
+  thread->arg = arg;
   // init fields
   pthread_create(&thread->thread_id, NULL, mjthread_once_routine, thread);
   pthread_detach(thread->thread_id);
-  return thread;
+  return true;
 }
 
 /*
@@ -58,30 +59,30 @@ ThreadRoutine:
 static void* mjthread_normal_routine(void* arg) {
   // arg can't be null
   mjthread  thread = (mjthread) arg;
-  mjProc    Routine;
   // call init Routine
   if (thread->Init_Routine) {
-    thread->local = thread->Init_Routine(thread->local);
+    thread->local = thread->Init_Routine(thread);
   }
   // threadloop 
   while (1) {
     // wait for routine and not shutdown
     pthread_mutex_lock(&thread->thread_lock);
-    while (!thread->Routine && !thread->shutdown) {
+    while (!thread->running && !thread->shutdown) {
       pthread_cond_wait(&thread->thread_ready, &thread->thread_lock);
     }
-    // get worker value and clean old
-    Routine = thread->Routine;
-    thread->Routine = NULL;
     pthread_mutex_unlock(&thread->thread_lock);
     // should shutdown, break
     if (thread->shutdown) break;
     // call routine
-    if (Routine) Routine(thread->local);
+    if (thread->Routine) thread->Routine(thread);
+    // clean for next task
+    thread->Routine = NULL;
+    thread->arg = NULL;
+    thread->running = false;
   }
   // call exit Routine
   if (thread->Exit_Routine) {
-    thread->Exit_Routine(thread->local);
+    thread->Exit_Routine(thread);
   }
   thread->closed = true;
   pthread_exit(NULL);
@@ -93,7 +94,7 @@ mjthread_AddWork
   add Routine to thread
 ===============================================================================
 */
-bool mjthread_add_routine(mjthread thread, mjProc Routine) {
+bool mjthread_add_routine(mjthread thread, mjProc Routine, void* arg) {
   // sanity check
   if (!thread) {
     MJLOG_ERR("thread is null");
@@ -103,8 +104,10 @@ bool mjthread_add_routine(mjthread thread, mjProc Routine) {
   // add worker to thread
   pthread_mutex_lock(&thread->thread_lock);
   bool retval = false;
-  if (!thread->Routine) {
+  if (!thread->running) {
     thread->Routine = Routine;
+    thread->arg = arg;
+    thread->running = true;
     pthread_cond_signal(&thread->thread_ready);
     retval = true; 
   } else {
@@ -114,13 +117,22 @@ bool mjthread_add_routine(mjthread thread, mjProc Routine) {
   return retval;
 }
 
+bool mjthread_set_local(mjthread thread, void* local) {
+  if (!thread || thread->Init_Routine) {
+    MJLOG_ERR("thread is null or has Init_Routine");
+    return false;
+  }
+  thread->local = local;
+  return true;
+}
+
 /*
 ===============================================================================
 mjthread_new
   create new thread, run mjthread_normal_routine
 ===============================================================================
 */
-mjthread mjthread_new(mjProc Init_Routine, mjProc Exit_Routine, void* local) {
+mjthread mjthread_new(mjProc Init_Routine, mjProc Exit_Routine) {
   // alloc mjthread struct
   mjthread thread = (mjthread) calloc(1, sizeof(struct mjthread));
   if (!thread) {
@@ -129,7 +141,6 @@ mjthread mjthread_new(mjProc Init_Routine, mjProc Exit_Routine, void* local) {
   }
   thread->Init_Routine = Init_Routine;
   thread->Exit_Routine = Exit_Routine;
-  thread->local = local;
   // init fields
   pthread_mutex_init(&thread->thread_lock, NULL);
   pthread_cond_init(&thread->thread_ready, NULL);

@@ -6,34 +6,32 @@
 #include "mjlist.h"
 #include "mjthread.h"
 
-struct mjThreadPool;
+struct mjthreadpool;
 
-struct mjThreadEntry {
-  struct mjThreadPool*  tPool;
+struct mjthreadentry {
+  struct mjthreadpool*  tpool;
   struct list_head      nodeList;
   mjthread              thread;
-  mjProc                Init_Routine;
-  mjProc                Exit_Routine;
   mjProc                Routine;
   void*                 arg;
 };
-typedef struct mjThreadEntry* mjThreadEntry;
+typedef struct mjthreadentry* mjthreadentry;
 
 // threadpool struct
-struct mjThreadPool {
-  pthread_mutex_t       freelist_lock;   // lock for threadList  
-  struct list_head      freelist;       // task list 
-  int                   shutdown;       // shutdown this thread pool?
+struct mjthreadpool {
+  pthread_mutex_t       freelist_lock;    // lock for threadList  
+  struct list_head      freelist;         // task list 
+  bool                  shutdown;         // shutdown this thread pool?
   int                   max_thread;
-  mjProc                Thread_Init_Proc;
-  struct mjThreadEntry  threads_entry[0];
+  mjProc                Thread_Init_Routine;
+  mjProc                Thread_Exit_Routine;
+  struct mjthreadentry  thread_entrys[0];
 };
-typedef struct mjThreadPool*  mjThreadPool;
+typedef struct mjthreadpool*  mjthreadpool;
 
-extern bool         mjThreadPool_AddWork(mjThreadPool tPool, mjProc Routine, void* arg);
-extern bool         mjThreadPool_AddWorkPlus(mjThreadPool tPool, mjProc Routine, void* arg);
-extern mjThreadPool mjThreadPool_New(int max_thread);
-extern mjThreadPool mjthreadpool_new(int max_thread, mjProc Init_Proc);
-extern bool         mjThreadPool_Delete(mjThreadPool tPool);
+extern bool         mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg);
+extern bool         mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc Routine, void* arg);
+extern mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine, mjProc Exit_Routine);
+extern bool         mjthreadpool_delete(mjthreadpool tpool);
 
 #endif

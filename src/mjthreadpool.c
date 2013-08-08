@@ -4,56 +4,59 @@
 
 /*
 ===============================================================================
-mjThreadPool_Routine
+mjthreadpool_Routine
   run mjthreadpool
 ===============================================================================
 */
-static void* mjThreadPool_Routine(void* arg) {
+static void* mjthreadpool_routine(void* arg) {
   // get thread entry struct
-  mjThreadEntry entry = (mjThreadEntry) arg;
+  mjthread thread = (mjthread) arg;
+  mjthreadentry entry = (mjthreadentry) thread->arg;
+  // change args
+  thread->arg = entry->arg;
   // call Routine
-  entry->Routine(entry->arg);
+  entry->Routine(thread);
   entry->Routine = NULL;
   entry->arg = NULL;
   // add thread to free list 
-  pthread_mutex_lock(&entry->tPool->freelist_lock);
-  list_add_tail(&entry->nodeList, &entry->tPool->freelist);
-  pthread_mutex_unlock(&entry->tPool->freelist_lock); 
+  pthread_mutex_lock(&entry->tpool->freelist_lock);
+  list_add_tail(&entry->nodeList, &entry->tpool->freelist);
+  pthread_mutex_unlock(&entry->tpool->freelist_lock); 
   return NULL;
 }
 
 /*
 ===============================================================================
-mjThreadPool_AddWork
+mjthreadpool_AddWork
   add worker to thread pool
   return: 0 --- success, -1 --- fail
 ===============================================================================
 */ 
-bool mjThreadPool_AddWork(mjThreadPool tPool, mjProc Routine, void* arg) { 
+bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg) { 
   // sanity check
-  if (!tPool) {
+  if (!tpool) {
     MJLOG_ERR("mjthread pool is null");
     return false;
   }
-  if (tPool->shutdown) {
+  if (tpool->shutdown) {
     MJLOG_WARNING("mjthreadpool is shutdown");
     return false;
   }
   // no free thread
-  if (list_empty(&tPool->freelist)) return false;
+  if (list_empty(&tpool->freelist)) return false;
   // get free thread
-  pthread_mutex_lock(&tPool->freelist_lock); 
-  mjThreadEntry entry  = list_first_entry(&tPool->freelist, 
-          struct mjThreadEntry, nodeList);
+  pthread_mutex_lock(&tpool->freelist_lock); 
+  mjthreadentry entry = list_first_entry(&tpool->freelist, 
+          struct mjthreadentry, nodeList);
   if (entry) {
     list_del_init(&entry->nodeList);
     entry->Routine = Routine;
     entry->arg = arg;
   }
-  pthread_mutex_unlock(&tPool->freelist_lock); 
+  pthread_mutex_unlock(&tpool->freelist_lock); 
   if (!entry) return false;
   // dispatch work to thread
-  int ret = mjThread_AddWork(entry->thread, mjThreadPool_Routine, entry);
+  int ret = mjthread_add_routine(entry->thread, mjthreadpool_routine, entry);
   if (!ret) {
     MJLOG_ERR("Oops AddWork Error, Thread Lost");
   }
@@ -62,73 +65,73 @@ bool mjThreadPool_AddWork(mjThreadPool tPool, mjProc Routine, void* arg) {
 
 /*
 ===============================================================================
-mjThreadPool_AddWorkPlus
-  call mjThreadPool_AddWork, if failed, call mjThread_RunOnce
+mjthreadpool_AddWorkPlus
+  call mjthreadpool_AddWork, if failed, call mjThread_RunOnce
 ===============================================================================
 */
-bool mjThreadPool_AddWorkPlus(mjThreadPool tPool, 
+bool mjthreadpool_add_routine_plus(mjthreadpool tpool, 
   mjProc Routine, void* arg) {
-  // call mjThreadPool_AddWork
-  if (!mjThreadPool_AddWork(tPool, Routine, arg)) {
-    return mjThread_RunOnce(Routine, arg);
+  // call mjthreadpool_AddWork
+  if (!mjthreadpool_add_routine(tpool, Routine, arg)) {
+    return mjthread_new_once(tpool->Thread_Init_Routine,
+      tpool->Thread_Exit_Routine, NULL, Routine, arg);
   }
   return true;
 }
 
 /*
 ===============================================================================
-mjThreadPool_New
+mjthreadpool_New
   init new thread pool
-  return: NOT NULL--- mjThreadPool struct, NULL --- fail
+  return: NOT NULL--- mjthreadpool struct, NULL --- fail
 ===============================================================================
 */
-mjThreadPool mjThreadPool_New(int max_thread, mjProc Init_Routine,
+mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine,
     mjProc Exit_Routine) {
   // alloc threadpool struct
-  mjThreadPool tpool = (mjThreadPool) calloc(1, sizeof(struct mjThreadPool) + 
-      max_thread * sizeof(struct mjThreadEntry));
+  mjthreadpool tpool = (mjthreadpool) calloc(1, sizeof(struct mjthreadpool) + 
+      max_thread * sizeof(struct mjthreadentry));
   if (!tpool) {
-    MJLOG_ERR("mjThreadPool alloc error");
+    MJLOG_ERR("mjthreadpool alloc error");
     return NULL;
   }
   // init field
   tpool->max_thread  = max_thread;
+  tpool->Thread_Init_Routine = Init_Routine;
+  tpool->Thread_Exit_Routine = Exit_Routine;
   pthread_mutex_init(&tpool->freelist_lock, NULL); 
   INIT_LIST_HEAD(&tpool->freelist); 
   // init thread
   for (int i = 0; i < tpool->max_thread; i++) {
-    tpool->threads_entry[i].tPool = tpool;
-    INIT_LIST_HEAD(&tpool->threads_entry[i].nodeList);
-    list_add_tail(&tpool->threads_entry[i].nodeList, &tpool->freelist);
+    tpool->thread_entrys[i].tpool = tpool;
+    INIT_LIST_HEAD(&tpool->thread_entrys[i].nodeList);
+    list_add_tail(&tpool->thread_entrys[i].nodeList, &tpool->freelist);
     // create new thread
-    tpool->threads_entry[i].thread = mjthread_new(Init_Routine, Exit_Routine, 
-        NULL, &tpool->threads_entry[i]);
+    tpool->thread_entrys[i].thread = mjthread_new(Init_Routine, Exit_Routine);
   }
   return tpool; 
 } 
 
 /* 
 ===============================================================================
-mjThreadPool_delete
+mjthreadpool_delete
   destory thread pool
 ===============================================================================
 */
-bool mjThreadPool_Delete(mjThreadPool tPool) {
+bool mjthreadpool_delete(mjthreadpool tpool) {
   // sanity check 
-  if (!tPool) {
-    MJLOG_ERR("tPool is null");
+  if (!tpool) {
+    MJLOG_ERR("tpool is null");
     return false;
   }
   // can't call it twice
-  if (tPool->shutdown) return false;
-  tPool->shutdown = 1; 
+  if (tpool->shutdown) return false;
+  tpool->shutdown = true; 
   // free all thread
-  for (int i = 0; i < tPool->max_thread; i++) {
-    mjthread_delete(tPool->threads_entry[i].thread);
+  for (int i = 0; i < tpool->max_thread; i++) {
+    mjthread_delete(tpool->thread_entrys[i].thread);
   }
-  // free mutex
-  pthread_mutex_destroy(&tPool->freelist_lock);
-  // free memory
-  free(tPool);
+  pthread_mutex_destroy(&tpool->freelist_lock);
+  free(tpool);
   return true; 
 } 

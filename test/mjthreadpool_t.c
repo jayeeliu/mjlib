@@ -4,7 +4,7 @@
 
 void* Routine(void* arg) {
     long a = 1;
-    for(int i = 1; i < 2; i++) {
+    for(int i = 1; i < 20; i++) {
         a = a * i;
     }
     printf("%ld\n", a);
@@ -13,11 +13,11 @@ void* Routine(void* arg) {
  
 int main()
 {
-    mjThreadPool tPool = mjThreadPool_New(10);
+    mjthreadpool tpool = mjthreadpool_new(10, NULL, NULL);
 
     for(int i = 0; i < 100; i++) {
-      mjThreadPool_AddWork(tPool, Routine, NULL);
+      mjthreadpool_add_routine_plus(tpool, Routine, NULL);
     }
-    mjThreadPool_Delete(tPool);
+    mjthreadpool_delete(tpool);
     return 0;
 }
