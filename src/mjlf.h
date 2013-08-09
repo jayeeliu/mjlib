@@ -7,7 +7,7 @@
 struct mjLF {
   int           sfd;            // server socket
   int           stop;
-  mjThreadPool  tPool;          // thread pool 
+  mjthreadpool  tpool;          // thread pool 
   mjProc        Routine;
 
   int           read_timeout;   // read write timeout

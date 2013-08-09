@@ -12,16 +12,20 @@ mjlf_routine
 ===============================================================================
 */
 static void* mjlf_routine(void* arg) {
-  mjLF srv = (mjLF) arg;
+  mjthread thread = (mjthread) arg;
+  mjLF srv = (mjLF) thread->arg;
   int cfd;
   // leader run this
   while (1) {
     cfd = mjSock_Accept(srv->sfd);
     if (cfd < 0) continue;
     // choose a new leader
-    if (mjThreadPool_AddWorkPlus(srv->tPool, mjlf_routine, srv)) break;
-    MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
-    close(cfd);
+    while(!mjthreadpool_add_routine(srv->tpool, mjlf_routine, srv));
+    break;
+
+//    if (mjthreadpool_add_routine_plus(srv->tpool, mjlf_routine, srv)) break;
+//    MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
+//    close(cfd);
   }
   // change to worker
   if (!srv->Routine) {
@@ -118,8 +122,8 @@ mjLF mjLF_New(int sfd, mjProc Routine, int max_thread) {
     return NULL;
   }
   // init new pool
-  srv->tPool = mjThreadPool_New(max_thread);
-  if (!srv->tPool) {
+  srv->tpool = mjthreadpool_new(max_thread, NULL, NULL);
+  if (!srv->tpool) {
     MJLOG_ERR("mjthreadpool create error");
     free(srv);
     return NULL;
@@ -128,9 +132,9 @@ mjLF mjLF_New(int sfd, mjProc Routine, int max_thread) {
   srv->sfd      = sfd;
   srv->Routine  = Routine;
   // add new worker 
-  if (!mjThreadPool_AddWork(srv->tPool, mjlf_routine, srv)) {
+  if (!mjthreadpool_add_routine(srv->tpool, mjlf_routine, srv)) {
     MJLOG_ERR("mjthreadpool addwork");
-    mjThreadPool_Delete(srv->tPool);
+    mjthreadpool_delete(srv->tpool);
     free(srv);
     return NULL;
   }
@@ -153,7 +157,7 @@ bool mjLF_Delete(mjLF srv) {
   }
   if (srv->private && srv->FreePrivate) srv->FreePrivate(srv->private);
   // delete thread pool
-  mjThreadPool_Delete(srv->tPool);
+  mjthreadpool_delete(srv->tpool);
   free(srv);
   return true;
 }

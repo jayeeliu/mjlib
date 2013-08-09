@@ -21,13 +21,14 @@ typedef struct mjthreadentry* mjthreadentry;
 struct mjthreadpool {
   pthread_mutex_t       freelist_lock;    // lock for threadList  
   struct list_head      freelist;         // task list 
+  int                   freenum;
   bool                  shutdown;         // shutdown this thread pool?
   int                   max_thread;
   mjProc                Thread_Init_Routine;
   mjProc                Thread_Exit_Routine;
   struct mjthreadentry  thread_entrys[0];
 };
-typedef struct mjthreadpool*  mjthreadpool;
+typedef struct mjthreadpool* mjthreadpool;
 
 extern bool         mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg);
 extern bool         mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc Routine, void* arg);

@@ -5,14 +5,12 @@
 #include "mjhttpreq.h"
 
 void* Run(void* arg) {
-    mjConnB conn = (mjConnB) arg;
+    mjconnb conn = (mjconnb) arg;
     mjStr data = mjStr_New();
-    mjConnB_ReadUntil(conn, "\r\n\r\n", data);
-    mjHttpReq req = mjHttpReq_New(data);
-    mjConnB_Write(conn, req->location);
-    mjHttpReq_Delete(req);
+    mjconnb_ReadUntil(conn, "\r\n\r\n", data);
+    mjconnb_WriteS(conn, "OK");
     mjStr_Delete(data);
-    mjConnB_Delete(conn);
+    mjconnb_Delete(conn);
     return NULL;
 }
 

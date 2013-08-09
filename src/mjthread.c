@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include "mjthread.h"
 #include "mjlog.h"
+#include "mjthreadpool.h"
 
 /*
 ===============================================================================
@@ -71,10 +72,10 @@ static void* mjthread_normal_routine(void* arg) {
       pthread_cond_wait(&thread->thread_ready, &thread->thread_lock);
     }
     pthread_mutex_unlock(&thread->thread_lock);
-    // should shutdown, break
-    if (thread->shutdown) break;
     // call routine
     if (thread->Routine) thread->Routine(thread);
+    // should shutdown, break
+    if (thread->shutdown) break;
     // clean for next task
     thread->Routine = NULL;
     thread->arg = NULL;
@@ -141,6 +142,7 @@ mjthread mjthread_new(mjProc Init_Routine, mjProc Exit_Routine) {
   }
   thread->Init_Routine = Init_Routine;
   thread->Exit_Routine = Exit_Routine;
+  thread->closed = false;
   // init fields
   pthread_mutex_init(&thread->thread_lock, NULL);
   pthread_cond_init(&thread->thread_ready, NULL);
@@ -167,9 +169,6 @@ bool mjthread_delete(mjthread thread) {
   pthread_cond_broadcast(&thread->thread_ready);
   // wait thread exit
   pthread_join(thread->thread_id, NULL);
-  if (thread->closed) {
-    MJLOG_ERR("something wrong");
-  }
   // only normal thread need destory
   pthread_mutex_destroy(&thread->thread_lock);
   pthread_cond_destroy(&thread->thread_ready);

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 #include "mjthreadpool.h"
 #include "mjlog.h"
 
@@ -18,9 +19,10 @@ static void* mjthreadpool_routine(void* arg) {
   entry->Routine(thread);
   entry->Routine = NULL;
   entry->arg = NULL;
-  // add thread to free list 
+  // add thread to free list
   pthread_mutex_lock(&entry->tpool->freelist_lock);
   list_add_tail(&entry->nodeList, &entry->tpool->freelist);
+  entry->tpool->freenum++;
   pthread_mutex_unlock(&entry->tpool->freelist_lock); 
   return NULL;
 }
@@ -52,13 +54,15 @@ bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg) {
     list_del_init(&entry->nodeList);
     entry->Routine = Routine;
     entry->arg = arg;
+    assert(entry->thread->running==false);
+    tpool->freenum--;
   }
   pthread_mutex_unlock(&tpool->freelist_lock); 
   if (!entry) return false;
   // dispatch work to thread
   int ret = mjthread_add_routine(entry->thread, mjthreadpool_routine, entry);
   if (!ret) {
-    MJLOG_ERR("Oops AddWork Error, Thread Lost");
+    MJLOG_ERR("Oops AddWork Error, Thread Lost %d", tpool->freenum);
   }
   return ret;
 }
@@ -97,6 +101,7 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine,
   }
   // init field
   tpool->max_thread  = max_thread;
+  tpool->freenum = max_thread;
   tpool->Thread_Init_Routine = Init_Routine;
   tpool->Thread_Exit_Routine = Exit_Routine;
   pthread_mutex_init(&tpool->freelist_lock, NULL); 

@@ -5,6 +5,8 @@
 #include <pthread.h>
 #include "mjproc.h"
 
+struct mjthreadpool_entry;
+
 struct mjthread {
   pthread_t       thread_id;
   pthread_mutex_t thread_lock;
