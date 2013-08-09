@@ -16,7 +16,7 @@ void* Run(void* arg) {
 
 int main() {
     int sock = mjSock_TcpServer(7879);
-    mjLF server = mjLF_New(sock, Run, 10);
+    mjLF server = mjLF_New(sock, Run, 20);
     mjLF_Run(server);
     mjLF_Delete(server);
     return 0;

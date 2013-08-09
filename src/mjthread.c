@@ -59,7 +59,7 @@ ThreadRoutine:
 */
 static void* mjthread_normal_routine(void* arg) {
   // arg can't be null
-  mjthread  thread = (mjthread) arg;
+  mjthread thread = (mjthread) arg;
   // call init Routine
   if (thread->Init_Routine) {
     thread->local = thread->Init_Routine(thread);
@@ -80,6 +80,12 @@ static void* mjthread_normal_routine(void* arg) {
     thread->Routine = NULL;
     thread->arg = NULL;
     thread->running = false;
+    // if in threadpool, add to freelist
+    if (thread->entry) {
+      pthread_mutex_lock(&thread->entry->tpool->freelist_lock);
+      list_add_tail(&thread->entry->nodeList, &thread->entry->tpool->freelist);
+      pthread_mutex_unlock(&thread->entry->tpool->freelist_lock);
+    }
   }
   // call exit Routine
   if (thread->Exit_Routine) {
@@ -111,7 +117,7 @@ bool mjthread_add_routine(mjthread thread, mjProc Routine, void* arg) {
     thread->running = true;
     pthread_cond_signal(&thread->thread_ready);
     retval = true; 
-  } else {
+  } else if (thread->entry) {
     MJLOG_ERR("Oops: thread is busy, can't happen in threadpool");
   }
   pthread_mutex_unlock(&thread->thread_lock);
@@ -142,7 +148,6 @@ mjthread mjthread_new(mjProc Init_Routine, mjProc Exit_Routine) {
   }
   thread->Init_Routine = Init_Routine;
   thread->Exit_Routine = Exit_Routine;
-  thread->closed = false;
   // init fields
   pthread_mutex_init(&thread->thread_lock, NULL);
   pthread_cond_init(&thread->thread_ready, NULL);

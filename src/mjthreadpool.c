@@ -1,31 +1,6 @@
 #include <stdlib.h>
-#include <assert.h>
 #include "mjthreadpool.h"
 #include "mjlog.h"
-
-/*
-===============================================================================
-mjthreadpool_Routine
-  run mjthreadpool
-===============================================================================
-*/
-static void* mjthreadpool_routine(void* arg) {
-  // get thread entry struct
-  mjthread thread = (mjthread) arg;
-  mjthreadentry entry = (mjthreadentry) thread->arg;
-  // change args
-  thread->arg = entry->arg;
-  // call Routine
-  entry->Routine(thread);
-  entry->Routine = NULL;
-  entry->arg = NULL;
-  // add thread to free list
-  pthread_mutex_lock(&entry->tpool->freelist_lock);
-  list_add_tail(&entry->nodeList, &entry->tpool->freelist);
-  entry->tpool->freenum++;
-  pthread_mutex_unlock(&entry->tpool->freelist_lock); 
-  return NULL;
-}
 
 /*
 ===============================================================================
@@ -52,17 +27,13 @@ bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg) {
           struct mjthreadentry, nodeList);
   if (entry) {
     list_del_init(&entry->nodeList);
-    entry->Routine = Routine;
-    entry->arg = arg;
-    assert(entry->thread->running==false);
-    tpool->freenum--;
   }
   pthread_mutex_unlock(&tpool->freelist_lock); 
   if (!entry) return false;
   // dispatch work to thread
-  int ret = mjthread_add_routine(entry->thread, mjthreadpool_routine, entry);
+  int ret = mjthread_add_routine(entry->thread, Routine, arg);
   if (!ret) {
-    MJLOG_ERR("Oops AddWork Error, Thread Lost %d", tpool->freenum);
+    MJLOG_ERR("Oops AddWork Error, Thread Lost");
   }
   return ret;
 }
@@ -101,7 +72,6 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine,
   }
   // init field
   tpool->max_thread  = max_thread;
-  tpool->freenum = max_thread;
   tpool->Thread_Init_Routine = Init_Routine;
   tpool->Thread_Exit_Routine = Exit_Routine;
   pthread_mutex_init(&tpool->freelist_lock, NULL); 
@@ -113,6 +83,7 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine,
     list_add_tail(&tpool->thread_entrys[i].nodeList, &tpool->freelist);
     // create new thread
     tpool->thread_entrys[i].thread = mjthread_new(Init_Routine, Exit_Routine);
+    tpool->thread_entrys[i].thread->entry = &tpool->thread_entrys[i];
   }
   return tpool; 
 } 

@@ -12,8 +12,6 @@ struct mjthreadentry {
   struct mjthreadpool*  tpool;
   struct list_head      nodeList;
   mjthread              thread;
-  mjProc                Routine;
-  void*                 arg;
 };
 typedef struct mjthreadentry* mjthreadentry;
 
@@ -21,7 +19,6 @@ typedef struct mjthreadentry* mjthreadentry;
 struct mjthreadpool {
   pthread_mutex_t       freelist_lock;    // lock for threadList  
   struct list_head      freelist;         // task list 
-  int                   freenum;
   bool                  shutdown;         // shutdown this thread pool?
   int                   max_thread;
   mjProc                Thread_Init_Routine;

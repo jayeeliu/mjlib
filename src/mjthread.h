@@ -5,23 +5,24 @@
 #include <pthread.h>
 #include "mjproc.h"
 
-struct mjthreadpool_entry;
+struct mjthreadentry;
 
 struct mjthread {
-  pthread_t       thread_id;
-  pthread_mutex_t thread_lock;
-  pthread_cond_t  thread_ready;
+  pthread_t             thread_id;
+  pthread_mutex_t       thread_lock;
+  pthread_cond_t        thread_ready;
+  struct mjthreadentry* entry;    // entry when in threadpool, otherwise NULL
 
-  mjProc          Init_Routine;   // run once when thread init
-  mjProc          Exit_Routine;   // run once when thread exit
-  void*           local;          // thread local data 
+  mjProc  Init_Routine;   // run once when thread init
+  mjProc  Exit_Routine;   // run once when thread exit
+  void*   local;          // thread local data 
 
-  mjProc          Routine;        // routine to be run
-  void*           arg;
+  mjProc  Routine;        // routine to be run
+  void*   arg;
 
-  bool            running;
-  bool            closed;         // 1 when thread exit, otherwise 0
-  bool            shutdown;       // 1 when shutdown command has invoked, otherwise 0
+  bool    running;
+  bool    closed;         // 1 when thread exit, otherwise 0
+  bool    shutdown;       // 1 when shutdown command has invoked, otherwise 0
 };
 typedef struct mjthread* mjthread;
 
