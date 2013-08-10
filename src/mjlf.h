@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "mjthreadpool.h"
 
-struct mjLF {
+struct mjlf {
   int           sfd;            // server socket
   int           stop;
   mjthreadpool  tpool;          // thread pool 
@@ -12,18 +12,15 @@ struct mjLF {
 
   int           read_timeout;   // read write timeout
   int           write_timeout;
-
-  void*         private;        // private data
-  mjProc        FreePrivate;
 };
-typedef struct mjLF* mjLF;
+typedef struct mjlf* mjlf;
 
-extern void mjLF_Run(mjLF srv);
-extern bool mjLF_SetPrivate(mjLF srv, void* private, mjProc FreePrivate);
-extern bool mjLF_SetStop(mjLF srv, int value);
-extern bool mjLF_SetTimeout(mjLF srv, int read_timeout, int write_timeout);
+extern void mjlf_run(mjlf srv);
+extern bool mjlf_set_stop(mjlf srv, int value);
+extern bool mjlf_set_timeout(mjlf srv, int read_timeout, int write_timeout);
 
-extern mjLF mjLF_New(int sfd, mjProc Routine, int maxThread);
-extern bool mjLF_Delete(mjLF srv);
+extern mjlf mjlf_new(int sfd, mjProc Routine, int maxThread,
+  mjProc Init_Routine, mjProc Exit_Routine);
+extern bool mjlf_delete(mjlf srv);
 
 #endif

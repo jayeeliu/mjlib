@@ -10,12 +10,11 @@ struct mjconnb {
   mjStr       rbuf;         // read read buffer 
 
   int         readtype;     // read type
-  const char  *delim;       // the delim when readtype is READUNTIL 
+  const char* delim;        // the delim when readtype is READUNTIL 
   int         rbytes;       // read data size when readtype is READBYTES 
 
-  void        *server;      // server the conn belongs to
-  mjProc      FreePrivate;  // free private data callback 
-  void        *private;     // private data
+  void*       server;       // server the conn belongs to
+  void*       shared;       // shared data, used by mjconnb
 
   bool        timeout;      // peer timeout
   bool        error;        // peer error  
@@ -23,20 +22,20 @@ struct mjconnb {
 };  
 typedef struct mjconnb* mjconnb;
 
-extern int    mjconnb_Read(mjconnb conn, mjStr data);
-extern int    mjconnb_ReadBytes(mjconnb conn, mjStr data, int len);
-extern int    mjconnb_ReadUntil(mjconnb conn, const char* delim, mjStr data);
-extern int    mjconnb_Write(mjconnb conn, mjStr data);
-extern int    mjconnb_WriteB(mjconnb conn, char* buf, int length);
-extern int    mjconnb_WriteS(mjconnb conn, char* buf);
+extern int    mjconnb_read(mjconnb conn, mjStr data);
+extern int    mjconnb_readbytes(mjconnb conn, mjStr data, int len);
+extern int    mjconnb_readuntil(mjconnb conn, const char* delim, mjStr data);
+extern int    mjconnb_write(mjconnb conn, mjStr data);
+extern int    mjconnb_writeb(mjconnb conn, char* buf, int length);
+extern int    mjconnb_writes(mjconnb conn, char* buf);
 
-extern bool   mjconnb_SetPrivate(mjconnb conn, void* private, mjProc FreePrivate);
-extern bool   mjconnb_SetServer(mjconnb conn, void* server);
+extern bool   mjconnb_set_server(mjconnb conn, void* server);
+extern bool   mjconnb_set_shared(mjconnb conn, void* shared);
 extern bool   mjconnb_set_timeout(mjconnb conn, unsigned int read_timeout, 
                 unsigned int write_timeout);
 
-extern mjconnb  mjconnb_Connect(const char* addr, int port, unsigned int timeout);
-extern mjconnb  mjconnb_New(int fd);
-extern bool     mjconnb_Delete(mjconnb conn);
+extern mjconnb  mjconnb_connect(const char* addr, int port, unsigned int timeout);
+extern mjconnb  mjconnb_new(int fd);
+extern bool     mjconnb_delete(mjconnb conn);
 
 #endif

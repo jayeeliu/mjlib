@@ -147,16 +147,15 @@ void RemovePid(const char* pidFile)
 }
 
 /*
-====================================
+===============================================================================
 GetCPUNumer
     get online cpu number
     return: number of online cpus 
-====================================
- */
-int GetCPUNumber()
-{
-    int cpu_num = sysconf(_SC_NPROCESSORS_ONLN);
-    return cpu_num;
+===============================================================================
+*/
+int get_cpu_count() {
+  int cpu_num = sysconf(_SC_NPROCESSORS_ONLN);
+  return cpu_num;
 }
 
 /*

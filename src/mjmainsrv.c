@@ -208,7 +208,7 @@ mjMainSrv mjMainSrv_New(int sfd, mjProc srvRoutine, int workerThreadNum) {
   // update fileds and srv
   mainSrv->sfd        = sfd;
   mainSrv->srvRoutine = srvRoutine;
-  mainSrv->srvNum     = GetCPUNumber();
+  mainSrv->srvNum     = get_cpu_count();
   if (mainSrv->srvNum <= 0) {
     MJLOG_ERR("cpu count error");
     free(mainSrv);

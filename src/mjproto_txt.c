@@ -15,7 +15,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     return false;
   }
   if (!routineList) {
-    mjconnb_WriteS(conn, "+ no command list\r\n");
+    mjconnb_writes(conn, "+ no command list\r\n");
     return false;
   } 
   // read data
@@ -24,12 +24,12 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     MJLOG_ERR("data create error");
     return false;  
   }
-  int ret = mjconnb_ReadUntil(conn, "\r\n", data);
+  int ret = mjconnb_readuntil(conn, "\r\n", data);
   if (ret == -2) {
-    mjconnb_WriteS(conn, "+ read timetout\r\n");
+    mjconnb_writes(conn, "+ read timetout\r\n");
     goto failout1;
   } else if (ret < 0) {
-    mjconnb_WriteS(conn, "+ read error\r\n");
+    mjconnb_writes(conn, "+ read error\r\n");
     goto failout1;
   } else if (ret == 0) {
     MJLOG_ERR("peer closed");
@@ -43,7 +43,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
   }
   mjStr_Split(data, " ", strList);
   if (strList->length < 2) {
-    mjconnb_WriteS(conn, "+ command error\r\n");
+    mjconnb_writes(conn, "+ command error\r\n");
     goto failout2;
   }
   // get tag and cmd
@@ -65,7 +65,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     mjStr_Delete(data);
     return true;
   }  
-  mjconnb_WriteS(conn, "+ wrong command\r\n");
+  mjconnb_writes(conn, "+ wrong command\r\n");
   // release resource
 failout2:
   mjStrList_Delete(strList);

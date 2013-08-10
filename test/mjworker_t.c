@@ -14,7 +14,7 @@ void myproc( void* arg )
     mjconnb conn = ( mjconnb )arg;
     mjStr data = mjStr_New();
 
-    mjconnb_ReadUntil( conn, "\r\n\r\n", data );
+    mjconnb_readuntil( conn, "\r\n\r\n", data );
 
     //connect to sql server
    // mjsql handle = mjsql_new( "127.0.0.1", "root", "", "test", 3306 );
@@ -25,7 +25,7 @@ void myproc( void* arg )
    // mjsql_delete( handle );
 
    // mjStr_copys( data, "OK\n" ); 
-    mjconnb_WriteS( conn, "TCP FORK SERVER READY!" );
+    mjconnb_writes( conn, "TCP FORK SERVER READY!" );
 
     mjStr_Delete(data);
 }

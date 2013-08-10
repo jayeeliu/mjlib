@@ -13,7 +13,7 @@ mjlf_routine
 */
 static void* mjlf_routine(void* arg) {
   mjthread thread = (mjthread) arg;
-  mjLF srv = (mjLF) thread->arg;
+  mjlf srv = (mjlf) thread->arg;
   int cfd;
   // leader run this
   while (1) {
@@ -34,13 +34,14 @@ static void* mjlf_routine(void* arg) {
     return NULL;
   }
   // create new conn 
-  mjconnb conn = mjconnb_New(cfd);
+  mjconnb conn = mjconnb_new(cfd);
   if (!conn) {
     MJLOG_ERR("create mjconnb error");
     close(cfd);
     return NULL;
   }
-  mjconnb_SetServer(conn, srv);
+  mjconnb_set_server(conn, srv);
+  mjconnb_set_shared(conn, thread->local);
   mjconnb_set_timeout(conn, srv->read_timeout, srv->write_timeout);
   // run server routine
   srv->Routine(conn);
@@ -49,27 +50,11 @@ static void* mjlf_routine(void* arg) {
 
 /*
 ===============================================================================
-mjLF_SetPrivate
-  set server private data
-===============================================================================
-*/
-bool mjLF_SetPrivate(mjLF srv, void* private, mjProc FreePrivate) {
-  if (!srv) {
-    MJLOG_ERR("srv is null");
-    return false;
-  }
-  srv->private      = private;
-  srv->FreePrivate  = FreePrivate;
-  return true;
-}
-
-/*
-===============================================================================
-mjLF_SetStop
+mjlf_SetStop
   set server stop
 ===============================================================================
 */
-bool mjLF_SetStop(mjLF srv, int value) {
+bool mjlf_set_stop(mjlf srv, int value) {
   if (!srv) {
     MJLOG_ERR("srv is null");
     return false;
@@ -80,11 +65,11 @@ bool mjLF_SetStop(mjLF srv, int value) {
 
 /*
 ===============================================================================
-mjLF_SetTimeout
+mjlf_SetTimeout
   set server timeout
 ===============================================================================
 */
-bool mjLF_SetTimeout(mjLF srv, int read_timeout, int write_timeout) {
+bool mjlf_set_timeout(mjlf srv, int read_timeout, int write_timeout) {
   if (!srv) {
     MJLOG_ERR("srv is null");
     return false;
@@ -96,11 +81,11 @@ bool mjLF_SetTimeout(mjLF srv, int read_timeout, int write_timeout) {
 
 /*
 ===============================================================================
-mjLF_Run
+mjlf_Run
   run leader follow server
 ===============================================================================
 */
-void mjLF_Run(mjLF srv) {
+void mjlf_run(mjlf srv) {
   if (!srv) return;
   while (!srv->stop) {
     sleep(3);
@@ -110,19 +95,20 @@ void mjLF_Run(mjLF srv) {
 
 /*
 ===============================================================================
-mjLF_New
-  create mjLF struct, create threadpool and run first leader
+mjlf_New
+  create mjlf struct, create threadpool and run first leader
 ===============================================================================
 */
-mjLF mjLF_New(int sfd, mjProc Routine, int max_thread) {
-  // alloc mjLF struct
-  mjLF srv = (mjLF) calloc(1, sizeof(struct mjLF));
+mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Routine,
+  mjProc Exit_Routine) {
+  // alloc mjlf struct
+  mjlf srv = (mjlf) calloc(1, sizeof(struct mjlf));
   if (!srv) {
     MJLOG_ERR("server create errror");
     return NULL;
   }
   // init new pool
-  srv->tpool = mjthreadpool_new(max_thread, NULL, NULL);
+  srv->tpool = mjthreadpool_new(max_thread, Init_Routine, Exit_Routine);
   if (!srv->tpool) {
     MJLOG_ERR("mjthreadpool create error");
     free(srv);
@@ -146,16 +132,15 @@ mjLF mjLF_New(int sfd, mjProc Routine, int max_thread) {
 
 /*
 ===============================================================================
-mjLF_Delete
+mjlf_Delete
   Delete server
 ===============================================================================
 */
-bool mjLF_Delete(mjLF srv) {
+bool mjlf_delete(mjlf srv) {
   if (!srv) {
     MJLOG_ERR("server is null");
     return false;
   }
-  if (srv->private && srv->FreePrivate) srv->FreePrivate(srv->private);
   // delete thread pool
   mjthreadpool_delete(srv->tpool);
   free(srv);

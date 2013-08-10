@@ -14,35 +14,26 @@ struct server_data {
 
 void* GetRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjconnb_WriteS(cmdData->conn, "Get Called\r\n");
+  mjconnb_writes(cmdData->conn, "Get Called\r\n");
   return NULL; 
 } 
 
 void* PutRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjconnb_WriteS(cmdData->conn, "Put Called\r\n");
+  mjconnb_writes(cmdData->conn, "Put Called\r\n");
   return NULL;
 }
 
 void* StatRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjconnb_WriteS(cmdData->conn, "OK Here\r\n");
-  return NULL;
-}
-
-void* TestRoutine(void* arg) {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
-  mjconnb conn = cmdData->conn;
-  mjLF  srv  = conn->server;
-  struct server_data* s_data = srv->private;
-  mjconnb_WriteS(cmdData->conn, s_data->id);
+  mjconnb_writes(cmdData->conn, "OK Here\r\n");
   return NULL;
 }
 
 void* QuitRoutine(void* arg) {
   struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
   mjconnb conn = cmdData->conn;
-  mjconnb_WriteS(cmdData->conn, "Quit\r\n");
+  mjconnb_writes(cmdData->conn, "Quit\r\n");
   conn->closed = true;
   return NULL;
 }
@@ -50,7 +41,6 @@ void* QuitRoutine(void* arg) {
 PROTO_TXT_ROUTINE routineList[] = {
   {"get", GetRoutine},
   {"put", PutRoutine},
-  {"test", TestRoutine},
   {"stat", StatRoutine},
   {"quit", QuitRoutine},
 };
@@ -61,7 +51,7 @@ void* Routine(void* arg) {
     mjTxt_RunCmd(routineList, sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), 
       conn);
   }
-  mjconnb_Delete(conn);
+  mjconnb_delete(conn);
   return NULL;
 }
 
@@ -82,14 +72,13 @@ int main() {
   struct server_data s_data;
   strcpy(s_data.id, "1013\r\n");
   
-  mjLF server = mjLF_New(sfd, Routine, threadNum);
+  mjlf server = mjlf_new(sfd, Routine, threadNum, NULL, NULL);
   if (!server) {
-    printf("mjLF_New error");
+    printf("mjlf_New error");
     return 1;
   }
-  mjLF_SetTimeout(server, 3000, 3000);
-  mjLF_SetPrivate(server, &s_data, NULL);
-  mjLF_Run(server);
-  mjLF_Delete(server);
+  mjlf_set_timeout(server, 3000, 3000);
+  mjlf_run(server);
+  mjlf_delete(server);
   return 0;
 }
