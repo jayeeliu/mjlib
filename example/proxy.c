@@ -94,12 +94,12 @@ int main() {
     return 1;
   }
 
-  mjTcpSrv srv = mjTcpSrv_New(sfd, On_Connect, MJTCPSRV_STANDALONE);
+  mjtcpsrv srv = mjtcpsrv_new(sfd, On_Connect, MJTCPSRV_STANDALONE);
   if (!srv) {
     printf("mjTcpSrv create error");
     return 1;
   }
-  mjTcpSrv_Run(srv);
-  mjTcpSrv_Delete(srv);
+  mjtcpsrv_run(srv);
+  mjtcpsrv_delete(srv);
   return 0;
 }

@@ -47,14 +47,14 @@ int main( int argc, char* argv[] )
         return 1;
     }
 
-    mjTcpSrv srv = mjTcpSrv_New( sfd, Msg_Handler, MJTCPSRV_STANDALONE );
+    mjtcpsrv srv = mjtcpsrv_new( sfd, Msg_Handler, MJTCPSRV_STANDALONE );
     if ( !srv ) {
         printf( "server create error" );
         close( sfd );
         return 1;
     }
 
-    mjTcpSrv_Run( srv );
-    mjTcpSrv_Delete( srv );
+    mjtcpsrv_run( srv );
+    mjtcpsrv_delete( srv );
     return 0;
 }

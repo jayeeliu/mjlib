@@ -8,12 +8,12 @@
 
 /*
 ===============================================================================
-mjTcpSrv_AcceptRoutine
+mjtcpsrv_accept_routine
   accept routine
 ===============================================================================
 */
-void* mjTcpSrv_AcceptRoutine(void* arg) {
-  mjTcpSrv srv = (mjTcpSrv) arg;
+void* mjtcpsrv_accept_routine(void* arg) {
+  mjtcpsrv srv = (mjtcpsrv) arg;
   // read new client socket
   int cfd;
   if (srv->type == MJTCPSRV_STANDALONE) {
@@ -28,7 +28,7 @@ void* mjTcpSrv_AcceptRoutine(void* arg) {
       return NULL;
     }
   } else {
-    MJLOG_ERR("mjTcpSrv type error");
+    MJLOG_ERR("mjtcpsrv type error");
     return NULL;
   }
   // no server routine exit
@@ -51,17 +51,17 @@ void* mjTcpSrv_AcceptRoutine(void* arg) {
 
 /*
 ===============================================================================
-mjTcpSrv_Run
-  run mjTcpSrv
+mjtcpsrv_Run
+  run mjtcpsrv
 ===============================================================================
 */
-void* mjTcpSrv_Run(void* arg) {
+void* mjtcpsrv_run(void* arg) {
   // sanity check
   if (!arg) {
     MJLOG_ERR("server is null");
     return NULL;
   }
-  mjTcpSrv srv = (mjTcpSrv) arg;
+  mjtcpsrv srv = (mjtcpsrv) arg;
   // call init Proc
   if (srv->InitSrv) srv->InitSrv(srv);
   // enter loop
@@ -74,11 +74,11 @@ void* mjTcpSrv_Run(void* arg) {
 
 /*
 ===============================================================================
-mjTcpSrv_SetPrivate
+mjtcpsrv_SetPrivate
   set private data and proc
 ===============================================================================
 */
-bool mjTcpSrv_SetPrivate(mjTcpSrv srv, void* private, mjProc FreePrivate) {
+bool mjtcpsrv_set_private(mjtcpsrv srv, void* private, mjProc FreePrivate) {
   if (!srv) {
     MJLOG_ERR("server is null");
     return false;
@@ -90,12 +90,12 @@ bool mjTcpSrv_SetPrivate(mjTcpSrv srv, void* private, mjProc FreePrivate) {
 
 /*
 ===============================================================================
-mjTcpSrv_SetSrvProc
+mjtcpsrv_SetSrvProc
   set server init and exit proc. called when server begin and exit.
   srv is the parameter
 ===============================================================================
 */
-bool mjTcpSrv_SetSrvProc(mjTcpSrv srv, mjProc InitSrv, mjProc ExitSrv) {
+bool mjtcpsrv_set_srvproc(mjtcpsrv srv, mjProc InitSrv, mjProc ExitSrv) {
   // sanity check
   if (!srv) {
     MJLOG_ERR("server is null");
@@ -108,11 +108,11 @@ bool mjTcpSrv_SetSrvProc(mjTcpSrv srv, mjProc InitSrv, mjProc ExitSrv) {
 
 /*
 ===============================================================================
-mjTcpSrv_SetStop
-  set mjTcpSrv stop
+mjtcpsrv_SetStop
+  set mjtcpsrv stop
 ===============================================================================
 */
-bool mjTcpSrv_SetStop(mjTcpSrv srv, int value) {
+bool mjtcpsrv_set_stop(mjtcpsrv srv, int value) {
   if (!srv) {
     MJLOG_ERR("server is null");
     return false;
@@ -123,13 +123,13 @@ bool mjTcpSrv_SetStop(mjTcpSrv srv, int value) {
 
 /*
 ===============================================================================
-mjTcpSrv_New
-  alloc mjTcpSrv struct
+mjtcpsrv_New
+  alloc mjtcpsrv struct
 ===============================================================================
 */
-mjTcpSrv mjTcpSrv_New(int sfd, mjProc Routine, int type) {
-  // alloc mjTcpSrv struct
-  mjTcpSrv srv = (mjTcpSrv) calloc (1, sizeof(struct mjTcpSrv));  
+mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type) {
+  // alloc mjtcpsrv struct
+  mjtcpsrv srv = (mjtcpsrv) calloc (1, sizeof(struct mjtcpsrv));  
   if (!srv) {
     MJLOG_ERR("create server error");
     goto failout1;
@@ -153,7 +153,7 @@ mjTcpSrv mjTcpSrv_New(int sfd, mjProc Routine, int type) {
   }
   // add read event
   if ((mjEV_Add(srv->ev, srv->sfd, MJEV_READABLE, 
-            mjTcpSrv_AcceptRoutine, srv)) < 0) {
+            mjtcpsrv_accept_routine, srv)) < 0) {
     MJLOG_ERR("mjev add error");
     goto failout3;
   }
@@ -175,12 +175,12 @@ failout1:
 
 /*
 ===============================================================================
-mjTcpSrv_Delete
+mjtcpsrv_Delete
   delete mjtcpsrv2 struct
 ===============================================================================
 */
-void* mjTcpSrv_Delete(void* arg) {
-  mjTcpSrv srv = (mjTcpSrv) arg;
+void* mjtcpsrv_delete(void* arg) {
+  mjtcpsrv srv = (mjtcpsrv) arg;
   // sanity check
   if (!srv) {
     MJLOG_ERR("server is null");

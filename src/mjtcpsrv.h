@@ -6,29 +6,29 @@
 #define MJTCPSRV_STANDALONE 0
 #define MJTCPSRV_INNER      1
 
-struct mjTcpSrv {
+struct mjtcpsrv {
   int     sfd;          // socket, accept for standalone, read for inner
   int     stop;         // server stop
   int     type;         // tcpsrv type, standalone or inner
   mjEV    ev;           // event loop
   mjProc  Routine;      // server routine
-  void    *mainSrv;     // used in inner mode, point to mainSrv
+  void*   mainSrv;      // used in inner mode, point to mainSrv
 
   mjProc  InitSrv;      // init Server proc
   mjProc  ExitSrv;      // exit Server proc
    
-  void    *private;     // private data
+  void*   private;      // private data
   mjProc  FreePrivate; 
 };
-typedef struct mjTcpSrv* mjTcpSrv;
+typedef struct mjtcpsrv* mjtcpsrv;
 
-extern void*    mjTcpSrv_AcceptRoutine(void *arg);
-extern void*    mjTcpSrv_Run(void *arg);
-extern bool     mjTcpSrv_SetPrivate(mjTcpSrv srv, void* private, mjProc FreePrivate);
-extern bool     mjTcpSrv_SetSrvProc(mjTcpSrv srv, mjProc InitSrv, mjProc ExitSrv);
-extern bool     mjTcpSrv_SetStop(mjTcpSrv srv, int value);
+extern void*    mjtcpsrv_accept_routine(void* arg);
+extern void*    mjtcpsrv_run(void *arg);
+extern bool     mjtcpsrv_set_private(mjtcpsrv srv, void* private, mjProc FreePrivate);
+extern bool     mjtcpsrv_set_srvproc(mjtcpsrv srv, mjProc InitSrv, mjProc ExitSrv);
+extern bool     mjtcpsrv_set_stop(mjtcpsrv srv, int value);
 
-extern mjTcpSrv mjTcpSrv_New(int sfd, mjProc Routine, int type);
-extern void*    mjTcpSrv_Delete(void *arg);
+extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type);
+extern void*    mjtcpsrv_delete(void *arg);
 
 #endif

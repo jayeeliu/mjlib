@@ -81,12 +81,12 @@ int main()
         return 1;
     }
 
-    mjTcpSrv server = mjTcpSrv_New(sfd, myhandler, MJTCPSRV_STANDALONE); 
+    mjtcpsrv server = mjtcpsrv_new(sfd, myhandler, MJTCPSRV_STANDALONE); 
     if ( !server ) {
         printf("Error create tcpserver\n");
         return 1;
     }
-    mjTcpSrv_Run(server);
-    mjTcpSrv_Delete(server); 
+    mjtcpsrv_run(server);
+    mjtcpsrv_delete(server); 
     return 0;
 }

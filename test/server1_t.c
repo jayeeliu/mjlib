@@ -67,13 +67,13 @@ int main()
         return 1;
     }
 
-    mjTcpSrv server = mjTcpSrv_New( sfd, Handler, MJTCPSRV_STANDALONE ); 
+    mjtcpsrv server = mjtcpsrv_new( sfd, Handler, MJTCPSRV_STANDALONE ); 
     if ( !server ) {
         printf( "mjTcpSrv_New error" );
         return 1;
     }
 
-    mjTcpSrv_Run( server );
-    mjTcpSrv_Delete( server );
+    mjtcpsrv_run( server );
+    mjtcpsrv_delete( server );
     return 0;
 }

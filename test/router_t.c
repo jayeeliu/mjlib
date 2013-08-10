@@ -63,8 +63,8 @@ int main()
         printf( "mjSock_TcpServer Error\n" );
         return 1;
     }
-    mjTcpSrv server = mjTcpSrv_New( sock, RouterHandler, MJTCPSRV_STANDALONE );
-    mjTcpSrv_Run( server );
-    mjTcpSrv_Delete( server );
+    mjtcpsrv server = mjtcpsrv_new( sock, RouterHandler, MJTCPSRV_STANDALONE );
+    mjtcpsrv_run( server );
+    mjtcpsrv_delete( server );
     return 0;
 }

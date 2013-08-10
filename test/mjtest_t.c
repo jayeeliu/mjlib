@@ -4,7 +4,6 @@
 #include "mjstr.h"
 #include "mjcomm.h"
 #include "mjthread.h"
-#include "mjsql.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
