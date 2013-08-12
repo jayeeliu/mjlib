@@ -25,7 +25,7 @@ void* conn_write(void *arg)
 
 int main()
 {
-    mjEV ev = mjEV_New();
+    mjev ev = mjev_new();
     int cfd = socket(AF_INET, SOCK_STREAM, 0);
     
     mjConn conn = mjConn_New(ev, cfd);
@@ -33,9 +33,9 @@ int main()
     mjConn_Connect(conn, "127.0.0.1", 7879, conn_write);
 
     while (!stop) {
-        mjEV_Run(ev);
+        mjev_run(ev);
     }
-    mjEV_Delete(ev);
+    mjev_delete(ev);
 
     return 0;
 }

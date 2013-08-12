@@ -10,7 +10,7 @@ struct mjtcpsrv {
   int     sfd;          // socket, accept for standalone, read for inner
   int     stop;         // server stop
   int     type;         // tcpsrv type, standalone or inner
-  mjEV    ev;           // event loop
+  mjev    ev;           // event loop
   mjProc  Routine;      // server routine
   void*   mainSrv;      // used in inner mode, point to mainSrv
 

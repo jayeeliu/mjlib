@@ -17,7 +17,7 @@ static void* mjlf_routine(void* arg) {
   int cfd;
   // leader run this
   while (1) {
-    cfd = mjSock_Accept(srv->sfd);
+    cfd = mjsock_accept(srv->sfd);
     if (cfd < 0) continue;
     // choose a new leader
     while(!mjthreadpool_add_routine(srv->tpool, mjlf_routine, srv));

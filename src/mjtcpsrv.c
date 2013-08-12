@@ -18,7 +18,7 @@ void* mjtcpsrv_accept_routine(void* arg) {
   int cfd;
   if (srv->type == MJTCPSRV_STANDALONE) {
     // standalone mode, accept new socket
-    cfd = mjSock_Accept(srv->sfd);
+    cfd = mjsock_accept(srv->sfd);
     if (cfd < 0) return NULL;
   } else if (srv->type == MJTCPSRV_INNER) {
     // innner mode, read new socket
@@ -34,14 +34,14 @@ void* mjtcpsrv_accept_routine(void* arg) {
   // no server routine exit
   if (!srv->Routine) {
     MJLOG_ERR("no server Routine found");
-    mjSock_Close(cfd);
+    mjsock_close(cfd);
     return NULL;
   }
   // create new mjconn
   mjConn conn = mjConn_New(srv->ev, cfd);
   if (!conn) {
     MJLOG_ERR("mjConn create error");
-    mjSock_Close(cfd);
+    mjsock_close(cfd);
     return NULL;
   }
   mjConn_SetServer(conn, srv);
@@ -66,7 +66,7 @@ void* mjtcpsrv_run(void* arg) {
   if (srv->InitSrv) srv->InitSrv(srv);
   // enter loop
   while (!srv->stop) {
-    mjEV_Run(srv->ev);
+    mjev_run(srv->ev);
     if (srv->type == MJTCPSRV_STANDALONE) mjSig_ProcessQueue();
   }
   return NULL;
@@ -140,20 +140,20 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type) {
     goto failout2;
   }
   // set sfd nonblock
-  mjSock_SetBlocking(srv->sfd, 0);
+  mjsock_set_blocking(srv->sfd, 0);
   // set fields
   srv->sfd      = sfd;
   srv->type     = type;
   srv->Routine  = Routine;
   // set event Loop
-  srv->ev = mjEV_New();
+  srv->ev = mjev_new();
   if (!srv->ev) {
     MJLOG_ERR("create ev error");
     goto failout2;
   }
   // add read event
-  if ((mjEV_Add(srv->ev, srv->sfd, MJEV_READABLE, 
-            mjtcpsrv_accept_routine, srv)) < 0) {
+  if ((mjev_add_fevent(srv->ev, srv->sfd, MJEV_READABLE, 
+          mjtcpsrv_accept_routine, srv)) < 0) {
     MJLOG_ERR("mjev add error");
     goto failout3;
   }
@@ -165,11 +165,11 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type) {
   return srv;
 
 failout3:
-  mjEV_Delete(srv->ev);
+  mjev_delete(srv->ev);
 failout2:
   free(srv);
 failout1:
-  mjSock_Close(sfd);
+  mjsock_close(sfd);
   return NULL; 
 }
 
@@ -190,8 +190,8 @@ void* mjtcpsrv_delete(void* arg) {
   if (srv->ExitSrv) srv->ExitSrv(srv);
   // free private
   if (srv->private && srv->FreePrivate) srv->FreePrivate(srv->private);
-  mjEV_Delete(srv->ev);
-  mjSock_Close(srv->sfd);
+  mjev_delete(srv->ev);
+  mjsock_close(srv->sfd);
   free(srv);
   return NULL;
 }

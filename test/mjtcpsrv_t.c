@@ -65,7 +65,7 @@ void* FreeClient( void* args )
 void* proxyhandler( void* args ) 
 {
     mjConn conn = ( mjConn ) args;
-    int cfd = mjSock_TcpSocket();
+    int cfd = mjsock_tcp_socket();
     mjConn clientConn = mjConn_New( conn->ev, cfd );
     clientConn->private = conn;
     mjConn_SetPrivate( conn, clientConn, FreeClient );
@@ -75,7 +75,7 @@ void* proxyhandler( void* args )
 
 int main()
 {
-    int sfd = mjSock_TcpServer(7879);
+    int sfd = mjsock_tcp_server(7879);
     if (sfd < 0) {
         printf("Error create server socket\n");
         return 1;

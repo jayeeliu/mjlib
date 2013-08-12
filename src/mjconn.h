@@ -8,7 +8,7 @@
 struct mjConn {
   int           fd;                     // fd 
   void*         server;                 // tcpserver for server side conn 
-  mjEV          ev;
+  mjev          ev;
 
   mjStr         rbuf;                   // read buffer 
   mjStr         wbuf;                   // write buffer
@@ -57,7 +57,7 @@ extern bool mjConn_SetTimeout(mjConn conn, unsigned int readTimeout, unsigned in
 extern bool mjConn_SetPrivate(mjConn conn, void* private, mjProc FreePrivte);
 extern bool mjConn_SetServer(mjConn conn, void* server);
 
-extern mjConn   mjConn_New(mjEV ev, int fd);
+extern mjConn   mjConn_New(mjev ev, int fd);
 extern bool     mjConn_Delete(mjConn conn);
 
 #endif

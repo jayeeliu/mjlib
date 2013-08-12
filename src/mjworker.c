@@ -256,7 +256,7 @@ int WorkerRun( int minProcs, int maxProcs, int sfd, workproc* proc )
     // worker run 
     while ( *( workerStop ) != WORKER_SHOULDSTOP ) {
         *( workerStatus ) = WORKER_FREE;
-        int cfd = mjSock_Accept( sfd );
+        int cfd = mjsock_accept( sfd );
         if ( cfd < 0 ) {
             if ( errno == EINTR ) continue;
             MJLOG_ERR( "Oops accept error exit" );
@@ -276,7 +276,7 @@ int WorkerRun( int minProcs, int maxProcs, int sfd, workproc* proc )
         // destroy conn
         mjconnb_delete( conn );
     }
-    mjSock_Close( sfd );
+    mjsock_close( sfd );
 
     return 0;
 }

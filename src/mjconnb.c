@@ -276,7 +276,7 @@ mjconnb mjconnb_new(int fd) {
     return NULL;
   }
   // set fd to block
-  mjSock_SetBlocking(fd, 1);
+  mjsock_set_blocking(fd, 1);
   // get mjconnb struct
   mjconnb conn  = &_conn[fd];
   conn->fd      = fd;      
@@ -287,7 +287,7 @@ mjconnb mjconnb_new(int fd) {
     conn->rbuf = mjStr_New();
     if (!conn->rbuf) {
       MJLOG_ERR("mjStr create error");
-      mjSock_Close(fd);
+      mjsock_close(fd);
       return NULL;
     }
   }
@@ -367,7 +367,7 @@ mjconnb mjconnb_connect(const char *addr, int port, unsigned int timeout) {
       continue;
     }
     // set to nonblock
-    mjSock_SetBlocking(fd, 0);
+    mjsock_set_blocking(fd, 0);
     // try to connect
     if (connect(fd, p->ai_addr, p->ai_addrlen) == -1) {
       if (errno == EHOSTUNREACH) {
@@ -400,6 +400,6 @@ mjconnb_Delete
 bool mjconnb_delete(mjconnb conn) {
   // sanity check
   if (!conn) return false;
-  mjSock_Close(conn->fd);
+  mjsock_close(conn->fd);
   return true;
 }
