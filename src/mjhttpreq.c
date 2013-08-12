@@ -9,20 +9,20 @@
 
 /*
 ===============================================================================
-mjHttpReq_New
-  create new mjHttpReq struct
+mjhttpreq_New
+  create new mjhttpreq struct
 ===============================================================================
 */
-mjHttpReq mjHttpReq_New(mjStr data) {
+mjhttpreq mjhttpreq_new(mjStr data) {
   // sanity check
   if (!data) {
     MJLOG_ERR("data is null");
     return NULL;  
   }
-  // create mjHttpReq struct
-  mjHttpReq request = (mjHttpReq) calloc (1, sizeof(struct mjHttpReq));
+  // create mjhttpreq struct
+  mjhttpreq request = (mjhttpreq) calloc (1, sizeof(struct mjhttpreq));
   if (!request) {
-    MJLOG_ERR("mjHttpReq alloc error");
+    MJLOG_ERR("mjhttpreq alloc error");
     return NULL;
   }
   // get all header from data  
@@ -47,23 +47,23 @@ mjHttpReq mjHttpReq_New(mjStr data) {
   // get method type
   const char* method = field->data[0]->data;
   if (!strcasecmp(method, "GET")) { 
-    request->methodType = GET_METHOD;
+    request->method = GET_METHOD;
   } else if (!strcasecmp(method, "POST")) {
-    request->methodType = POST_METHOD;
+    request->method = POST_METHOD;
   } else {
-    request->methodType = UNKNOWN_METHOD;
+    request->method = UNKNOWN_METHOD;
   }
   // get access location
   request->location = mjStr_New();
   mjStr_Copy(request->location, field->data[1]);
   mjStrList_Clean(field);
   // parse other header
-  request->reqHeader = mjMap_New(128);
+  request->req_header = mjMap_New(128);
   for (int i = 1; i < header->length; i++) {
     if (!header->data[i]) break;
     mjStr_Split(header->data[i], ":", field);
     if (!field || field->length < 2) continue;
-    mjMap_Add(request->reqHeader, field->data[0]->data, field->data[1]);
+    mjMap_Add(request->req_header, field->data[0]->data, field->data[1]);
     mjStrList_Clean(field);
   }
   // clean strlist
@@ -82,17 +82,17 @@ failout1:
 
 /*
 ===============================================================================
-mjHttpReq_Delete
-  delete mjHttpReq struct
+mjhttpreq_Delete
+  delete mjhttpreq struct
 ===============================================================================
 */
-bool mjHttpReq_Delete(mjHttpReq request) {
+bool mjhttpreq_delete(mjhttpreq request) {
   // sanity check
   if (!request) return false;
   // free struct
   mjStr_Delete(request->location);
   mjMap_Delete(request->parameter);
-  mjMap_Delete(request->reqHeader);
+  mjMap_Delete(request->req_header);
   free(request);
   return true;
 }

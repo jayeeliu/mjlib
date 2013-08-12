@@ -20,7 +20,7 @@ extern bool mjlf_set_stop(mjlf srv, int value);
 extern bool mjlf_set_timeout(mjlf srv, int read_timeout, int write_timeout);
 
 extern mjlf mjlf_new(int sfd, mjProc Routine, int maxThread,
-  mjProc Init_Routine, mjProc Exit_Routine);
+  mjProc Init_Routine, void* init_arg, mjProc Exit_Routine);
 extern bool mjlf_delete(mjlf srv);
 
 #endif

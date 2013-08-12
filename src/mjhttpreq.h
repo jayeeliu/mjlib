@@ -8,15 +8,15 @@
 #define POST_METHOD     2
 #define UNKNOWN_METHOD  5
 
-struct mjHttpReq {
-    int     methodType;     // method type
+struct mjhttpreq {
+    int     method;         // method type
     mjStr   location;       // request location
     mjMap   parameter;      // request parameter
-    mjMap   reqHeader;
+    mjMap   req_header;
 };
-typedef struct mjHttpReq* mjHttpReq;
+typedef struct mjhttpreq* mjhttpreq;
 
-extern mjHttpReq    mjHttpReq_New( mjStr data );
-extern bool         mjHttpReq_Delete( mjHttpReq request );
+extern mjhttpreq  mjhttpreq_new(mjStr data);
+extern bool       mjhttpreq_delete(mjhttpreq request);
 
 #endif

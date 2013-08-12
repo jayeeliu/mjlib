@@ -48,8 +48,8 @@ bool mjthreadpool_add_routine_plus(mjthreadpool tpool,
   mjProc Routine, void* arg) {
   // call mjthreadpool_AddWork
   if (!mjthreadpool_add_routine(tpool, Routine, arg)) {
-    return mjthread_new_once(tpool->Thread_Init_Routine,
-      tpool->Thread_Exit_Routine, NULL, Routine, arg);
+    return mjthread_new_once(tpool->Init_Thread, NULL,
+      tpool->Exit_Thread, NULL, Routine, arg);
   }
   return true;
 }
@@ -61,8 +61,8 @@ mjthreadpool_New
   return: NOT NULL--- mjthreadpool struct, NULL --- fail
 ===============================================================================
 */
-mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine,
-    mjProc Exit_Routine) {
+mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Thread, 
+    void* init_arg, mjProc Exit_Thread) {
   // alloc threadpool struct
   mjthreadpool tpool = (mjthreadpool) calloc(1, sizeof(struct mjthreadpool) + 
       max_thread * sizeof(struct mjthreadentry));
@@ -72,8 +72,9 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine,
   }
   // init field
   tpool->max_thread  = max_thread;
-  tpool->Thread_Init_Routine = Init_Routine;
-  tpool->Thread_Exit_Routine = Exit_Routine;
+  tpool->Init_Thread = Init_Thread;
+  tpool->init_arg = init_arg;
+  tpool->Exit_Thread = Exit_Thread;
   pthread_mutex_init(&tpool->freelist_lock, NULL); 
   INIT_LIST_HEAD(&tpool->freelist); 
   // init thread
@@ -82,7 +83,7 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine,
     INIT_LIST_HEAD(&tpool->thread_entrys[i].nodeList);
     list_add_tail(&tpool->thread_entrys[i].nodeList, &tpool->freelist);
     // create new thread
-    tpool->thread_entrys[i].thread = mjthread_new(Init_Routine, Exit_Routine);
+    tpool->thread_entrys[i].thread = mjthread_new(Init_Thread, init_arg, Exit_Thread);
     tpool->thread_entrys[i].thread->entry = &tpool->thread_entrys[i];
   }
   return tpool; 

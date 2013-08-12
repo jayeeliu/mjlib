@@ -41,10 +41,11 @@ static void* mjlf_routine(void* arg) {
     return NULL;
   }
   mjconnb_set_server(conn, srv);
-  mjconnb_set_shared(conn, thread->local);
+  mjconnb_set_shared(conn, thread->thread_local);
   mjconnb_set_timeout(conn, srv->read_timeout, srv->write_timeout);
   // run server routine
   srv->Routine(conn);
+  mjconnb_delete(conn);
   return NULL; 
 }
 
@@ -100,7 +101,7 @@ mjlf_New
 ===============================================================================
 */
 mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Routine,
-  mjProc Exit_Routine) {
+  void* init_arg, mjProc Exit_Routine) {
   // alloc mjlf struct
   mjlf srv = (mjlf) calloc(1, sizeof(struct mjlf));
   if (!srv) {
@@ -108,7 +109,8 @@ mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Routine,
     return NULL;
   }
   // init new pool
-  srv->tpool = mjthreadpool_new(max_thread, Init_Routine, Exit_Routine);
+  srv->tpool = mjthreadpool_new(max_thread, Init_Routine, init_arg, 
+      Exit_Routine);
   if (!srv->tpool) {
     MJLOG_ERR("mjthreadpool create error");
     free(srv);

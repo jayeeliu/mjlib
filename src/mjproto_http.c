@@ -5,6 +5,8 @@
 #include "mjtcpsrv.h"
 #include "mjlog.h"
 #include "mjconn.h"
+#include "mjconnb.h"
+#include "mjlf.h"
 #include "mjproto_http.h"
 
 /*
@@ -13,6 +15,7 @@ on_header
   called in http_Workder
 ===============================================================================
 */
+/*
 static void *on_header(void *arg) {
   mjConn conn = (mjConn) arg;
   mjHttpData httpData = (mjHttpData) conn->private;
@@ -58,13 +61,14 @@ static void *on_header(void *arg) {
   urls[i].fun(conn);
   return NULL;
 }
-
+*/
 /*
 ===============================================================================
 httpData_free
   free per conn data
 ===============================================================================
 */
+/*
 static void* httpData_free(void *arg) {
   mjHttpData httpData = (mjHttpData) arg;
   if (httpData->request) mjHttpReq_Delete(httpData->request);
@@ -73,7 +77,7 @@ static void* httpData_free(void *arg) {
   free(httpData);
   return NULL;
 }
-
+*/
 /*
 ===============================================================================
 http_worker
@@ -82,6 +86,7 @@ http_worker
   read header
 ===============================================================================
 */
+/*
 void* http_Worker(void* arg) {
   mjConn conn = (mjConn) arg;
   void *httpData = calloc(1, sizeof(struct mjHttpData));
@@ -95,7 +100,7 @@ void* http_Worker(void* arg) {
   mjConn_ReadUntil(conn, "\r\n\r\n", on_header); 
   return NULL;
 }
-
+*/
 /*
 ===============================================================================
 http_InitSrv
@@ -104,6 +109,7 @@ http_InitSrv
   create mjreg
 ===============================================================================
 */
+/*
 static void* http_InitSrv(struct mjHttpUrl *urls) {
   // create mjreg
   for (int i = 0; urls[i].url != NULL; i++) {
@@ -142,7 +148,7 @@ void* http_InitMainSrv(void *arg) {
   }
   return NULL;
 }
-
+*/
 /*
 ===============================================================================
 http_ExitSrv
@@ -150,6 +156,7 @@ http_ExitSrv
   delete mjreg
 ===============================================================================
 */
+/*
 static void* http_ExitSrv(struct mjHttpUrl *urls) {
   if (!urls) {
     MJLOG_ERR("Oops urls is null");
@@ -175,7 +182,7 @@ void* http_ExitMainSrv(void* arg) {
   }
   return NULL;
 }
-
+*/
 /*
 ===========================================
 FileToStr
@@ -206,4 +213,40 @@ mjStr FileToStr(const char* fileName)
   close(fd);
 
   return out;
+}
+
+void* http_mjlf_init(void* arg) {
+  mjthread thread = (mjthread) arg;
+  struct mjhttpurl* urls = thread->init_arg;
+  for (int i = 0; urls[i].url != NULL; i++) {
+    if (!(urls[i].reg = mjReg_New(urls[i].url))) {
+      MJLOG_ERR("mjreg_new Error");
+      return NULL;
+    }
+  }
+  return urls;
+}
+
+void* http_mjlf_routine(void* arg) {
+  mjconnb conn = (mjconnb) arg;
+  struct mjhttpurl* urls = (struct mjhttpurl*) conn->shared;
+  mjStr data = mjStr_New();
+  mjconnb_readuntil(conn, "\r\n\r\n", data);
+  
+  mjhttpreq req = mjhttpreq_new(data);
+  if (!req) {
+    MJLOG_ERR("mjhttpreq_New error");
+    mjStr_Delete(data);
+    return NULL;
+  }
+  mjStrList strlist = mjStrList_New();
+  int i;
+  for (i = 0; urls[i].url != NULL; i++) {
+    if (mjReg_Search(urls[i].reg, req->location->data, strlist)) break;
+  }
+  urls[i].fun(conn);
+  mjStr_Delete(data);
+  mjStrList_Delete(strlist);
+  mjhttpreq_delete(req);
+  return NULL;
 }

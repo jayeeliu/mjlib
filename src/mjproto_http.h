@@ -12,25 +12,31 @@
 #define HTTP_GETPARAM(conn) ((mjHttpData) conn->private)->param
 
 // per conn http data
+/*
 struct mjHttpData {
   mjHttpReq   request;
   mjHttpRsp   response;
   mjStrList   param;
 };
 typedef struct mjHttpData* mjHttpData;
+*/
 
 // url redirect struct
-struct mjHttpUrl {
+struct mjhttpurl {
   char    *url;
   mjProc  fun;
   mjReg   reg;
 };
 
+/*
 extern void*  http_Worker(void *arg);
 extern void*  http_InitTcpSrv(void *arg);
 extern void*  http_InitMainSrv(void *arg);
 extern void*  http_ExitTcpSrv(void *arg);
 extern void*  http_ExitMainSrv(void *arg);
 extern mjStr  FileToStr(const char *fileName);
+*/
+extern void*  http_mjlf_init(void* arg);
+extern void*  http_mjlf_routine(void* arg);
 
 #endif

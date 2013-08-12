@@ -13,14 +13,14 @@ mjthread_RunOnce
 static void* mjthread_once_routine(void* arg) {
   // create and detach thread
   mjthread thread = (mjthread) arg;
-  if (thread->Init_Routine) {
-    thread->local = thread->Init_Routine(thread);
+  if (thread->Init_Thread) {
+    thread->thread_local = thread->Init_Thread(thread);
   }
   if (thread->Routine) {
     thread->Routine(thread);
   }
-  if (thread->Exit_Routine) {
-    thread->Exit_Routine(thread);
+  if (thread->Exit_Thread) {
+    thread->Exit_Thread(thread);
   }
   free(thread);
   return NULL;
@@ -32,17 +32,18 @@ mjthread_new_once
   create thread run once and exit
 ===============================================================================
 */
-bool mjthread_new_once(mjProc Init_Routine, mjProc Exit_Routine, 
-    void* local, mjProc Routine, void* arg) {
+bool mjthread_new_once(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread, 
+    void* thread_local, mjProc Routine, void* arg) {
   // alloc mjthread struct
   mjthread thread = (mjthread) calloc(1, sizeof(struct mjthread));
   if (!thread) {
     MJLOG_ERR("mjthread create error");
     return false;
   }
-  thread->Init_Routine = Init_Routine;
-  thread->Exit_Routine = Exit_Routine;
-  thread->local = local;
+  thread->Init_Thread = Init_Thread;
+  thread->init_arg = init_arg;
+  thread->Exit_Thread = Exit_Thread;
+  thread->thread_local = thread_local;
   thread->Routine = Routine;
   thread->arg = arg;
   // init fields
@@ -61,8 +62,8 @@ static void* mjthread_normal_routine(void* arg) {
   // arg can't be null
   mjthread thread = (mjthread) arg;
   // call init Routine
-  if (thread->Init_Routine) {
-    thread->local = thread->Init_Routine(thread);
+  if (thread->Init_Thread) {
+    thread->thread_local = thread->Init_Thread(thread);
   }
   // threadloop 
   while (1) {
@@ -88,8 +89,8 @@ static void* mjthread_normal_routine(void* arg) {
     }
   }
   // call exit Routine
-  if (thread->Exit_Routine) {
-    thread->Exit_Routine(thread);
+  if (thread->Exit_Thread) {
+    thread->Exit_Thread(thread);
   }
   thread->closed = true;
   pthread_exit(NULL);
@@ -124,12 +125,12 @@ bool mjthread_add_routine(mjthread thread, mjProc Routine, void* arg) {
   return retval;
 }
 
-bool mjthread_set_local(mjthread thread, void* local) {
-  if (!thread || thread->Init_Routine) {
-    MJLOG_ERR("thread is null or has Init_Routine");
+bool mjthread_set_local(mjthread thread, void* thread_local) {
+  if (!thread || thread->Init_Thread) {
+    MJLOG_ERR("thread is null or has Init_Thread");
     return false;
   }
-  thread->local = local;
+  thread->thread_local = thread_local;
   return true;
 }
 
@@ -139,15 +140,16 @@ mjthread_new
   create new thread, run mjthread_normal_routine
 ===============================================================================
 */
-mjthread mjthread_new(mjProc Init_Routine, mjProc Exit_Routine) {
+mjthread mjthread_new(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread) {
   // alloc mjthread struct
   mjthread thread = (mjthread) calloc(1, sizeof(struct mjthread));
   if (!thread) {
     MJLOG_ERR("mjthread create error");
     return NULL;
   }
-  thread->Init_Routine = Init_Routine;
-  thread->Exit_Routine = Exit_Routine;
+  thread->Init_Thread = Init_Thread;
+  thread->init_arg = init_arg;
+  thread->Exit_Thread = Exit_Thread;
   // init fields
   pthread_mutex_init(&thread->thread_lock, NULL);
   pthread_cond_init(&thread->thread_ready, NULL);

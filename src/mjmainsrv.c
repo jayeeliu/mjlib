@@ -26,7 +26,7 @@ mjmainsrv_AsyncFinCallBack
   call when asyncroutine finish
 ===============================================================================
 */
-static void* mjmainsrv_AsyncFinCallBack(void* data) {
+static void* mjmainsrv_async_fin_callback(void* data) {
   mjmainsrv_async_data asyncData = (mjmainsrv_async_data) data;
   int finNotify_r = asyncData->finNotify_r;
   int finNotify_w = asyncData->finNotify_w;
@@ -71,13 +71,14 @@ mjmainsrv_Async
   run workerRoutine in threadpool, when finish call CallBack
 ===============================================================================
 */
-bool mjmainsrv_async(mjmainsrv mainSrv, mjProc workerRoutine, void* rdata,
-      mjev ev, mjProc CallBack, void* cdata) {
+bool mjmainsrv_async(mjtcpsrv srv, mjProc workerRoutine, void* rdata,
+      mjProc CallBack, void* cdata) {
   // sanity check
-  if (!mainSrv) {
+  if (!srv) {
     MJLOG_ERR("srv is null");
     return false;
   }
+  mjmainsrv mainSrv = (mjmainsrv) srv->mainSrv;
   // alloc mjmainsrv_AsyncData
   mjmainsrv_async_data asyncData = (mjmainsrv_async_data) calloc(1,
         sizeof(struct mjmainsrv_async_data));
@@ -85,7 +86,7 @@ bool mjmainsrv_async(mjmainsrv mainSrv, mjProc workerRoutine, void* rdata,
     MJLOG_ERR("AsycData alloc Error");
     return false;
   }
-  asyncData->ev             = ev;
+  asyncData->ev             = srv->ev;
   asyncData->workerRoutine  = workerRoutine;
   asyncData->rdata          = rdata;
   asyncData->CallBack       = CallBack;
@@ -97,8 +98,8 @@ bool mjmainsrv_async(mjmainsrv mainSrv, mjProc workerRoutine, void* rdata,
     free(asyncData);
     return false;
   }
-  mjev_add_fevent(ev, notifyFd[0], MJEV_READABLE, mjmainsrv_AsyncFinCallBack, 
-      asyncData);
+  mjev_add_fevent(srv->ev, notifyFd[0], MJEV_READABLE, 
+      mjmainsrv_async_fin_callback, asyncData);
   asyncData->finNotify_r  = notifyFd[0];
   asyncData->finNotify_w  = notifyFd[1];
   // add routine to threadpool
@@ -106,7 +107,7 @@ bool mjmainsrv_async(mjmainsrv mainSrv, mjProc workerRoutine, void* rdata,
       mjmainsrv_async_routine, asyncData)) {
     MJLOG_ERR("Oops async run Error");
     // del notify event
-    mjev_del_fevent(ev, notifyFd[0], MJEV_READABLE);
+    mjev_del_fevent(srv->ev, notifyFd[0], MJEV_READABLE);
     close(notifyFd[0]);
     close(notifyFd[1]);
     free(asyncData);
@@ -132,8 +133,6 @@ bool mjmainsrv_run(mjmainsrv mainSrv) {
   CPU_ZERO(&cpuset);
   CPU_SET(0, &cpuset);
   pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
-  // run InitSrv
-  if (mainSrv->InitSrv) mainSrv->InitSrv(mainSrv);
   // accept and dispatch
   static int dispatchServer = 0;
   while (!mainSrv->stop) {
@@ -143,26 +142,12 @@ bool mjmainsrv_run(mjmainsrv mainSrv) {
       continue;
     }
     dispatchServer = (dispatchServer + 1) % mainSrv->srvNum;
-    int ret = write(mainSrv->srvNotify[dispatchServer], 
-          &cfd, sizeof(int)); 
+    int ret = write(mainSrv->srvNotify[dispatchServer], &cfd, sizeof(int)); 
     if (ret < 0) {
       MJLOG_ERR("set socket to thread error, close");
       mjsock_close(cfd);
     }
   }
-  return true;
-}
-
-/*
-===============================================================================
-mjmainsrv_SetSrvProc
-  set mainsrv init and exit proc
-===============================================================================
-*/
-bool mjmainsrv_set_srvproc(mjmainsrv srv, mjProc InitSrv, mjProc ExitSrv) {
-  if (!srv) return false;
-  srv->InitSrv  = InitSrv;
-  srv->ExitSrv  = ExitSrv;
   return true;
 }
 
@@ -186,8 +171,8 @@ mjmainsrv_srvthread_run
 */
 static void* mjmainsrv_srvthread_run(void* arg) {
   mjthread thread = (mjthread) arg;
-  void* run_arg = thread->arg;
-  mjtcpsrv_run(run_arg);
+  mjtcpsrv srv = thread->thread_local;
+  mjtcpsrv_run(srv);
   return NULL;
 }
 
@@ -199,7 +184,7 @@ mjmainsrv_srvthread_exit
 */
 static void* mjmainsrv_srvthread_exit(void* arg) {
   mjthread thread = (mjthread) arg;
-  mjtcpsrv srv = thread->local;
+  mjtcpsrv srv = thread->thread_local;
   mjtcpsrv_delete(srv);
   return NULL;
 }
@@ -210,7 +195,8 @@ mjmainsrv_New
   create new mjsrv struct
 ===============================================================================
 */
-mjmainsrv mjmainsrv_new(int sfd, mjProc srvRoutine, int workerThreadNum) {
+mjmainsrv mjmainsrv_new(int sfd, mjProc srvRoutine, mjProc InitSrv,
+    mjProc ExitSrv, int workerThreadNum) {
   // alloc srv struct
   mjmainsrv mainSrv = (mjmainsrv) calloc(1, sizeof(struct mjmainsrv));
   if (!mainSrv) {
@@ -238,7 +224,8 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc srvRoutine, int workerThreadNum) {
     }
     mainSrv->srvNotify[i] = fd[0];
     // create new srv struct and set mainSrv
-    mainSrv->srv[i] = mjtcpsrv_new(fd[1], srvRoutine, NULL, NULL, MJTCPSRV_INNER);
+    mainSrv->srv[i] = mjtcpsrv_new(fd[1], srvRoutine, InitSrv, 
+        ExitSrv, MJTCPSRV_INNER);
     if (!mainSrv->srv[i]) {
       MJLOG_ERR("mjTcpSrv create error");
       mjmainsrv_delete(mainSrv);
@@ -246,15 +233,14 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc srvRoutine, int workerThreadNum) {
     }
     mainSrv->srv[i]->mainSrv = mainSrv;
     // create new thread
-    mainSrv->srvThread[i] = mjthread_new(NULL, mjmainsrv_srvthread_exit);
+    mainSrv->srvThread[i] = mjthread_new(NULL, NULL, mjmainsrv_srvthread_exit);
     if (!mainSrv->srvThread[i]) {
       MJLOG_ERR("mjThread create error");
       mjmainsrv_delete(mainSrv);
       return NULL;
     }
     mjthread_set_local(mainSrv->srvThread[i], mainSrv->srv[i]);
-    mjthread_add_routine(mainSrv->srvThread[i], mjmainsrv_srvthread_run, 
-        mainSrv->srv[i]);
+    mjthread_add_routine(mainSrv->srvThread[i], mjmainsrv_srvthread_run, NULL);
     // set cpu affinity
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
@@ -263,8 +249,7 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc srvRoutine, int workerThreadNum) {
         sizeof(cpu_set_t), &cpuset);
   }
   // update threadpool
-  mainSrv->workerThreadNum = workerThreadNum;
-  mainSrv->workerThreadPool = mjthreadpool_new(mainSrv->workerThreadNum, NULL, NULL); 
+  mainSrv->workerThreadPool = mjthreadpool_new(workerThreadNum, NULL, NULL, NULL); 
   if (!mainSrv->workerThreadPool) {
     MJLOG_ERR("threadpool create error");
     mjmainsrv_delete(mainSrv);
@@ -298,8 +283,6 @@ bool mjmainsrv_delete(mjmainsrv mainSrv) {
   if (mainSrv->workerThreadPool) {
     mjthreadpool_delete(mainSrv->workerThreadPool);
   }
-  // run Exit Server
-  if (mainSrv->ExitSrv) mainSrv->ExitSrv(mainSrv);
   free(mainSrv);
   return true;
 }
