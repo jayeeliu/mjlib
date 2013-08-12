@@ -128,7 +128,7 @@ mjtevent* mjev_add_timer(mjev ev, long long ms, mjProc Proc, void* data) {
   te->TimerProc   = Proc;
   te->data        = data;
   // insert into queue
-  int ret = mjPQ_Insert(ev->timerEventQueue, te->time, te);
+  int ret = mjpq_insert(ev->timerEventQueue, te->time, te);
   if (ret < 0) {
     MJLOG_ERR("mjpq_insert error");
     free(te);
@@ -205,7 +205,7 @@ GetFirstTimer
 ===============================================================================
 */
 static long long get_first_timer(mjev ev) {
-  return mjPQ_GetMinKey(ev->timerEventQueue);
+  return mjpq_get_minkey(ev->timerEventQueue);
 }
 
 /*
@@ -215,10 +215,10 @@ GetFirstTimerEvent
 ===============================================================================
 */
 static mjtevent* get_first_timerevent(mjev ev) {
-  mjtevent* te = mjPQ_GetMinValue(ev->timerEventQueue);
+  mjtevent* te = mjpq_get_minvalue(ev->timerEventQueue);
   if (!te) return NULL;
   // delete timer event from queue
-  mjPQ_DelMin(ev->timerEventQueue);
+  mjpq_delmin(ev->timerEventQueue);
   return te;
 }
 
@@ -327,7 +327,7 @@ mjev mjev_new() {
     return NULL;
   }
   // create timer event queue
-  ev->timerEventQueue = mjPQ_New();
+  ev->timerEventQueue = mjpq_new();
   if (!ev->timerEventQueue) {
     MJLOG_ERR("mjpq alloc error");
     close(ev->epfd);
@@ -370,7 +370,7 @@ bool mjev_delete(mjev ev) {
     return false;
   }
   close(ev->epfd);
-  mjPQ_Delete(ev->timerEventQueue);
+  mjpq_delete(ev->timerEventQueue);
   // release pending struct
   mjev_release_pending(ev);
   free(ev);

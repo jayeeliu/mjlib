@@ -12,7 +12,7 @@ mjtcpsrv_accept_routine
   accept routine
 ===============================================================================
 */
-void* mjtcpsrv_accept_routine(void* arg) {
+static void* mjtcpsrv_accept_routine(void* arg) {
   mjtcpsrv srv = (mjtcpsrv) arg;
   // read new client socket
   int cfd;
@@ -63,47 +63,15 @@ void* mjtcpsrv_run(void* arg) {
   }
   mjtcpsrv srv = (mjtcpsrv) arg;
   // call init Proc
-  if (srv->InitSrv) srv->InitSrv(srv);
+  if (srv->InitSrv) {
+    srv->srv_local = srv->InitSrv(srv);
+  }
   // enter loop
   while (!srv->stop) {
     mjev_run(srv->ev);
     if (srv->type == MJTCPSRV_STANDALONE) mjSig_ProcessQueue();
   }
   return NULL;
-}
-
-/*
-===============================================================================
-mjtcpsrv_SetPrivate
-  set private data and proc
-===============================================================================
-*/
-bool mjtcpsrv_set_private(mjtcpsrv srv, void* private, mjProc FreePrivate) {
-  if (!srv) {
-    MJLOG_ERR("server is null");
-    return false;
-  }
-  srv->private      = private;
-  srv->FreePrivate  = FreePrivate;
-  return true;
-}
-
-/*
-===============================================================================
-mjtcpsrv_SetSrvProc
-  set server init and exit proc. called when server begin and exit.
-  srv is the parameter
-===============================================================================
-*/
-bool mjtcpsrv_set_srvproc(mjtcpsrv srv, mjProc InitSrv, mjProc ExitSrv) {
-  // sanity check
-  if (!srv) {
-    MJLOG_ERR("server is null");
-    return false;
-  }
-  srv->InitSrv = InitSrv;
-  srv->ExitSrv = ExitSrv;
-  return true;
 }
 
 /*
@@ -127,7 +95,8 @@ mjtcpsrv_New
   alloc mjtcpsrv struct
 ===============================================================================
 */
-mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type) {
+mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, mjProc InitSrv, mjProc ExitSrv,
+    int type) {
   // alloc mjtcpsrv struct
   mjtcpsrv srv = (mjtcpsrv) calloc (1, sizeof(struct mjtcpsrv));  
   if (!srv) {
@@ -145,6 +114,8 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type) {
   srv->sfd      = sfd;
   srv->type     = type;
   srv->Routine  = Routine;
+  srv->InitSrv  = InitSrv;
+  srv->ExitSrv  = ExitSrv;
   // set event Loop
   srv->ev = mjev_new();
   if (!srv->ev) {
@@ -188,8 +159,6 @@ void* mjtcpsrv_delete(void* arg) {
   }
   // call exit proc
   if (srv->ExitSrv) srv->ExitSrv(srv);
-  // free private
-  if (srv->private && srv->FreePrivate) srv->FreePrivate(srv->private);
   mjev_delete(srv->ev);
   mjsock_close(srv->sfd);
   free(srv);

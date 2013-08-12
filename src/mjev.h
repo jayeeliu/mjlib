@@ -37,7 +37,7 @@ typedef struct mjpending {
 struct mjev {
     int                 epfd;       // epoll fd
     mjfevent            fileEventList[MJEV_MAXFD];
-    mjPQ                timerEventQueue;
+    mjpq                timerEventQueue;
     struct list_head    pendingHead;
 };
 typedef struct mjev* mjev;

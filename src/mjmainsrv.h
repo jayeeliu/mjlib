@@ -8,38 +8,30 @@
 
 #define MAX_SERVER_NUM  64
 
-struct mjMainSrv {
+struct mjmainsrv {
   int           sfd;
   int           stop;
   
   int           workerThreadNum;
-  mjThreadPool  workerThreadPool;
+  mjthreadpool  workerThreadPool;
 
-  mjProc        srvRoutine;
   int           srvNum;
   int           srvNotify[MAX_SERVER_NUM];
-  mjTcpSrv      srv[MAX_SERVER_NUM];
-  mjThread      srvThread[MAX_SERVER_NUM];
+  mjtcpsrv      srv[MAX_SERVER_NUM];
+  mjthread      srvThread[MAX_SERVER_NUM];
 
   mjProc        InitSrv;
   mjProc        ExitSrv;
-
-  void          *private;
-  mjProc        FreePrivate;
 };
-typedef struct mjMainSrv* mjMainSrv;
+typedef struct mjmainsrv* mjmainsrv;
 
-extern bool       mjMainSrv_Async(mjMainSrv srv, mjProc Routine, void *rdata, 
-                    mjEV ev, mjProc CallBack, void *cdata);
-extern bool       mjMainSrv_Run(mjMainSrv srv);
-extern bool       mjMainSrv_SetPrivate(mjMainSrv srv, void *private, 
-                    mjProc FreePrivate);
-extern bool       mjMainSrv_SetSrvProc(mjMainSrv srv, mjProc InitSrv, 
-                    mjProc ExitSrv);
-extern bool       mjMainSrv_SetStop(mjMainSrv srv, int value);
+extern bool       mjmainsrv_async(mjmainsrv srv, mjProc Routine, void *rdata, 
+                    mjev ev, mjProc CallBack, void *cdata);
+extern bool       mjmainsrv_run(mjmainsrv srv);
+extern bool       mjmainsrv_set_srvproc(mjmainsrv srv, mjProc InitSrv, mjProc ExitSrv);
+extern bool       mjmainsrv_set_stop(mjmainsrv srv, int value);
 
-extern mjMainSrv  mjMainSrv_New(int sfd, mjProc srvRoutine, 
-                    int workerThreadNum);
-extern bool       mjMainSrv_Delete(mjMainSrv srv);
+extern mjmainsrv  mjmainsrv_new(int sfd, mjProc srvRoutine, int workerThreadNum);
+extern bool       mjmainsrv_delete(mjmainsrv srv);
 
 #endif

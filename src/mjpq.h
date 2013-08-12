@@ -13,19 +13,19 @@ struct pq_elt {
     void*       value;
 };
 
-struct mjPQ {
+struct mjpq {
     struct pq_elt*  p;      // the element array
     unsigned int    used;   // used in array
     unsigned int    total;  // total size of array
 };
-typedef struct mjPQ* mjPQ;
+typedef struct mjpq* mjpq;
 
-extern long long    mjPQ_GetMinKey(mjPQ pq);
-extern void*        mjPQ_GetMinValue(mjPQ pq);
-extern bool         mjPQ_Insert(mjPQ pq, long long key, void* value);
-extern void         mjPQ_DelMin(mjPQ pq);
+extern long long    mjpq_get_minkey(mjpq pq);
+extern void*        mjpq_get_minvalue(mjpq pq);
+extern bool         mjpq_insert(mjpq pq, long long key, void* value);
+extern void         mjpq_delmin(mjpq pq);
 
-extern mjPQ mjPQ_New();
-extern bool mjPQ_Delete(mjPQ pq);
+extern mjpq mjpq_new();
+extern bool mjpq_delete(mjpq pq);
 
 #endif

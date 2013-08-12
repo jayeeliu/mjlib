@@ -5,12 +5,12 @@
 
 /*
 ===============================================================================
-mjPQ_ReadyPlus
+mjpq_ReadyPlus
   add more n elements to mjprioq
   return: -1--failed, 0--success
 ===============================================================================
 */
-static int mjPQ_ReadyPlus(mjPQ pq, unsigned int n) {
+static int mjpq_readyplus(mjpq pq, unsigned int n) {
   // the queue is not empty
   if (pq->p) {
     // get size
@@ -47,13 +47,13 @@ static int mjPQ_ReadyPlus(mjPQ pq, unsigned int n) {
 
 /*
 ===============================================================================
-mjPQ_Insert
+mjpq_Insert
   insert new element into prioq
 ===============================================================================
  */
-bool mjPQ_Insert(mjPQ pq, long long key, void* value) {
+bool mjpq_insert(mjpq pq, long long key, void* value) {
   // expand array if needed
-  if (mjPQ_ReadyPlus(pq, 1) < 0) return false;
+  if (mjpq_readyplus(pq, 1) < 0) return false;
   // we add a new element
   int j = pq->used++;
   while (j) {
@@ -73,12 +73,12 @@ bool mjPQ_Insert(mjPQ pq, long long key, void* value) {
 
 /*
 ===============================================================================
-mjPQ_GetMinKey
+mjpq_GetMinKey
   return the min element in prioq
   if no element, return -1
 ===============================================================================
 */
-long long mjPQ_GetMinKey(mjPQ pq) {
+long long mjpq_get_minkey(mjpq pq) {
   if (!pq->p) return -1;
   if (!pq->used) return -1;
   return pq->p[0].key;
@@ -86,12 +86,12 @@ long long mjPQ_GetMinKey(mjPQ pq) {
 
 /*
 ===============================================================================
-mjPQ_GetMinValue
+mjpq_GetMinValue
   get the min value in prioq
   if no element return NULL
 ===============================================================================
 */
-void* mjPQ_GetMinValue(mjPQ pq) {
+void* mjpq_get_minvalue(mjpq pq) {
   if (!pq->p) return NULL;
   if (!pq->used) return NULL;
   return pq->p[0].value;
@@ -99,13 +99,12 @@ void* mjPQ_GetMinValue(mjPQ pq) {
 
 /*
 ====================================
-mjPQ_DelMin
+mjpq_DelMin
   delete min element
   no return
 ====================================
 */
-void mjPQ_DelMin(mjPQ pq)
-{
+void mjpq_delmin(mjpq pq) {
   if (!pq->p) return;
 
   int n = pq->used;
@@ -128,24 +127,24 @@ void mjPQ_DelMin(mjPQ pq)
 
 /*
 ===============================================================================
-mjPQ_New
-  create mjPQ struct
+mjpq_New
+  create mjpq struct
 ===============================================================================
 */
-mjPQ mjPQ_New() {
-  // alloc mjPQ struct
-  mjPQ pq = (mjPQ) calloc(1, sizeof(struct mjPQ));
+mjpq mjpq_new() {
+  // alloc mjpq struct
+  mjpq pq = (mjpq) calloc(1, sizeof(struct mjpq));
   if (!pq) return NULL;
   return pq;
 }
 
 /*
 ===============================================================================
-mjPQ_Delete
+mjpq_Delete
   delete a mjpq
 ===============================================================================
 */
-bool mjPQ_Delete(mjPQ pq) {
+bool mjpq_delete(mjpq pq) {
   if (!pq) return false;
   free(pq->p);
   free(pq);
