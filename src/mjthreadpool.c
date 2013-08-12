@@ -48,7 +48,7 @@ bool mjthreadpool_add_routine_plus(mjthreadpool tpool,
   mjProc Routine, void* arg) {
   // call mjthreadpool_AddWork
   if (!mjthreadpool_add_routine(tpool, Routine, arg)) {
-    return mjthread_new_once(tpool->Init_Thread, NULL,
+    return mjthread_new_once(tpool->Init_Thread, tpool->init_arg,
       tpool->Exit_Thread, NULL, Routine, arg);
   }
   return true;

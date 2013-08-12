@@ -4,15 +4,13 @@
 #include <regex.h>
 #include "mjstr.h"
 
-struct mjReg {
+struct mjreg {
   regex_t preg;
 };
-typedef struct mjReg* mjReg;
+typedef struct mjreg* mjreg;
 
-extern bool   mjReg_Search(mjReg reg, char* string, mjStrList result);
-extern bool   mjReg_Init(mjReg reg, const char* regex);
-extern bool   mjReg_DeInit(mjReg reg);
-extern mjReg  mjReg_New(const char* regex);
-extern bool   mjReg_Delete(mjReg reg);
+extern bool   mjreg_search(mjreg reg, char* string, mjStrList result);
+extern mjreg  mjreg_new(const char* regex);
+extern bool   mjreg_delete(mjreg reg);
 
 #endif

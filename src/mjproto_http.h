@@ -25,7 +25,7 @@ typedef struct mjHttpData* mjHttpData;
 struct mjhttpurl {
   char    *url;
   mjProc  fun;
-  mjReg   reg;
+  mjreg   reg;
 };
 
 /*
@@ -37,6 +37,7 @@ extern void*  http_ExitMainSrv(void *arg);
 extern mjStr  FileToStr(const char *fileName);
 */
 extern void*  http_mjlf_init(void* arg);
+extern void*  http_mjlf_exit(void* arg);
 extern void*  http_mjlf_routine(void* arg);
 
 #endif

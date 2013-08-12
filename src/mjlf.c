@@ -19,13 +19,10 @@ static void* mjlf_routine(void* arg) {
   while (1) {
     cfd = mjsock_accept(srv->sfd);
     if (cfd < 0) continue;
-    // choose a new leader
-    while(!mjthreadpool_add_routine(srv->tpool, mjlf_routine, srv));
-    break;
 
-//    if (mjthreadpool_add_routine_plus(srv->tpool, mjlf_routine, srv)) break;
-//    MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
-//    close(cfd);
+    if (mjthreadpool_add_routine_plus(srv->tpool, mjlf_routine, srv)) break;
+    MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
+    close(cfd);
   }
   // change to worker
   if (!srv->Routine) {

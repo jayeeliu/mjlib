@@ -8,11 +8,11 @@
 
 /*
 ===============================================================================
-mjReg_Search
+mjreg_Search
     search string copy result to result
 ===============================================================================
 */
-bool mjReg_Search(mjReg reg, char* string, mjStrList result) {
+bool mjreg_search(mjreg reg, char* string, mjStrList result) {
   // call regexec to search string
   regmatch_t pm[MAXLEN];
   if (regexec(&reg->preg, string, MAXLEN, pm, 0)) return false;
@@ -27,49 +27,22 @@ bool mjReg_Search(mjReg reg, char* string, mjStrList result) {
 
 /*
 ===============================================================================
-mjReg_Init
-    init mjReg struct
-===============================================================================
-*/
-bool mjReg_Init(mjReg reg, const char* regex) {
-  if (!reg) return false;
-  if (regcomp(&reg->preg, regex, REG_EXTENDED)) {
-    MJLOG_ERR("regcom error");
-    return false;
-  }
-  return true;
-}
-
-/*
-===============================================================================
-mjReg_DeInit
-    deinit mjReg struct
-===============================================================================
-*/
-bool mjReg_DeInit(mjReg reg) {
-  if (!reg) return false;
-  regfree(&reg->preg);
-  return true;
-}
-
-/*
-===============================================================================
-mjReg_new
-    create new mjReg struct
+mjreg_new
+    create new mjreg struct
     return  NULL -- fail,
             other -- success
 ===============================================================================
 */
-mjReg mjReg_New(const char* regex) {
-  // create mjReg struct
-  mjReg reg = (mjReg) calloc(1, sizeof(struct mjReg));
+mjreg mjreg_new(const char* regex) {
+  // create mjreg struct
+  mjreg reg = (mjreg) calloc(1, sizeof(struct mjreg));
   if (!reg) {
-    MJLOG_ERR("mjReg calloc error");
+    MJLOG_ERR("mjreg calloc error");
     return NULL;
   }
   // init reg
-  if (!mjReg_Init(reg, regex)) {
-    free(reg);
+  if (regcomp(&reg->preg, regex, REG_EXTENDED)) {
+    MJLOG_ERR("regcom error");
     return NULL;
   }
   return reg;
@@ -77,14 +50,14 @@ mjReg mjReg_New(const char* regex) {
 
 /*
 ===============================================================================
-mjReg_delete
-    delete mjReg struct
+mjreg_delete
+    delete mjreg struct
     no return
 ===============================================================================
 */
-bool mjReg_Delete(mjReg reg) {
+bool mjreg_delete(mjreg reg) {
   if (!reg) return false;
-  mjReg_DeInit(reg);
+  regfree(&reg->preg);
   free(reg);
   return true;
 }

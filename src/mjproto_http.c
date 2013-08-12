@@ -218,13 +218,28 @@ mjStr FileToStr(const char* fileName)
 void* http_mjlf_init(void* arg) {
   mjthread thread = (mjthread) arg;
   struct mjhttpurl* urls = thread->init_arg;
-  for (int i = 0; urls[i].url != NULL; i++) {
-    if (!(urls[i].reg = mjReg_New(urls[i].url))) {
+  int count;
+  for (count = 0; urls[count].url != NULL; count++);
+  struct mjhttpurl* newurls = (struct mjhttpurl*) malloc(
+      sizeof(struct mjhttpurl) * (count + 1));
+  memcpy(newurls, urls, sizeof(newurls));
+  for(int i = 0;  newurls[i].url != NULL; i++) {
+    if (!(newurls[i].reg = mjreg_new(newurls[i].url))) {
       MJLOG_ERR("mjreg_new Error");
       return NULL;
     }
   }
-  return urls;
+  return newurls;
+}
+
+void* http_mjlf_exit(void* arg) {
+  mjthread thread = (mjthread) arg;
+  struct mjhttpurl* newurls = thread->thread_local;
+  for(int i = 0; newurls[i].url != NULL; i++) {
+    mjreg_delete(newurls[i].reg);
+  }
+  free(newurls);
+  return NULL;
 }
 
 void* http_mjlf_routine(void* arg) {
@@ -232,7 +247,6 @@ void* http_mjlf_routine(void* arg) {
   struct mjhttpurl* urls = (struct mjhttpurl*) conn->shared;
   mjStr data = mjStr_New();
   mjconnb_readuntil(conn, "\r\n\r\n", data);
-  
   mjhttpreq req = mjhttpreq_new(data);
   if (!req) {
     MJLOG_ERR("mjhttpreq_New error");
@@ -242,7 +256,7 @@ void* http_mjlf_routine(void* arg) {
   mjStrList strlist = mjStrList_New();
   int i;
   for (i = 0; urls[i].url != NULL; i++) {
-    if (mjReg_Search(urls[i].reg, req->location->data, strlist)) break;
+    if (mjreg_search(urls[i].reg, req->location->data, strlist)) break;
   }
   urls[i].fun(conn);
   mjStr_Delete(data);
