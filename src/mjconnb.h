@@ -15,6 +15,9 @@ struct mjconnb {
 
   void*       server;       // server the conn belongs to
   void*       shared;       // shared data, used by mjconnb
+  
+  void*       private_data; // private data
+  mjProc      Free_Private; // free private data
 
   bool        timeout;      // peer timeout
   bool        error;        // peer error  
@@ -29,6 +32,7 @@ extern int    mjconnb_write(mjconnb conn, mjStr data);
 extern int    mjconnb_writeb(mjconnb conn, char* buf, int length);
 extern int    mjconnb_writes(mjconnb conn, char* buf);
 
+extern bool   mjconnb_set_private_data(mjconnb conn, void* private_data, mjProc Free_Private);
 extern bool   mjconnb_set_server(mjconnb conn, void* server);
 extern bool   mjconnb_set_shared(mjconnb conn, void* shared);
 extern bool   mjconnb_set_timeout(mjconnb conn, unsigned int read_timeout, 

@@ -189,6 +189,24 @@ int mjconnb_writes(mjconnb conn, char *buf) {
   return mjconnb_writeb(conn, buf, strlen(buf));
 }
 
+
+/*
+===============================================================================
+mjconnb_set_private_data
+  set mjconnb private data, free when conn closed
+===============================================================================
+*/
+bool mjconnb_set_private_data(mjconnb conn, void* private_data,
+  mjProc Free_Private) {
+  if (!conn) {
+    MJLOG_ERR("conn is null");
+    return false;
+  }
+  conn->private_data = private_data;
+  conn->Free_Private = Free_Private;
+  return true;
+}
+
 /*
 ===============================================================================
 mjconnb_set_server
@@ -298,6 +316,9 @@ mjconnb mjconnb_new(int fd) {
   conn->rbytes    = -1;
   // init server
   conn->server  = NULL;
+  conn->shared  = NULL;
+  conn->private_data = NULL;
+  conn->Free_Private = NULL;
   // init flag
   conn->timeout = conn->error = conn->closed = false;
   return conn;
@@ -400,6 +421,7 @@ mjconnb_Delete
 bool mjconnb_delete(mjconnb conn) {
   // sanity check
   if (!conn) return false;
+  if (conn->Free_Private) conn->Free_Private(conn->private_data);
   mjsock_close(conn->fd);
   return true;
 }

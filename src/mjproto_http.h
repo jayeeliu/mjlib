@@ -12,14 +12,12 @@
 #define HTTP_GETPARAM(conn) ((mjHttpData) conn->private)->param
 
 // per conn http data
-/*
-struct mjHttpData {
-  mjHttpReq   request;
-  mjHttpRsp   response;
-  mjStrList   param;
+struct mjhttpdata {
+  mjhttpreq   req;
+  mjStrList   params;
+  mjHttpRsp   rsp;
 };
-typedef struct mjHttpData* mjHttpData;
-*/
+typedef struct mjhttpdata* mjhttpdata;
 
 // url redirect struct
 struct mjhttpurl {
