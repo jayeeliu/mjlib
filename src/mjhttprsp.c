@@ -35,7 +35,7 @@ mjstr mjHttpRsp_HeaderToStr( mjHttpRsp rsp ) {
     while ( item ) {
         mjstr_cat( str, item->key );
         mjstr_cats( str, ": " );
-        mjstr_cat( str, item->value ); 
+        mjstr_cat( str, item->value_str ); 
         mjstr_cats( str, "\r\n" );
         item = mjmap_get_next( rsp->rspHeader, item );
     }

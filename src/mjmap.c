@@ -21,17 +21,17 @@ static mjitem mjitem_new(const char* key, const char* value) {
   }
   // set key and value 
   item->key   = mjstr_new();
-  item->value = mjstr_new();
-  if (!item->key || !item->value) {
+  item->value_str = mjstr_new();
+  if (!item->key || !item->value_str) {
     MJLOG_ERR("mjstr new error");
     mjstr_delete(item->key);
-    mjstr_delete(item->value);
+    mjstr_delete(item->value_str);
     free(item);
     return NULL;
   }
   // set key and value
   mjstr_copys(item->key, key);
-  mjstr_copys(item->value, value);
+  mjstr_copys(item->value_str, value);
   // init list
   INIT_LIST_HEAD(&item->listNode);
   // init map list
@@ -54,7 +54,7 @@ static bool mjitem_delete(mjitem item) {
   }
   // free key
   mjstr_delete(item->key);
-  mjstr_delete(item->value);
+  mjstr_delete(item->value_str);
   // free struct
   free(item);
   return true;
@@ -196,7 +196,7 @@ mjstr mjmap_get(mjmap map, const char* key) {
   // search mjtime 
   mjitem item = mjmap_search(map, key);
   if (!item) return NULL;
-  return item->value;
+  return item->value_str;
 }
 
 /*

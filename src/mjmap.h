@@ -6,7 +6,9 @@
 
 struct mjitem {
   mjstr             key;
-  mjstr             value;
+  mjstr             value_str;
+  void*             value_obj;
+  int               type;
   struct list_head  listNode;
   struct hlist_node mapNode;
 };
