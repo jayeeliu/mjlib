@@ -14,7 +14,7 @@
 // per conn http data
 struct mjhttpdata {
   mjhttpreq   req;
-  mjStrList   params;
+  mjstrlist   params;
   mjHttpRsp   rsp;
 };
 typedef struct mjhttpdata* mjhttpdata;
@@ -32,7 +32,7 @@ extern void*  http_InitTcpSrv(void *arg);
 extern void*  http_InitMainSrv(void *arg);
 extern void*  http_ExitTcpSrv(void *arg);
 extern void*  http_ExitMainSrv(void *arg);
-extern mjStr  FileToStr(const char *fileName);
+extern mjstr  FileToStr(const char *fileName);
 */
 extern void*  http_mjlf_init(void* arg);
 extern void*  http_mjlf_exit(void* arg);

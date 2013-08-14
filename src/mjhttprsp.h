@@ -4,12 +4,12 @@
 #include "mjmap.h"
 
 struct mjHttpRsp {
-    mjMap rspHeader;
+    mjmap rspHeader;
 };
 typedef struct mjHttpRsp* mjHttpRsp;
 
 extern bool         mjHttpRsp_AddHeader( mjHttpRsp rsp, char* name, char* value );
-extern mjStr        mjHttpRsp_HeaderToStr( mjHttpRsp rsp );
+extern mjstr        mjHttpRsp_HeaderToStr( mjHttpRsp rsp );
 
 extern mjHttpRsp    mjHttpRsp_New();
 extern bool         mjHttpRsp_Delete( mjHttpRsp rsp );

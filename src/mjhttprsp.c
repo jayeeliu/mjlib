@@ -13,31 +13,31 @@ bool mjHttpRsp_AddHeader( mjHttpRsp rsp, char* name, char* value ) {
     // sanity check
     if ( !rsp ) return false;
     // add value to header
-    mjMap_AddS( rsp->rspHeader, name, value );
+    mjmap_adds( rsp->rspHeader, name, value );
     return true;
 }
 
 /*
 ===============================================================================
 mjHttpRsp_HeaderToStr
-    change http header to string, alloc and return mjStr
+    change http header to string, alloc and return mjstr
 ===============================================================================
 */
-mjStr mjHttpRsp_HeaderToStr( mjHttpRsp rsp ) {
-    // alloc new mjStr
-    mjStr str = mjStr_New();
+mjstr mjHttpRsp_HeaderToStr( mjHttpRsp rsp ) {
+    // alloc new mjstr
+    mjstr str = mjstr_new();
     if ( !str ) {
-        MJLOG_ERR( "mjStr_New error" );
+        MJLOG_ERR( "mjstr_New error" );
         return NULL;
     }
     // iter the mjmap
-    mjItem item = mjMap_GetNext( rsp->rspHeader, NULL );
+    mjitem item = mjmap_get_next( rsp->rspHeader, NULL );
     while ( item ) {
-        mjStr_Cat( str, item->key );
-        mjStr_CatS( str, ": " );
-        mjStr_Cat( str, item->value ); 
-        mjStr_CatS( str, "\r\n" );
-        item = mjMap_GetNext( rsp->rspHeader, item );
+        mjstr_cat( str, item->key );
+        mjstr_cats( str, ": " );
+        mjstr_cat( str, item->value ); 
+        mjstr_cats( str, "\r\n" );
+        item = mjmap_get_next( rsp->rspHeader, item );
     }
     return str;
 }
@@ -56,7 +56,7 @@ mjHttpRsp mjHttpRsp_New() {
         return NULL;
     }
     // alloc new mjMap
-    rsp->rspHeader = mjMap_New( 128 );
+    rsp->rspHeader = mjmap_new( 128 );
     if ( !rsp->rspHeader ) {
         MJLOG_ERR( "mjMap_New error" );
         free( rsp );
@@ -75,7 +75,7 @@ bool mjHttpRsp_Delete( mjHttpRsp rsp ) {
     // sanity check
     if ( !rsp ) return false;
     // relase rspHeader
-    if ( rsp->rspHeader ) mjMap_Delete( rsp ->rspHeader );
+    if ( rsp->rspHeader ) mjmap_delete( rsp ->rspHeader );
     free( rsp );
     return true;
 }

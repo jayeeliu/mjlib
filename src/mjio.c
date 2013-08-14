@@ -12,13 +12,13 @@ mjIO_Read
   return mj file io
 ===============================================================================
 */
-int mjIO_Read(mjIO io, mjStr data, int len) {
+int mjIO_Read(mjIO io, mjstr data, int len) {
   // sanity check
   if (!io || !data || len <= 0) return 0;
   // rbuf has data return
   if (io->rbuf && io->rbuf->length > 0) {
-    mjStr_Copy(data, io->rbuf);
-    mjStr_Consume(io->rbuf, io->rbuf->length);
+    mjstr_copy(data, io->rbuf);
+    mjstr_consume(io->rbuf, io->rbuf->length);
     return data->length;
   }
   // io rbuf is empty
@@ -31,7 +31,7 @@ int mjIO_Read(mjIO io, mjStr data, int len) {
   } else if (!ret) {
     ret = 2;
   } else {
-    mjStr_CopyB(data, buf, ret);
+    mjstr_copyb(data, buf, ret);
   }
   return ret;
 }
@@ -45,15 +45,15 @@ mjIO_ReadLine
        -3 -- can't be this
 ===============================================================================
 */
-int mjIO_ReadLine(mjIO io, mjStr data) {  
+int mjIO_ReadLine(mjIO io, mjstr data) {  
   int ret = -3;
   char buf[BUF_LEN];
 
   while (1) {
-    int pos = mjStr_Search(io->rbuf, "\n");
+    int pos = mjstr_search(io->rbuf, "\n");
     if (pos != -1) {
-      mjStr_CopyB(data, io->rbuf->data, pos + 1);
-      mjStr_Consume(io->rbuf, pos + 1);
+      mjstr_copyb(data, io->rbuf->data, pos + 1);
+      mjstr_consume(io->rbuf, pos + 1);
       return data->length;
     }
     // get data from file
@@ -66,10 +66,10 @@ int mjIO_ReadLine(mjIO io, mjStr data) {
       ret = -2;
       break;
     }
-    mjStr_CatB(io->rbuf, buf, ret);
+    mjstr_catb(io->rbuf, buf, ret);
   }
-  mjStr_Copy(data, io->rbuf);
-  mjStr_Consume(io->rbuf, io->rbuf->length);
+  mjstr_copy(data, io->rbuf);
+  mjstr_consume(io->rbuf, io->rbuf->length);
   return ret;
 }
 
@@ -94,9 +94,9 @@ mjIO mjIO_New(const char* fileName) {
     goto failout2;
   }
   // alloc mjio rbuf
-  io->rbuf = mjStr_New();
+  io->rbuf = mjstr_new();
   if (!io->rbuf) {
-    MJLOG_ERR("mjStr_New error");
+    MJLOG_ERR("mjstr_New error");
     goto failout3;
   }
   return io;
@@ -121,7 +121,7 @@ bool mjIO_Delete(mjIO io) {
     return false;
   }
   close(io->fd);
-  mjStr_Delete(io->rbuf);
+  mjstr_delete(io->rbuf);
   free(io);
   return true;
 }

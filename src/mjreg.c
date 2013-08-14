@@ -12,7 +12,7 @@ mjreg_Search
     search string copy result to result
 ===============================================================================
 */
-bool mjreg_search(mjreg reg, char* string, mjStrList result) {
+bool mjreg_search(mjreg reg, char* string, mjstrlist result) {
   // call regexec to search string
   regmatch_t pm[MAXLEN];
   if (regexec(&reg->preg, string, MAXLEN, pm, 0)) return false;
@@ -20,7 +20,7 @@ bool mjreg_search(mjreg reg, char* string, mjStrList result) {
   if (!result) return true;
   // copy data 
   for (int i = 0; i < MAXLEN && pm[i].rm_so != -1; i++) {
-    mjStrList_AddB(result, string + pm[i].rm_so, pm[i].rm_eo - pm[i].rm_so);
+    mjstrlist_addb(result, string + pm[i].rm_so, pm[i].rm_eo - pm[i].rm_so);
   }
   return true;
 }

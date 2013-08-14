@@ -6,12 +6,12 @@
 struct mjIO {
   const char* fileName;
   int         fd;
-  mjStr       rbuf;
+  mjstr       rbuf;
 };
 typedef struct mjIO* mjIO;
 
-extern int  mjIO_Read(mjIO io, mjStr data, int len);
-extern int  mjIO_ReadLine(mjIO io, mjStr data);
+extern int  mjIO_Read(mjIO io, mjstr data, int len);
+extern int  mjIO_ReadLine(mjIO io, mjstr data);
 extern mjIO mjIO_New(const char* fileName);
 extern bool mjIO_Delete(mjIO io);
 

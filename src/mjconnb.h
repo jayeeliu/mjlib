@@ -7,7 +7,7 @@
 
 struct mjconnb {
   int         fd;           // fd to control
-  mjStr       rbuf;         // read read buffer 
+  mjstr       rbuf;         // read read buffer 
 
   int         readtype;     // read type
   const char* delim;        // the delim when readtype is READUNTIL 
@@ -25,10 +25,10 @@ struct mjconnb {
 };  
 typedef struct mjconnb* mjconnb;
 
-extern int    mjconnb_read(mjconnb conn, mjStr data);
-extern int    mjconnb_readbytes(mjconnb conn, mjStr data, int len);
-extern int    mjconnb_readuntil(mjconnb conn, const char* delim, mjStr data);
-extern int    mjconnb_write(mjconnb conn, mjStr data);
+extern int    mjconnb_read(mjconnb conn, mjstr data);
+extern int    mjconnb_readbytes(mjconnb conn, mjstr data, int len);
+extern int    mjconnb_readuntil(mjconnb conn, const char* delim, mjstr data);
+extern int    mjconnb_write(mjconnb conn, mjstr data);
 extern int    mjconnb_writeb(mjconnb conn, char* buf, int length);
 extern int    mjconnb_writes(mjconnb conn, char* buf);
 

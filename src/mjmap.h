@@ -4,28 +4,28 @@
 #include "mjlist.h"
 #include "mjstr.h"
 
-struct mjItem {
-  mjStr             key;
-  mjStr             value;
+struct mjitem {
+  mjstr             key;
+  mjstr             value;
   struct list_head  listNode;
   struct hlist_node mapNode;
 };
-typedef struct mjItem *mjItem;
+typedef struct mjitem *mjitem;
 
-struct mjMap {
+struct mjmap {
   int               len;                // hash length of elem
   struct list_head  listHead;
-  struct hlist_head elem[0];            // element of mjItem
+  struct hlist_head elem[0];            // element of mjitem
 };
-typedef struct mjMap *mjMap;
+typedef struct mjmap *mjmap;
 
-extern int    mjMap_Add(mjMap map, const char* key, mjStr value);
-extern int    mjMap_AddS(mjMap map, const char* key, const char* value);
-extern int    mjMap_Del(mjMap map, const char* key);
-extern mjStr  mjMap_Get(mjMap map, const char* key);
-extern mjItem mjMap_GetNext(mjMap map, mjItem item);
+extern int    mjmap_add(mjmap map, const char* key, mjstr value);
+extern int    mjmap_adds(mjmap map, const char* key, const char* value);
+extern int    mjmap_del(mjmap map, const char* key);
+extern mjstr  mjmap_get(mjmap map, const char* key);
+extern mjitem mjmap_get_next(mjmap map, mjitem item);
 
-extern mjMap  mjMap_New(int mapsize);
-extern bool   mjMap_Delete(mjMap map);
+extern mjmap  mjmap_new(int mapsize);
+extern bool   mjmap_delete(mjmap map);
 
 #endif

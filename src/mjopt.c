@@ -90,9 +90,9 @@ bool mjopt_parse_conf(const char* fileName) {
     MJLOG_ERR("mjio alloc error");
     return false;
   }
-  mjStr line = mjStr_New();
+  mjstr line = mjstr_new();
   if (!line) {
-    MJLOG_ERR("mjStr_New error");
+    MJLOG_ERR("mjstr_New error");
     mjIO_Delete(io);
     return false;
   }
@@ -101,47 +101,47 @@ bool mjopt_parse_conf(const char* fileName) {
   while (1) {
     // get one line from file
     if (mjIO_ReadLine(io, line) <= 0) break;
-    mjStr_Strim(line);
+    mjstr_strim(line);
     // ignore empty line
     if (line->length == 0) continue;
     // ignore comment line
     if (line->data[0] == '#') continue;
     // section line, get section
     if (line->data[0] == '[' && line->data[line->length-1] == ']') {
-      mjStr_Consume(line, 1);
-      mjStr_RConsume(line, 1);
-      mjStr_Strim(line);
+      mjstr_consume(line, 1);
+      mjstr_rconsume(line, 1);
+      mjstr_strim(line);
       // section can't be null
       if (line->length == 0) {
         MJLOG_ERR("section is null");
         mjIO_Delete(io);
-        mjStr_Delete(line);
+        mjstr_delete(line);
         return false;
       }
       strncpy(section, line->data, MAX_SECTION_LEN);
       continue;
     }
     // split key and value
-    mjStrList strList = mjStrList_New();
-    mjStr_Split(line, "=", strList);
+    mjstrlist strList = mjstrlist_new();
+    mjstr_split(line, "=", strList);
     if (strList->length != 2) {
       MJLOG_ERR("conf error");
-      mjStrList_Delete(strList);
-      mjStr_Delete(line);
+      mjstrlist_delete(strList);
+      mjstr_delete(line);
       mjIO_Delete(io);
       return false;
     }
-    mjStr keyStr = mjStrList_Get(strList, 0);
-    mjStr valueStr = mjStrList_Get(strList, 1);
-    mjStr_Strim(keyStr);
-    mjStr_Strim(valueStr);
+    mjstr keyStr = mjstrlist_get(strList, 0);
+    mjstr valueStr = mjstrlist_get(strList, 1);
+    mjstr_strim(keyStr);
+    mjstr_strim(valueStr);
     strncpy(key, keyStr->data, MAX_KEY_LEN);
     strncpy(value, valueStr->data, MAX_VALUE_LEN);
-    mjStrList_Delete(strList);
+    mjstrlist_delete(strList);
     // set option value
     mjopt_set_value(section, key, value);
   }
-  mjStr_Delete(line);
+  mjstr_delete(line);
   mjIO_Delete(io);
   return true;
 }

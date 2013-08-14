@@ -6,9 +6,9 @@
 #include "mjconnb.h"
 
 struct mjProtoTxtData {
-  mjStr     tag;
-  mjStr     cmd;
-  mjStrList arg;
+  mjstr     tag;
+  mjstr     cmd;
+  mjstrlist arg;
   mjconnb   conn;
 };
 

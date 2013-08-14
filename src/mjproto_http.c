@@ -34,9 +34,9 @@ static void *on_header(void *arg) {
     mjConn_Delete(conn);
     return NULL;
   }
-  httpData->param = mjStrList_New();
+  httpData->param = mjstrlist_New();
   if (!httpData->param) {
-    MJLOG_ERR("mjStrList_New error");
+    MJLOG_ERR("mjstrlist_New error");
     mjConn_Delete(conn);
     return NULL;
   }
@@ -45,9 +45,9 @@ static void *on_header(void *arg) {
           "text/html; charset=UTF-8");
   mjHttpRsp_AddHeader(httpData->response, "Server", "SFQ-0.01");
   // call function
-  mjStr location = httpData->request->location;
+  mjstr location = httpData->request->location;
   if (location->data[location->length - 1] != '/') {
-    mjStr_CatS(location, "/");
+    mjstr_CatS(location, "/");
   }
   // check string match
   int i;
@@ -65,21 +65,21 @@ static void *on_header(void *arg) {
 /*
 ===========================================
 FileToStr
-  read file and store data into mjStr
+  read file and store data into mjstr
 ===========================================
 */
-mjStr FileToStr(const char* fileName)
+mjstr FileToStr(const char* fileName)
 {
-  mjStr out = mjStr_New();
+  mjstr out = mjstr_new();
   if (!out) {
-    MJLOG_ERR("mjStr alloc error");
+    MJLOG_ERR("mjstr alloc error");
     return NULL;
   }
 
   int fd = open(fileName, O_RDONLY);
   if (fd < 0) {
     MJLOG_ERR("open file error");
-    mjStr_Delete(out);
+    mjstr_delete(out);
     return NULL;
   }
 
@@ -87,7 +87,7 @@ mjStr FileToStr(const char* fileName)
   while (1) {
     int ret = read(fd, buf, sizeof(buf));
     if (ret <= 0) break;
-    mjStr_CatB(out, buf, ret);
+    mjstr_catb(out, buf, ret);
   }
   close(fd);
 
@@ -142,7 +142,7 @@ create_httpdata
   create new httpdata
 ===============================================================================
 */
-static mjhttpdata create_httpdata(mjStr data) {
+static mjhttpdata create_httpdata(mjstr data) {
   // alloc httpdata
   mjhttpdata httpdata = (mjhttpdata) calloc(1, sizeof(struct mjhttpdata));
   if (!httpdata) {
@@ -157,7 +157,7 @@ static mjhttpdata create_httpdata(mjStr data) {
     return NULL;
   }
   // alloc http params
-  httpdata->params = mjStrList_New();
+  httpdata->params = mjstrlist_new();
   if (!httpdata->params) {
     MJLOG_ERR("params alloc error");
     mjhttpreq_delete(httpdata->req);
@@ -176,7 +176,7 @@ free_httpdata
 static void* free_httpdata(void* arg) {
   mjhttpdata httpdata = (mjhttpdata) arg;
   mjhttpreq_delete(httpdata->req);
-  mjStrList_Delete(httpdata->params);
+  mjstrlist_delete(httpdata->params);
   free(httpdata);
   return NULL;
 }
@@ -191,7 +191,7 @@ void* http_mjlf_routine(void* arg) {
   mjconnb conn = (mjconnb) arg;
   struct mjhttpurl* urls = (struct mjhttpurl*) conn->shared;
   // alloc data for readuntil
-  mjStr data = mjStr_New();
+  mjstr data = mjstr_new();
   if (!data) {
     MJLOG_ERR("mjstr alloc error");
     return NULL;
@@ -201,13 +201,13 @@ void* http_mjlf_routine(void* arg) {
   mjhttpdata httpdata = create_httpdata(data);
   if (!httpdata) {
     MJLOG_ERR("create httpdata error");
-    mjStr_Delete(data);
+    mjstr_delete(data);
     return NULL;
   }
   // expand location
-  mjStr location = httpdata->req->location;
+  mjstr location = httpdata->req->location;
   if (location->data[location->length - 1] != '/') {
-    mjStr_CatS(location, "/");
+    mjstr_cats(location, "/");
   }
   // match proc and run
   int i;
@@ -217,6 +217,6 @@ void* http_mjlf_routine(void* arg) {
   // set private data
   mjconnb_set_private_data(conn, httpdata, free_httpdata);
   urls[i].fun(conn);
-  mjStr_Delete(data);
+  mjstr_delete(data);
   return NULL;
 }

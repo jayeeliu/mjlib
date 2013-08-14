@@ -19,7 +19,7 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     return false;
   } 
   // read data
-  mjStr data = mjStr_New();
+  mjstr data = mjstr_new();
   if (!data) {
     MJLOG_ERR("data create error");
     return false;  
@@ -36,22 +36,22 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     goto failout1;
   }
   // split string
-  mjStrList strList = mjStrList_New();
+  mjstrlist strList = mjstrlist_new();
   if (!strList) {
     MJLOG_ERR("mjstrlist create error");
     goto failout1;
   }
-  mjStr_Split(data, " ", strList);
+  mjstr_split(data, " ", strList);
   if (strList->length < 2) {
     mjconnb_writes(conn, "+ command error\r\n");
     goto failout2;
   }
   // get tag and cmd
   struct mjProtoTxtData cmdData;
-  cmdData.tag = mjStrList_Get(strList, 0);
-  mjStr_Strim(cmdData.tag);
-  cmdData.cmd = mjStrList_Get(strList, 1);
-  mjStr_Strim(cmdData.cmd);
+  cmdData.tag = mjstrlist_get(strList, 0);
+  mjstr_strim(cmdData.tag);
+  cmdData.cmd = mjstrlist_get(strList, 1);
+  mjstr_strim(cmdData.cmd);
   cmdData.arg = strList;
   cmdData.conn = conn;
   // run routine
@@ -61,15 +61,15 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     // run routine
     if (routineList[i].Routine) (*routineList[i].Routine)(&cmdData);
     // clean and return
-    mjStrList_Delete(strList);
-    mjStr_Delete(data);
+    mjstrlist_delete(strList);
+    mjstr_delete(data);
     return true;
   }  
   mjconnb_writes(conn, "+ wrong command\r\n");
   // release resource
 failout2:
-  mjStrList_Delete(strList);
+  mjstrlist_delete(strList);
 failout1:
-  mjStr_Delete(data);
+  mjstr_delete(data);
   return false;
 }

@@ -3,52 +3,52 @@
 
 #include <stdbool.h>
 
-// mjStr struct 
-struct mjStr {
+// mjstr struct 
+struct mjstr {
   unsigned int  length;         // used length 
   unsigned int  total;          // total length
   char*         data;           // point to the string
 };
-typedef struct mjStr* mjStr;
+typedef struct mjstr* mjstr;
 
-// mjStrlist struct
-struct mjStrList {
+// mjstrlist struct
+struct mjstrlist {
   unsigned int  length;         // used length
-  unsigned int  total;          // count of mjStr
-  mjStr*        data;           // mjStr list
+  unsigned int  total;          // count of mjstr
+  mjstr*        data;           // mjstr list
 };
-typedef struct mjStrList* mjStrList;
+typedef struct mjstrlist* mjstrlist;
 
-// function for mjStr
-extern bool   mjStr_Copy(mjStr sato, mjStr safrom);
-extern bool   mjStr_CopyS(mjStr sa, const char *s);
-extern bool   mjStr_CopyB(mjStr sa, const char *s, unsigned int n);
-extern bool   mjStr_Cat(mjStr sato, mjStr safrom);
-extern bool   mjStr_CatS(mjStr sa, const char *s);
-extern bool   mjStr_CatB(mjStr sa, const char *s, unsigned int n);
-extern int    mjStr_Consume(mjStr str, unsigned int len);
-extern int    mjStr_RConsume(mjStr str, unsigned int len);
-extern int    mjStr_Search( mjStr x, const char *split );
-extern int    mjStr_Cmp(mjStr str1, mjStr str2);
-extern bool   mjStr_Split(mjStr str, const char* split, mjStrList strList);
-extern void   mjStr_Strim(mjStr str);
-extern void   mjStr_LStrim(mjStr str);
-extern void   mjStr_RStrim(mjStr str);
-extern bool   mjStr_ToLower(mjStr str);
-extern bool   mjStr_ToUpper(mjStr str);
+// function for mjstr
+extern bool   mjstr_copy(mjstr sato, mjstr safrom);
+extern bool   mjstr_copys(mjstr sa, const char *s);
+extern bool   mjstr_copyb(mjstr sa, const char *s, unsigned int n);
+extern bool   mjstr_cat(mjstr sato, mjstr safrom);
+extern bool   mjstr_cats(mjstr sa, const char *s);
+extern bool   mjstr_catb(mjstr sa, const char *s, unsigned int n);
+extern int    mjstr_consume(mjstr str, unsigned int len);
+extern int    mjstr_rconsume(mjstr str, unsigned int len);
+extern int    mjstr_search( mjstr x, const char *split );
+extern int    mjstr_cmp(mjstr str1, mjstr str2);
+extern bool   mjstr_split(mjstr str, const char* split, mjstrlist strList);
+extern void   mjstr_strim(mjstr str);
+extern void   mjstr_lstrim(mjstr str);
+extern void   mjstr_rstrim(mjstr str);
+extern bool   mjstr_tolower(mjstr str);
+extern bool   mjstr_toupper(mjstr str);
 
-extern bool   mjStr_Init(mjStr str);
-extern bool   mjStr_DeInit(mjStr str);
-extern mjStr  mjStr_New();
-extern bool   mjStr_Delete(mjStr x);
-// function for mjStrList
-extern bool       mjStrList_Add(mjStrList strList, mjStr str);
-extern bool       mjStrList_AddS(mjStrList strList, char* str);
-extern bool       mjStrList_AddB(mjStrList strList, char* str , int len);
-extern mjStr      mjStrList_Get(mjStrList strList, unsigned int idx);
-extern bool       mjStrList_Clean(mjStrList strList);
+extern bool   mjstr_init(mjstr str);
+extern bool   mjstr_deinit(mjstr str);
+extern mjstr  mjstr_new();
+extern bool   mjstr_delete(mjstr x);
+// function for mjstrlist
+extern bool       mjstrlist_add(mjstrlist strList, mjstr str);
+extern bool       mjstrlist_adds(mjstrlist strList, char* str);
+extern bool       mjstrlist_addb(mjstrlist strList, char* str , int len);
+extern mjstr      mjstrlist_get(mjstrlist strList, unsigned int idx);
+extern bool       mjstrlist_clean(mjstrlist strList);
 
-extern mjStrList  mjStrList_New();
-extern bool       mjStrList_Delete(mjStrList strList);
+extern mjstrlist  mjstrlist_new();
+extern bool       mjstrlist_delete(mjstrlist strList);
 
 #endif

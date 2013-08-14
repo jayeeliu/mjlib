@@ -10,13 +10,13 @@
 
 struct mjhttpreq {
     int     method;         // method type
-    mjStr   location;       // request location
-    mjMap   parameter;      // request parameter
-    mjMap   req_header;
+    mjstr   location;       // request location
+    mjmap   parameter;      // request parameter
+    mjmap   req_header;
 };
 typedef struct mjhttpreq* mjhttpreq;
 
-extern mjhttpreq  mjhttpreq_new(mjStr data);
+extern mjhttpreq  mjhttpreq_new(mjstr data);
 extern bool       mjhttpreq_delete(mjhttpreq request);
 
 #endif
