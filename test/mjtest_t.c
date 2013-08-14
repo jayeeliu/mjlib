@@ -4,6 +4,7 @@
 #include "mjstr.h"
 #include "mjcomm.h"
 #include "mjthread.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -12,12 +13,11 @@ void* Init(void* arg) {
   char* buf = (char*) malloc(sizeof(char)*100);
   strcpy(buf, "Test String");
   return buf;
-  
 }
 
 void* Exit(void* arg) {
   mjthread thread = (mjthread) arg;
-  free(thread->local);
+  free(thread->thread_local);
   return NULL;
 }
 
@@ -27,13 +27,16 @@ void* Run(void* arg) {
     mjconnb_readuntil(conn, "\r\n\r\n", data);
     mjconnb_writes(conn, conn->shared);
     mjStr_Delete(data);
-    mjconnb_delete(conn);
     return NULL;
 }
 
 int main() {
-    int sock = mjSock_TcpServer(7879);
-    mjlf server = mjlf_new(sock, Run, get_cpu_count() * 2, Init, Exit);
+    int sock = mjsock_tcp_server(7879);
+    if (sock < 0) {
+      printf("server socket create error");
+      return 1;
+    }
+    mjlf server = mjlf_new(sock, Run, get_cpu_count(), Init, NULL, Exit);
     mjlf_run(server);
     mjlf_delete(server);
     return 0;

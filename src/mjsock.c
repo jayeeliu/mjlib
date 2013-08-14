@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -91,12 +92,12 @@ mjSock_SetBlocking
     return -1 -- failed, 0 -- success
 ===============================================================================
 */
-int mjsock_set_blocking(int fd, int blocking) {
+bool mjsock_set_blocking(int fd, int blocking) {
   // get current flag
   int flags;
   if ((flags = fcntl(fd, F_GETFL, 0)) < 0) {
-    MJLOG_ERR("fcntl F_GETFL error");
-    return -1;
+    MJLOG_ERR("fcntl F_GETFL error fd--%d  msg--%s", fd, strerror(errno));
+    return false;
   }
   // set new flags;
   if (blocking) {
@@ -107,9 +108,9 @@ int mjsock_set_blocking(int fd, int blocking) {
   // set nonblock
   if (fcntl(fd, F_SETFL, flags) < 0) {
     MJLOG_ERR("fcntl F_SETFL error");  
-    return -1;
+    return false;
   }
-  return 0;
+  return true;
 }
 
 

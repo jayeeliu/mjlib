@@ -294,7 +294,10 @@ mjconnb mjconnb_new(int fd) {
     return NULL;
   }
   // set fd to block
-  mjsock_set_blocking(fd, 1);
+  if (!mjsock_set_blocking(fd, 1)) {
+    MJLOG_ERR("mjsock_set_blocking error");
+    return NULL;
+  }
   // get mjconnb struct
   mjconnb conn  = &_conn[fd];
   conn->fd      = fd;      

@@ -29,7 +29,7 @@ struct mjhttpurl urls[] = {
 
 int main() {
   int srv_sock = mjsock_tcp_server(7879);
-  mjlf srv = mjlf_new(srv_sock, http_mjlf_routine, 10, http_mjlf_init, 
+  mjlf srv = mjlf_new(srv_sock, http_mjlf_routine, 2, http_mjlf_init, 
       urls, http_mjlf_exit);
   mjlf_run(srv);
   mjlf_delete(srv);
