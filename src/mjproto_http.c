@@ -150,9 +150,16 @@ static mjhttpdata create_httpdata(mjstr data) {
     return NULL;
   }
   // alloc httpreq object
-  httpdata->req = mjhttpreq_new(data);
+  httpdata->req = mjhttpreq_new();
   if (!httpdata->req) {
     MJLOG_ERR("mjhttpreq_New error");
+    free(httpdata);
+    return NULL;
+  }
+
+  if (!mjhttpreq_init(httpdata->req, data)) {
+    MJLOG_ERR("mjhttpreq_init error");
+    mjhttpreq_delete(httpdata->req);
     free(httpdata);
     return NULL;
   }
