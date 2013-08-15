@@ -4,6 +4,9 @@
 #include "mjlist.h"
 #include "mjstr.h"
 
+#define MJITEM_STR  1
+#define MJITEM_OBJ  2
+
 struct mjitem {
   mjstr             key;
   mjstr             value_str;
@@ -21,10 +24,12 @@ struct mjmap {
 };
 typedef struct mjmap *mjmap;
 
-extern int    mjmap_add(mjmap map, const char* key, mjstr value);
-extern int    mjmap_adds(mjmap map, const char* key, const char* value);
-extern int    mjmap_del(mjmap map, const char* key);
-extern mjstr  mjmap_get(mjmap map, const char* key);
+extern mjstr  mjmap_get_str(mjmap map, const char* key);
+extern void*  mjmap_get_obj(mjmap map, const char* key);
+extern int    mjmap_set_str(mjmap map, const char* key, mjstr value_str);
+extern int    mjmap_set_strs(mjmap map, const char* key, const char* value_str);
+extern int    mjmap_set_obj(mjmap map, const char* key, void* value_obj);
+extern bool   mjmap_del(mjmap map, const char* key);
 extern mjitem mjmap_get_next(mjmap map, mjitem item);
 
 extern mjmap  mjmap_new(int mapsize);

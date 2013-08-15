@@ -20,7 +20,7 @@ mjhttpreq mjhttpreq_new(mjstr data) {
     return NULL;  
   }
   // create mjhttpreq struct
-  mjhttpreq request = (mjhttpreq) calloc (1, sizeof(struct mjhttpreq));
+  mjhttpreq request = (mjhttpreq) calloc(1, sizeof(struct mjhttpreq));
   if (!request) {
     MJLOG_ERR("mjhttpreq alloc error");
     return NULL;
@@ -63,7 +63,7 @@ mjhttpreq mjhttpreq_new(mjstr data) {
     if (!header->data[i]) break;
     mjstr_split(header->data[i], ":", field);
     if (!field || field->length < 2) continue;
-    mjmap_add(request->req_header, field->data[0]->data, field->data[1]);
+    mjmap_set_str(request->req_header, field->data[0]->data, field->data[1]);
     mjstrlist_clean(field);
   }
   // clean strlist

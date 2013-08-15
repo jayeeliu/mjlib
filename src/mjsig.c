@@ -7,8 +7,8 @@
 
 // signal struct
 struct signal_descriptor {
-    int         count;
-    sighandler* handler;
+  int         count;
+  sighandler* handler;
 };
 
 static int  signal_queue_len;
@@ -17,41 +17,38 @@ static struct signal_descriptor signal_state[MAX_SIGNAL];
 static sigset_t blocked_sig;
 
 /*
-=====================================================
+===============================================================================
 mjSig_Init
     init signal
-=====================================================
+===============================================================================
 */
-void mjSig_Init()
-{
-    signal_queue_len = 0;
-    memset( signal_queue, 0, sizeof( signal_queue ) );
-    memset( signal_state, 0, sizeof( signal_state ) );
-    sigfillset( &blocked_sig );
+void mjsig_init() {
+  signal_queue_len = 0;
+  memset(signal_queue, 0, sizeof(signal_queue));
+  memset(signal_state, 0, sizeof(signal_state));
+  sigfillset(&blocked_sig);
 }
 
-static void signal_handler(int sig)
-{
-    if (sig < 0 || sig > MAX_SIGNAL || !signal_state[sig].handler) {
-        MJLOG_ERR("Received unhandled signal %d. Signal has been disabled.", sig);
-        signal(sig, SIG_IGN);
-        return;
-    }
+static void signal_handler(int sig) {
+  if (sig < 0 || sig > MAX_SIGNAL || !signal_state[sig].handler) {
+    MJLOG_ERR("Received unhandled signal %d. Signal has been disabled.", sig);
+    signal(sig, SIG_IGN);
+    return;
+  }
 
-    if (!signal_state[sig].count) {
-        if (signal_queue_len < MAX_SIGNAL) {
-            signal_queue[signal_queue_len++] = sig;
-        } else {
-            MJLOG_ERR("Signal %d: signal queue is unexpected full.", sig);
-        }
+  if (!signal_state[sig].count) {
+    if (signal_queue_len < MAX_SIGNAL) {
+      signal_queue[signal_queue_len++] = sig;
+    } else {
+      MJLOG_ERR("Signal %d: signal queue is unexpected full.", sig);
     }
+  }
 
-    signal_state[sig].count++;
-    signal(sig, signal_handler);
+  signal_state[sig].count++;
+  signal(sig, signal_handler);
 }
 
-void mjSig_Register(int sig, sighandler handler)
-{
+void mjsig_register(int sig, sighandler handler) {
     if (sig < 0 || sig > MAX_SIGNAL) return;
 
     signal_state[sig].count = 0;
@@ -66,8 +63,7 @@ void mjSig_Register(int sig, sighandler handler)
     }
 }
 
-void mjSig_ProcessQueue()
-{
+void mjsig_process_queue() {
     sigset_t old_sig;
     sigprocmask(SIG_SETMASK, &blocked_sig, &old_sig);   /* block all signal delivery */
     

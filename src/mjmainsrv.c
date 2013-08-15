@@ -171,7 +171,7 @@ mjmainsrv_srvthread_run
 */
 static void* mjmainsrv_srvthread_run(void* arg) {
   mjthread thread = (mjthread) arg;
-  mjtcpsrv srv = thread->thread_local;
+  mjtcpsrv srv = mjmap_get_obj(thread->arg_map, "thread_local");
   mjtcpsrv_run(srv);
   return NULL;
 }
@@ -184,7 +184,7 @@ mjmainsrv_srvthread_exit
 */
 static void* mjmainsrv_srvthread_exit(void* arg) {
   mjthread thread = (mjthread) arg;
-  mjtcpsrv srv = thread->thread_local;
+  mjtcpsrv srv = mjmap_get_obj(thread->arg_map, "thread_local");
   mjtcpsrv_delete(srv);
   return NULL;
 }

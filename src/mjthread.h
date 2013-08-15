@@ -4,23 +4,22 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "mjproc.h"
+#include "mjmap.h"
 
-struct mjthreadentry;
+//struct mjthreadentry;
 
 struct mjthread {
   pthread_t             thread_id;
   pthread_mutex_t       thread_lock;
   pthread_cond_t        thread_ready;
-  struct mjthreadentry* entry;        // entry when in threadpool, otherwise NULL
 
   mjProc  Init_Thread;                // run once when thread init
   void*   init_arg;
   mjProc  Exit_Thread;                // run once when thread exit
-
-  void*   thread_local;               // thread local data 
-
   mjProc  Routine;                    // routine to be run
   void*   arg;
+
+  mjmap   arg_map;                    // arg map for this thread
 
   bool    running;
   bool    closed;         // 1 when thread exit, otherwise 0

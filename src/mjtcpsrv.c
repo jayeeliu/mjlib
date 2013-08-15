@@ -69,7 +69,7 @@ void* mjtcpsrv_run(void* arg) {
   // enter loop
   while (!srv->stop) {
     mjev_run(srv->ev);
-    if (srv->type == MJTCPSRV_STANDALONE) mjSig_ProcessQueue();
+    if (srv->type == MJTCPSRV_STANDALONE) mjsig_process_queue();
   }
   return NULL;
 }
@@ -130,8 +130,8 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, mjProc InitSrv, mjProc ExitSrv,
   }
   // set signal
   if (type == MJTCPSRV_STANDALONE) {
-    mjSig_Init();
-    mjSig_Register(SIGPIPE, SIG_IGN);
+    mjsig_init();
+    mjsig_register(SIGPIPE, SIG_IGN);
   }
   return srv;
 

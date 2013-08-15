@@ -14,7 +14,8 @@ static void* mjthread_once_routine(void* arg) {
   // create and detach thread
   mjthread thread = (mjthread) arg;
   if (thread->Init_Thread) {
-    thread->thread_local = thread->Init_Thread(thread);
+    mjmap_set_obj(thread->arg_map, "thread_local",
+        thread->Init_Thread(thread));
   }
   if (thread->Routine) {
     thread->Routine(thread);
@@ -43,7 +44,10 @@ bool mjthread_new_once(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread,
   thread->Init_Thread = Init_Thread;
   thread->init_arg = init_arg;
   thread->Exit_Thread = Exit_Thread;
-  thread->thread_local = thread_local;
+  thread->arg_map = mjmap_new(31);
+  if (thread_local) {
+    mjmap_set_obj(thread->arg_map, "thread_local", thread_local);
+  }
   thread->Routine = Routine;
   thread->arg = arg;
   // init fields
@@ -63,7 +67,7 @@ static void* mjthread_normal_routine(void* arg) {
   mjthread thread = (mjthread) arg;
   // call init Routine
   if (thread->Init_Thread) {
-    thread->thread_local = thread->Init_Thread(thread);
+    mjmap_set_obj(thread->arg_map, "thread_local", thread->Init_Thread(thread));
   }
   // threadloop 
   while (1) {
@@ -82,10 +86,11 @@ static void* mjthread_normal_routine(void* arg) {
     thread->arg = NULL;
     thread->running = false;
     // if in threadpool, add to freelist
-    if (thread->entry) {
-      pthread_mutex_lock(&thread->entry->tpool->freelist_lock);
-      list_add_tail(&thread->entry->nodeList, &thread->entry->tpool->freelist);
-      pthread_mutex_unlock(&thread->entry->tpool->freelist_lock);
+    mjthreadentry entry = mjmap_get_obj(thread->arg_map, "entry");
+    if (entry) {
+      pthread_mutex_lock(&entry->tpool->freelist_lock);
+      list_add_tail(&entry->nodeList, &entry->tpool->freelist);
+      pthread_mutex_unlock(&entry->tpool->freelist_lock);
     }
   }
   // call exit Routine
@@ -118,8 +123,11 @@ bool mjthread_add_routine(mjthread thread, mjProc Routine, void* arg) {
     thread->running = true;
     pthread_cond_signal(&thread->thread_ready);
     retval = true; 
-  } else if (thread->entry) {
-    MJLOG_ERR("Oops: thread is busy, can't happen in threadpool");
+  } else {
+    mjthreadentry entry = mjmap_get_obj(thread->arg_map, "entry");
+    if (entry) {
+      MJLOG_ERR("Oops: thread is busy, can't happen in threadpool");
+    }
   }
   pthread_mutex_unlock(&thread->thread_lock);
   return retval;
@@ -130,7 +138,7 @@ bool mjthread_set_local(mjthread thread, void* thread_local) {
     MJLOG_ERR("thread is null or has Init_Thread");
     return false;
   }
-  thread->thread_local = thread_local;
+  mjmap_set_obj(thread->arg_map, "thread_local", thread_local);
   return true;
 }
 
@@ -150,6 +158,7 @@ mjthread mjthread_new(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread) {
   thread->Init_Thread = Init_Thread;
   thread->init_arg = init_arg;
   thread->Exit_Thread = Exit_Thread;
+  thread->arg_map = mjmap_new(31);
   // init fields
   pthread_mutex_init(&thread->thread_lock, NULL);
   pthread_cond_init(&thread->thread_ready, NULL);
@@ -177,6 +186,7 @@ bool mjthread_delete(mjthread thread) {
   // wait thread exit
   pthread_join(thread->thread_id, NULL);
   // only normal thread need destory
+  mjmap_delete(thread->arg_map);
   pthread_mutex_destroy(&thread->thread_lock);
   pthread_cond_destroy(&thread->thread_ready);
   free(thread);

@@ -38,7 +38,8 @@ static void* mjlf_routine(void* arg) {
     return NULL;
   }
   mjconnb_set_server(conn, srv);
-  mjconnb_set_shared(conn, thread->thread_local);
+  void* thread_local = mjmap_get_obj(thread->arg_map, "thread_local");
+  mjconnb_set_shared(conn, thread_local);
   mjconnb_set_timeout(conn, srv->read_timeout, srv->write_timeout);
   // run server routine
   srv->Routine(conn);
@@ -87,7 +88,7 @@ void mjlf_run(mjlf srv) {
   if (!srv) return;
   while (!srv->stop) {
     sleep(3);
-    mjSig_ProcessQueue();
+    mjsig_process_queue();
   }
 }
 
@@ -124,8 +125,8 @@ mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Routine,
     return NULL;
   }
   // init signal
-  mjSig_Init();
-  mjSig_Register(SIGPIPE, SIG_IGN);
+  mjsig_init();
+  mjsig_register(SIGPIPE, SIG_IGN);
   return srv;
 }
 

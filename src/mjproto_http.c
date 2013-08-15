@@ -128,7 +128,7 @@ http_mjlf_exit
 */
 void* http_mjlf_exit(void* arg) {
   mjthread thread = (mjthread) arg;
-  struct mjhttpurl* newurls = thread->thread_local;
+  struct mjhttpurl* newurls = mjmap_get_obj(thread->arg_map, "thread_local");
   for(int i = 0; newurls[i].url != NULL; i++) {
     mjreg_delete(newurls[i].reg);
   }
@@ -196,7 +196,12 @@ void* http_mjlf_routine(void* arg) {
     MJLOG_ERR("mjstr alloc error");
     return NULL;
   }
-  mjconnb_readuntil(conn, "\r\n\r\n", data);
+  int ret = mjconnb_readuntil(conn, "\r\n\r\n", data);
+  if (ret <= 0) {
+    MJLOG_ERR("read http header failed");
+    mjstr_delete(data);
+    return NULL;
+  }
   // alloc httpdata
   mjhttpdata httpdata = create_httpdata(data);
   if (!httpdata) {

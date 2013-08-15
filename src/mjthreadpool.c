@@ -84,7 +84,8 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Thread,
     list_add_tail(&tpool->thread_entrys[i].nodeList, &tpool->freelist);
     // create new thread
     tpool->thread_entrys[i].thread = mjthread_new(Init_Thread, init_arg, Exit_Thread);
-    tpool->thread_entrys[i].thread->entry = &tpool->thread_entrys[i];
+    mjmap_set_obj(tpool->thread_entrys[i].thread->arg_map, "entry",
+      &tpool->thread_entrys[i]);
   }
   return tpool; 
 } 
