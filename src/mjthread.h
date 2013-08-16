@@ -6,35 +6,31 @@
 #include "mjproc.h"
 #include "mjmap.h"
 
-//struct mjthreadentry;
-
 struct mjthread {
-  pthread_t             thread_id;
-  pthread_mutex_t       thread_lock;
-  pthread_cond_t        thread_ready;
+  pthread_t       _thread_id;
+  pthread_mutex_t _thread_lock;
+  pthread_cond_t  _thread_ready;
 
-  mjProc  Init_Thread;                // run once when thread init
-  void*   init_arg;
-  mjProc  Exit_Thread;                // run once when thread exit
-  mjProc  Routine;                    // routine to be run
-  void*   arg;
+  mjProc          _Init;            // run once when thread init
+  void*           init_arg;         // Init Routine use this
+  mjProc          _Routine;         // routine to be run
+  void*           arg;              // Routine use this
 
-  mjmap   arg_map;                    // arg map for this thread
+  mjmap           _arg_map;         // arg map for this thread
 
-  bool    running;
-  bool    closed;         // 1 when thread exit, otherwise 0
-  bool    shutdown;       // 1 when shutdown command has invoked, otherwise 0
+  bool            _running;
+  bool            _closed;          // 1 when thread exit, otherwise 0
+  bool            _shutdown;        // 1 when shutdown command has invoked, otherwise 0
 };
 typedef struct mjthread* mjthread;
 
-extern bool     mjthread_new_once(mjProc Init_Thread, void* init_arg, 
-    mjProc Exit_Thread, mjProc Routine, void* arg);
+extern bool     mjthread_new_once(mjProc Init, void* init_arg, mjProc Routine, void* arg);
 
 extern bool     mjthread_add_routine(mjthread thread, mjProc Routine, void* arg);
 extern void*    mjthread_get_obj(mjthread thread, const char* key);
 extern bool     mjthread_set_obj(mjthread thread, const char* key, void* obj, mjProc obj_free);
 
-extern mjthread mjthread_new(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread);
+extern mjthread mjthread_new(mjProc Init, void* init_arg);
 extern bool     mjthread_delete(mjthread thread);
 
 #endif

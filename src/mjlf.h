@@ -5,22 +5,22 @@
 #include "mjthreadpool.h"
 
 struct mjlf {
-  int           sfd;            // server socket
-  int           stop;
-  mjthreadpool  tpool;          // thread pool 
-  mjProc        Routine;
+  int           _sfd;             // server socket
+  bool          _stop;
+  mjthreadpool  _tpool;           // thread pool 
+  mjProc        _Routine;         // run when new conn come
 
-  int           read_timeout;   // read write timeout
-  int           write_timeout;
+  int           _read_timeout;    // read write timeout
+  int           _write_timeout;
 };
 typedef struct mjlf* mjlf;
 
 extern void mjlf_run(mjlf srv);
-extern bool mjlf_set_stop(mjlf srv, int value);
+extern bool mjlf_set_stop(mjlf srv, bool value);
 extern bool mjlf_set_timeout(mjlf srv, int read_timeout, int write_timeout);
 
-extern mjlf mjlf_new(int sfd, mjProc Routine, int maxThread,
-  mjProc Init_Routine, void* init_arg, mjProc Exit_Routine);
+extern mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init, 
+    void* init_arg);
 extern bool mjlf_delete(mjlf srv);
 
 #endif

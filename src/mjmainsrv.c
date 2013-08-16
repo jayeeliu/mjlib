@@ -171,7 +171,7 @@ mjmainsrv_srvthread_run
 */
 static void* mjmainsrv_srvthread_run(void* arg) {
   mjthread thread = (mjthread) arg;
-  mjtcpsrv srv = mjmap_get_obj(thread->arg_map, "thread_local");
+  mjtcpsrv srv = mjthread_get_obj(thread, "thread_local");
   mjtcpsrv_run(srv);
   return NULL;
 }
@@ -182,9 +182,8 @@ mjmainsrv_srvthread_exit
   wrap function for srvthread_exit
 ===============================================================================
 */
-static void* mjmainsrv_srvthread_exit(void* arg) {
-  mjthread thread = (mjthread) arg;
-  mjtcpsrv srv = mjmap_get_obj(thread->arg_map, "thread_local");
+static void* mjmainsrv_srvthread_free_local(void* arg) {
+  mjtcpsrv srv = (mjtcpsrv) arg;
   mjtcpsrv_delete(srv);
   return NULL;
 }
@@ -233,23 +232,18 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc srvRoutine, mjProc InitSrv,
     }
     mainSrv->srv[i]->mainSrv = mainSrv;
     // create new thread
-    mainSrv->srvThread[i] = mjthread_new(NULL, NULL, mjmainsrv_srvthread_exit);
+    mainSrv->srvThread[i] = mjthread_new(NULL, NULL);
     if (!mainSrv->srvThread[i]) {
       MJLOG_ERR("mjThread create error");
       mjmainsrv_delete(mainSrv);
       return NULL;
     }
-    mjthread_set_obj(mainSrv->srvThread[i], "thread_local", mainSrv->srv[i], NULL);
+    mjthread_set_obj(mainSrv->srvThread[i], "thread_local", mainSrv->srv[i],
+        mjmainsrv_srvthread_free_local);
     mjthread_add_routine(mainSrv->srvThread[i], mjmainsrv_srvthread_run, NULL);
-    // set cpu affinity
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(i, &cpuset);
-    pthread_setaffinity_np(mainSrv->srvThread[i]->thread_id, 
-        sizeof(cpu_set_t), &cpuset);
   }
   // update threadpool
-  mainSrv->workerThreadPool = mjthreadpool_new(workerThreadNum, NULL, NULL, NULL); 
+  mainSrv->workerThreadPool = mjthreadpool_new(workerThreadNum, NULL, NULL); 
   if (!mainSrv->workerThreadPool) {
     MJLOG_ERR("threadpool create error");
     mjmainsrv_delete(mainSrv);

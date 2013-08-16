@@ -96,6 +96,19 @@ mjstr FileToStr(const char* fileName)
 
 /*
 ===============================================================================
+http_mjlf_exit
+  free http mapping
+===============================================================================
+*/
+static void* http_mjlf_free_urls(void* arg) {
+  struct mjhttpurl* newurls = arg;
+  for(int i = 0; newurls[i].url != NULL; i++) mjreg_delete(newurls[i].reg);
+  free(newurls);
+  return NULL;
+}
+
+/*
+===============================================================================
 http_mjlf_init
   init mjlf according to urls
 ===============================================================================
@@ -117,23 +130,7 @@ void* http_mjlf_init(void* arg) {
       return NULL;
     }
   }
-  mjthread_set_obj(thread, "thread_local", newurls, NULL);
-  return NULL;
-}
-
-/*
-===============================================================================
-http_mjlf_exit
-  free http mapping
-===============================================================================
-*/
-void* http_mjlf_exit(void* arg) {
-  mjthread thread = (mjthread) arg;
-  struct mjhttpurl* newurls = mjmap_get_obj(thread->arg_map, "thread_local");
-  for(int i = 0; newurls[i].url != NULL; i++) {
-    mjreg_delete(newurls[i].reg);
-  }
-  free(newurls);
+  mjthread_set_obj(thread, "urls", newurls, http_mjlf_free_urls);
   return NULL;
 }
 
@@ -197,9 +194,6 @@ http_mjlf_routine
 */
 void* http_mjlf_routine(void* arg) {
   mjconnb conn = (mjconnb) arg;
-  mjthread thread = (mjthread) conn->shared;
-  struct mjhttpurl* urls = (struct mjhttpurl*) mjthread_get_obj(thread, 
-      "thread_local");
   // alloc data for readuntil
   mjstr data = mjstr_new();
   if (!data) {
@@ -221,10 +215,10 @@ void* http_mjlf_routine(void* arg) {
   }
   // expand location
   mjstr location = httpdata->req->location;
-  if (location->data[location->length - 1] != '/') {
-    mjstr_cats(location, "/");
-  }
+  if (location->data[location->length - 1] != '/') mjstr_cats(location, "/");
   // match proc and run
+  mjthread thread = (mjthread) conn->shared;
+  struct mjhttpurl* urls = (struct mjhttpurl*) mjthread_get_obj(thread, "urls");
   int i;
   for (i = 0; urls[i].url != NULL; i++) {
     if (mjreg_search(urls[i].reg, location->data, httpdata->params)) break;
