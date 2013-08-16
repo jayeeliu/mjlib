@@ -14,8 +14,8 @@ void* def(void* arg) {
 void* main0(void* arg) {
   mjconnb conn = (mjconnb) arg;
   mjconnb_writes(conn, "main0");
-  count++;
-  if (count > 1000) mjlf_set_stop(conn->server, true);
+//  count++;
+//  if (count > 1000) mjlf_set_stop(conn->server, true);
   return NULL;
 }
 
@@ -33,7 +33,8 @@ struct mjhttpurl urls[] = {
 
 int main() {
   int srv_sock = mjsock_tcp_server(7879);
-  mjlf srv = mjlf_new(srv_sock, http_mjlf_routine, 2, http_mjlf_init, urls);
+  mjlf srv = mjlf_new(srv_sock, http_mjlf_routine, 2, http_mjlf_init, urls,
+      NULL, NULL);
   mjlf_run(srv);
   mjlf_delete(srv);
   return 0;

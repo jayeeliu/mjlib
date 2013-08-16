@@ -114,8 +114,8 @@ http_mjlf_init
 ===============================================================================
 */
 void* http_mjlf_init(void* arg) {
-  mjthread thread = (mjthread) arg;
-  struct mjhttpurl* urls = thread->init_arg;
+  mjlf srv = (mjlf) arg;
+  struct mjhttpurl* urls = srv->srv_init_arg;
   // get urls counts
   int count;
   for (count = 0; urls[count].url != NULL; count++);
@@ -130,7 +130,7 @@ void* http_mjlf_init(void* arg) {
       return NULL;
     }
   }
-  mjthread_set_obj(thread, "urls", newurls, http_mjlf_free_urls);
+  mjlf_set_obj(srv, "urls", newurls, http_mjlf_free_urls);
   return NULL;
 }
 
@@ -217,8 +217,8 @@ void* http_mjlf_routine(void* arg) {
   mjstr location = httpdata->req->location;
   if (location->data[location->length - 1] != '/') mjstr_cats(location, "/");
   // match proc and run
-  mjthread thread = (mjthread) conn->shared;
-  struct mjhttpurl* urls = (struct mjhttpurl*) mjthread_get_obj(thread, "urls");
+  mjlf srv = (mjlf) conn->server;
+  struct mjhttpurl* urls = (struct mjhttpurl*) mjlf_get_obj(srv, "urls");
   int i;
   for (i = 0; urls[i].url != NULL; i++) {
     if (mjreg_search(urls[i].reg, location->data, httpdata->params)) break;

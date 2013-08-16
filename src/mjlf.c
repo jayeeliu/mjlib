@@ -48,6 +48,34 @@ static void* mjlf_routine(void* arg) {
 
 /*
 ===============================================================================
+mjlf_get_obj
+===============================================================================
+*/
+void* mjlf_get_obj(mjlf srv, const char* key) {
+  if (!srv || !key) {
+    MJLOG_ERR("srv or key is null");
+    return false;
+  }
+  return mjmap_get_obj(srv->_arg_map, key);
+}
+
+/*
+===============================================================================
+mjlf_set_obj
+  mjlf set object
+===============================================================================
+*/
+bool mjlf_set_obj(mjlf srv, const char* key, void* obj, mjProc obj_free) {
+  if (!srv || !key) {
+    MJLOG_ERR("srv or key is null");
+    return false;
+  } 
+  if (mjmap_set_obj(srv->_arg_map, key, obj, obj_free) < 0) return false;
+  return true;
+}
+
+/*
+===============================================================================
 mjlf_SetStop
   set server stop
 ===============================================================================
@@ -97,24 +125,32 @@ mjlf_New
   create mjlf struct, create threadpool and run first leader
 ===============================================================================
 */
-mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init, 
-    void* init_arg) {
+mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Srv,
+    void* srv_init_arg, mjProc Init_Thrd, void* thrd_init_arg) {
   // alloc mjlf struct
   mjlf srv = (mjlf) calloc(1, sizeof(struct mjlf));
   if (!srv) {
     MJLOG_ERR("server create errror");
     return NULL;
   }
+  // set server socket and routine
+  srv->_sfd      = sfd;
+  srv->_Routine  = Routine;
+  srv->srv_init_arg = srv_init_arg;
+  srv->_arg_map = mjmap_new(31);
+  if (!srv->_arg_map) {
+    MJLOG_ERR("mjmap new error");
+    free(srv);
+    return NULL;
+  }
+  if (Init_Srv) Init_Srv(srv);
   // init new pool
-  srv->_tpool = mjthreadpool_new(max_thread, Init, init_arg);
+  srv->_tpool = mjthreadpool_new(max_thread, Init_Thrd, thrd_init_arg);
   if (!srv->_tpool) {
     MJLOG_ERR("mjthreadpool create error");
     free(srv);
     return NULL;
   }
-  // set server socket and routine
-  srv->_sfd      = sfd;
-  srv->_Routine  = Routine;
   // add new worker 
   if (!mjthreadpool_add_routine(srv->_tpool, mjlf_routine, srv)) {
     MJLOG_ERR("mjthreadpool addwork");
