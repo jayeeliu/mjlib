@@ -189,6 +189,35 @@ int mjconnb_writes(mjconnb conn, char *buf) {
   return mjconnb_writeb(conn, buf, strlen(buf));
 }
 
+/*
+===============================================================================
+mjconnb_get_obj
+  get object from conn
+===============================================================================
+*/
+void* mjconnb_get_obj(mjconnb conn, const char* key) {
+  if (!conn || !key) {
+    MJLOG_ERR("conn or key is null");
+    return false;
+  }
+  return mjmap_get_obj(conn->_arg_map, key);
+}
+
+/*
+===============================================================================
+mjconn_set_obj
+  mjconn set object
+===============================================================================
+*/
+bool mjconnb_set_obj(mjconnb conn, const char* key, void* obj,
+    mjProc obj_free) {
+  if (!conn || !key) {
+    MJLOG_ERR("conn or key is null");
+    return false;
+  }
+  if (mjmap_set_obj(conn->_arg_map, key, obj, obj_free) < 0) return false;
+  return true;
+}
 
 /*
 ===============================================================================
@@ -196,6 +225,7 @@ mjconnb_set_private_data
   set mjconnb private data, free when conn closed
 ===============================================================================
 */
+/*
 bool mjconnb_set_private_data(mjconnb conn, void* private_data,
   mjProc Free_Private) {
   if (!conn) {
@@ -206,37 +236,7 @@ bool mjconnb_set_private_data(mjconnb conn, void* private_data,
   conn->Free_Private = Free_Private;
   return true;
 }
-
-/*
-===============================================================================
-mjconnb_set_server
-  set conn server 
-===============================================================================
 */
-bool mjconnb_set_server(mjconnb conn, void* server) {
-  if (!conn) {
-    MJLOG_ERR("conn is null");
-    return false;
-  }
-  conn->server = server;
-  return true;
-}
-
-/*
-===============================================================================
-mjconnb_set_shared
-  set conn shared data
-===============================================================================
-*/
-bool mjconnb_set_shared(mjconnb conn, void* shared) {
-  if (!conn) {
-    MJLOG_ERR("conn is null");
-    return false;
-  }
-  conn->shared = shared;
-  return true;
-}
-
 /*
 ===============================================================================
 mjconnb_SetTimeout
@@ -301,7 +301,6 @@ mjconnb mjconnb_new(int fd) {
   // get mjconnb struct
   mjconnb conn  = &_conn[fd];
   conn->fd      = fd;      
-  conn->server  = NULL;
   // create rbuf
   if (!conn->rbuf) {
     // create read buffer
@@ -317,11 +316,15 @@ mjconnb mjconnb_new(int fd) {
   conn->readtype  = MJCONNB_NONE;
   conn->delim     = NULL;
   conn->rbytes    = -1;
+  // init mjmap
+  conn->_arg_map = mjmap_new(31);
+  if (!conn->_arg_map) {
+    MJLOG_ERR("mjmap_new error");
+    return NULL;
+  }
   // init server
-  conn->server  = NULL;
-  conn->shared  = NULL;
-  conn->private_data = NULL;
-  conn->Free_Private = NULL;
+  //conn->private_data = NULL;
+  //conn->Free_Private = NULL;
   // init flag
   conn->timeout = conn->error = conn->closed = false;
   return conn;
@@ -424,7 +427,8 @@ mjconnb_Delete
 bool mjconnb_delete(mjconnb conn) {
   // sanity check
   if (!conn) return false;
-  if (conn->Free_Private) conn->Free_Private(conn->private_data);
+  mjmap_delete(conn->_arg_map);
+  //if (conn->Free_Private) conn->Free_Private(conn->private_data);
   mjsock_close(conn->fd);
   return true;
 }

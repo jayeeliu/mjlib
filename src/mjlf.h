@@ -12,7 +12,6 @@ struct mjlf {
   mjProc        _Routine;         // run when new conn come
 
   void*         srv_init_arg;
-  
   mjmap         _arg_map;
 
   int           _read_timeout;    // read write timeout

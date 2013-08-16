@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "mjstr.h"
 #include "mjproc.h"
+#include "mjmap.h"
 
 struct mjconnb {
   int         fd;           // fd to control
@@ -13,11 +14,7 @@ struct mjconnb {
   const char* delim;        // the delim when readtype is READUNTIL 
   int         rbytes;       // read data size when readtype is READBYTES 
 
-  void*       server;       // server the conn belongs to
-  void*       shared;       // shared data, used by mjconnb
-  
-  void*       private_data; // private data
-  mjProc      Free_Private; // free private data
+  mjmap       _arg_map;
 
   bool        timeout;      // peer timeout
   bool        error;        // peer error  
@@ -32,9 +29,9 @@ extern int    mjconnb_write(mjconnb conn, mjstr data);
 extern int    mjconnb_writeb(mjconnb conn, char* buf, int length);
 extern int    mjconnb_writes(mjconnb conn, char* buf);
 
-extern bool   mjconnb_set_private_data(mjconnb conn, void* private_data, mjProc Free_Private);
-extern bool   mjconnb_set_server(mjconnb conn, void* server);
-extern bool   mjconnb_set_shared(mjconnb conn, void* shared);
+extern void*  mjconnb_get_obj(mjconnb conn, const char* key);
+extern bool   mjconnb_set_obj(mjconnb conn, const char* key, void* obj, mjProc obj_free);
+
 extern bool   mjconnb_set_timeout(mjconnb conn, unsigned int read_timeout, 
                 unsigned int write_timeout);
 

@@ -217,14 +217,14 @@ void* http_mjlf_routine(void* arg) {
   mjstr location = httpdata->req->location;
   if (location->data[location->length - 1] != '/') mjstr_cats(location, "/");
   // match proc and run
-  mjlf srv = (mjlf) conn->server;
+  mjlf srv = (mjlf) mjconnb_get_obj(conn, "server");
   struct mjhttpurl* urls = (struct mjhttpurl*) mjlf_get_obj(srv, "urls");
   int i;
   for (i = 0; urls[i].url != NULL; i++) {
     if (mjreg_search(urls[i].reg, location->data, httpdata->params)) break;
   }
   // set private data
-  mjconnb_set_private_data(conn, httpdata, free_httpdata);
+  mjconnb_set_obj(conn, "httpdata", httpdata, free_httpdata);
   urls[i].fun(conn);
   mjstr_delete(data);
   return NULL;
