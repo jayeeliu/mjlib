@@ -14,8 +14,7 @@ static void* mjthread_once_routine(void* arg) {
   // create and detach thread
   mjthread thread = (mjthread) arg;
   if (thread->Init_Thread) {
-    mjmap_set_obj(thread->arg_map, "thread_local",
-        thread->Init_Thread(thread));
+    thread->Init_Thread(thread);
   }
   if (thread->Routine) {
     thread->Routine(thread);
@@ -34,7 +33,7 @@ mjthread_new_once
 ===============================================================================
 */
 bool mjthread_new_once(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread, 
-    void* thread_local, mjProc Routine, void* arg) {
+  mjProc Routine, void* arg) {
   // alloc mjthread struct
   mjthread thread = (mjthread) calloc(1, sizeof(struct mjthread));
   if (!thread) {
@@ -45,9 +44,6 @@ bool mjthread_new_once(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread,
   thread->init_arg = init_arg;
   thread->Exit_Thread = Exit_Thread;
   thread->arg_map = mjmap_new(31);
-  if (thread_local) {
-    mjmap_set_obj(thread->arg_map, "thread_local", thread_local);
-  }
   thread->Routine = Routine;
   thread->arg = arg;
   // init fields
@@ -67,7 +63,7 @@ static void* mjthread_normal_routine(void* arg) {
   mjthread thread = (mjthread) arg;
   // call init Routine
   if (thread->Init_Thread) {
-    mjmap_set_obj(thread->arg_map, "thread_local", thread->Init_Thread(thread));
+    thread->Init_Thread(thread);
   }
   // threadloop 
   while (1) {
@@ -133,13 +129,34 @@ bool mjthread_add_routine(mjthread thread, mjProc Routine, void* arg) {
   return retval;
 }
 
-bool mjthread_set_local(mjthread thread, void* thread_local) {
-  if (!thread || thread->Init_Thread) {
-    MJLOG_ERR("thread is null or has Init_Thread");
+/*
+===============================================================================
+mjthread_set_obj
+  set mjthread object
+===============================================================================
+*/
+bool mjthread_set_obj(mjthread thread, const char* key, void* obj,
+    mjProc obj_free) {
+  if (!thread || !key) {
+    MJLOG_ERR("thread or key is null");
     return false;
   }
-  mjmap_set_obj(thread->arg_map, "thread_local", thread_local);
+  if (mjmap_set_obj(thread->arg_map, key, obj, obj_free) < 0) return false;
   return true;
+}
+
+/*
+===============================================================================
+mjthread_get_obj
+  get mjthread obj
+===============================================================================
+*/
+void* mjthread_get_obj(mjthread thread, const char* key) {
+  if (!thread || !key) {
+    MJLOG_ERR("thread or key is null");
+    return false;
+  }
+  return mjmap_get_obj(thread->arg_map, key);
 }
 
 /*

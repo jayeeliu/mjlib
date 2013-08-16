@@ -117,7 +117,8 @@ void* http_mjlf_init(void* arg) {
       return NULL;
     }
   }
-  return newurls;
+  mjthread_set_obj(thread, "thread_local", newurls, NULL);
+  return NULL;
 }
 
 /*
@@ -196,7 +197,9 @@ http_mjlf_routine
 */
 void* http_mjlf_routine(void* arg) {
   mjconnb conn = (mjconnb) arg;
-  struct mjhttpurl* urls = (struct mjhttpurl*) conn->shared;
+  mjthread thread = (mjthread) conn->shared;
+  struct mjhttpurl* urls = (struct mjhttpurl*) mjthread_get_obj(thread, 
+      "thread_local");
   // alloc data for readuntil
   mjstr data = mjstr_new();
   if (!data) {

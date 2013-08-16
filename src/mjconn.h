@@ -5,7 +5,7 @@
 #include "mjev.h"
 #include "mjthread.h"
 
-struct mjConn {
+struct mjconn {
   int           fd;                     // fd 
   void*         server;                 // tcpserver for server side conn 
   mjev          ev;
@@ -14,22 +14,22 @@ struct mjConn {
   mjstr         wbuf;                   // write buffer
   mjstr         data;                   // data get from rbuf
 
-  int           connectType;            // connect type
+  int           connect_type;            // connect type
   mjProc        ConnectCallback;        // ConnectCallback
-  unsigned int  connectTimeout;         // connect timeout 
-  mjtevent*     connectTimeoutEvent;    // connect timeout event
+  unsigned int  connect_timeout;         // connect timeout 
+  mjtevent*     connect_timeout_event;    // connect timeout event
 
-  int           readType;               // readType
+  int           read_type;               // readType
   mjProc        ReadCallBack;           // read callback 
   char*         delim;                  // the delim when readType is READUNTIL
   int           rbytes;                 // read data size when readType is READBYTES
-  unsigned int  readTimeout;            // read timeout 
-  mjtevent*     readTimeoutEvent;       // read timeout event 
+  unsigned int  read_timeout;            // read timeout 
+  mjtevent*     read_timeout_event;       // read timeout event 
 
-  int           writeType;              // write type 
+  int           write_type;              // write type 
   mjProc        WriteCallBack;          // write callback 
-  unsigned int  writeTimeout;           // write timeout
-  mjtevent*     writeTimeoutEvent;      // write timeout event 
+  unsigned int  write_timeout;           // write timeout
+  mjtevent*     write_timeout_event;      // write timeout event 
 
   int           error;                  // some error happened 
   int           closed;                 // fd closed 
@@ -37,27 +37,27 @@ struct mjConn {
   mjProc        FreePrivte;             // free private callback 
   void*         private;                // user conn private data 
 };
-typedef struct mjConn* mjConn;
+typedef struct mjconn* mjconn;
 
 // read func
-extern bool mjConn_ReadBytes(mjConn conn, int len, mjProc CallBack);
-extern bool mjConn_ReadUntil(mjConn conn, char* delim, mjProc CallBack);
-extern bool mjConn_Read(mjConn conn, mjProc CallBack);
+extern bool mjconn_readbytes(mjconn conn, int len, mjProc CallBack);
+extern bool mjconn_readuntil(mjconn conn, char* delim, mjProc CallBack);
+extern bool mjconn_read(mjconn conn, mjProc CallBack);
 // write func
-extern bool mjConn_WriteS(mjConn conn, char* buf, mjProc CallBack);
-extern bool mjConn_Write(mjConn conn, mjstr buf, mjProc CallBack);
-extern bool mjConn_BufWriteS(mjConn conn, char* buf);
-extern bool mjConn_BufWrite(mjConn conn, mjstr buf);
-extern bool mjConn_Flush(mjConn conn, mjProc CallBack);
+extern bool mjconn_writes(mjconn conn, char* buf, mjProc CallBack);
+extern bool mjconn_write(mjconn conn, mjstr buf, mjProc CallBack);
+extern bool mjconn_buf_writes(mjconn conn, char* buf);
+extern bool mjconn_buf_write(mjconn conn, mjstr buf);
+extern bool mjconn_flush(mjconn conn, mjProc CallBack);
 // conn func
-extern bool mjConn_Connect(mjConn conn, const char* ipaddr, int port, mjProc CallBack);
+extern bool mjconn_connect(mjconn conn, const char* ipaddr, int port, mjProc CallBack);
 
-extern bool mjConn_SetConnectTimeout(mjConn conn, unsigned int connectTimeout);
-extern bool mjConn_SetTimeout(mjConn conn, unsigned int readTimeout, unsigned int writeTimeout);
-extern bool mjConn_SetPrivate(mjConn conn, void* private, mjProc FreePrivte);
-extern bool mjConn_SetServer(mjConn conn, void* server);
+extern bool mjconn_set_connect_timeout(mjconn conn, unsigned int connect_timeout);
+extern bool mjconn_set_timeout(mjconn conn, unsigned int read_timeout, unsigned int write_timeout);
+extern bool mjconn_set_private(mjconn conn, void* private, mjProc FreePrivte);
+extern bool mjconn_set_server(mjconn conn, void* server);
 
-extern mjConn   mjConn_New(mjev ev, int fd);
-extern bool     mjConn_Delete(mjConn conn);
+extern mjconn   mjconn_new(mjev ev, int fd);
+extern bool     mjconn_delete(mjconn conn);
 
 #endif

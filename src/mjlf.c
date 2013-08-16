@@ -38,8 +38,7 @@ static void* mjlf_routine(void* arg) {
     return NULL;
   }
   mjconnb_set_server(conn, srv);
-  void* thread_local = mjmap_get_obj(thread->arg_map, "thread_local");
-  mjconnb_set_shared(conn, thread_local);
+  mjconnb_set_shared(conn, thread);
   mjconnb_set_timeout(conn, srv->read_timeout, srv->write_timeout);
   // run server routine
   srv->Routine(conn);

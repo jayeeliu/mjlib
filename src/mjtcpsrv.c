@@ -38,13 +38,13 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     return NULL;
   }
   // create new mjconn
-  mjConn conn = mjConn_New(srv->ev, cfd);
+  mjconn conn = mjconn_new(srv->ev, cfd);
   if (!conn) {
     MJLOG_ERR("mjConn create error");
     mjsock_close(cfd);
     return NULL;
   }
-  mjConn_SetServer(conn, srv);
+  mjconn_set_server(conn, srv);
   srv->Routine(conn);
   return NULL;
 }

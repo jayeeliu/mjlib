@@ -49,7 +49,7 @@ bool mjthreadpool_add_routine_plus(mjthreadpool tpool,
   // call mjthreadpool_AddWork
   if (!mjthreadpool_add_routine(tpool, Routine, arg)) {
     return mjthread_new_once(tpool->Init_Thread, tpool->init_arg,
-      tpool->Exit_Thread, NULL, Routine, arg);
+      tpool->Exit_Thread, Routine, arg);
   }
   return true;
 }
@@ -83,9 +83,10 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Thread,
     INIT_LIST_HEAD(&tpool->thread_entrys[i].nodeList);
     list_add_tail(&tpool->thread_entrys[i].nodeList, &tpool->freelist);
     // create new thread
-    tpool->thread_entrys[i].thread = mjthread_new(Init_Thread, init_arg, Exit_Thread);
-    mjmap_set_obj(tpool->thread_entrys[i].thread->arg_map, "entry",
-      &tpool->thread_entrys[i]);
+    tpool->thread_entrys[i].thread = mjthread_new(Init_Thread, init_arg, 
+        Exit_Thread);
+    mjthread_set_obj(tpool->thread_entrys[i].thread, "entry", 
+        &tpool->thread_entrys[i], NULL);
   }
   return tpool; 
 } 

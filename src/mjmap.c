@@ -46,7 +46,8 @@ mjitem_new_obj
   alloc new mjitem store obj
 ===============================================================================
 */
-static mjitem mjitem_new_obj(const char* key, void* value_obj) {
+static mjitem mjitem_new_obj(const char* key, void* value_obj,
+    mjProc value_obj_free) {
   mjitem item = (mjitem) calloc(1, sizeof(struct mjitem));
   if (!item) {
     MJLOG_ERR("mjitem calloc error");
@@ -55,6 +56,7 @@ static mjitem mjitem_new_obj(const char* key, void* value_obj) {
   item->key = mjstr_new();
   item->value_str = NULL;
   item->value_obj = value_obj;
+  item->value_obj_free = value_obj_free;
   item->type = MJITEM_OBJ;
   if (!item->key) {
     MJLOG_ERR("mjstr new error");
@@ -84,6 +86,8 @@ static bool mjitem_delete(mjitem item) {
   mjstr_delete(item->key);
   if (item->type == MJITEM_STR) {
     mjstr_delete(item->value_str);
+  } else if (item->type == MJITEM_OBJ && item->value_obj_free) {
+    item->value_obj_free(item->value_obj);
   }
   // free struct
   free(item);
@@ -195,12 +199,19 @@ int mjmap_set_strs(mjmap map, const char* key, const char* value_str) {
   return 0;
 }
 
-int mjmap_set_obj(mjmap map, const char* key, void* value_obj) {
+/*
+===============================================================================
+mjmap_set_obj
+  set mjmap object
+===============================================================================
+*/
+int mjmap_set_obj(mjmap map, const char* key, void* value_obj, 
+    mjProc value_obj_free) {
   unsigned int hashvalue = genhashvalue((void*)key, strlen(key));
   unsigned int index = hashvalue % map->len;
   mjitem item = mjmap_search(map, key);
   if (item) return -2;
-  item = mjitem_new_obj(key, value_obj);
+  item = mjitem_new_obj(key, value_obj, value_obj_free);
   if (!item) {
     MJLOG_ERR("mjitem_new error");
     return -1;

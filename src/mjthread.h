@@ -28,10 +28,12 @@ struct mjthread {
 typedef struct mjthread* mjthread;
 
 extern bool     mjthread_new_once(mjProc Init_Thread, void* init_arg, 
-    mjProc Exit_Thread, void* thread_local, mjProc Routine, void* arg);
+    mjProc Exit_Thread, mjProc Routine, void* arg);
 
 extern bool     mjthread_add_routine(mjthread thread, mjProc Routine, void* arg);
-extern bool     mjthread_set_local(mjthread thread, void* thread_local);
+extern void*    mjthread_get_obj(mjthread thread, const char* key);
+extern bool     mjthread_set_obj(mjthread thread, const char* key, void* obj, mjProc obj_free);
+
 extern mjthread mjthread_new(mjProc Init_Thread, void* init_arg, mjProc Exit_Thread);
 extern bool     mjthread_delete(mjthread thread);
 

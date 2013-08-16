@@ -239,7 +239,7 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc srvRoutine, mjProc InitSrv,
       mjmainsrv_delete(mainSrv);
       return NULL;
     }
-    mjthread_set_local(mainSrv->srvThread[i], mainSrv->srv[i]);
+    mjthread_set_obj(mainSrv->srvThread[i], "thread_local", mainSrv->srv[i], NULL);
     mjthread_add_routine(mainSrv->srvThread[i], mjmainsrv_srvthread_run, NULL);
     // set cpu affinity
     cpu_set_t cpuset;
