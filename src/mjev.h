@@ -31,14 +31,14 @@ typedef struct mjtevent {
 typedef struct mjpending {
     mjProc              _PendingProc;
     void*               _arg;
-    struct list_head    _pendingNode;
+    struct list_head    _pending_node;
 } mjpending;
 // mjev struct
 struct mjev {
     int                 _epfd;       // epoll fd
-    mjfevent            _fileEventList[MJEV_MAXFD];
-    mjpq                _timerEventQueue;
-    struct list_head    _pendingHead;
+    mjfevent            _file_event_list[MJEV_MAXFD];
+    mjpq                _timer_event_queue;
+    struct list_head    _pending_head;
 };
 typedef struct mjev* mjev;
 
