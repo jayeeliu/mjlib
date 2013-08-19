@@ -15,40 +15,40 @@
 #define MJEV_MAXFD          60000
 
 typedef struct mjfevent {
-    int     mask;
-    mjProc  ReadCallBack;
-    mjProc  WriteCallBack;
-    void*   data;
+    int     _mask;
+    mjProc  _ReadProc;
+    mjProc  _WriteProc;
+    void*   _arg;
 } mjfevent;
 // timer event struct
 typedef struct mjtevent {
-    int         valid;
-    long long   time;
-    mjProc      TimerProc;
-    void*       data;
+    bool        _valid;
+    long long   _time;
+    mjProc      _TimerProc;
+    void*       _arg;
 } mjtevent;
 // pending proc to be run
 typedef struct mjpending {
-    mjProc              Proc;
-    void*               data;
-    struct list_head    pendingNode;
+    mjProc              _PendingProc;
+    void*               _arg;
+    struct list_head    _pendingNode;
 } mjpending;
 // mjev struct
 struct mjev {
-    int                 epfd;       // epoll fd
-    mjfevent            fileEventList[MJEV_MAXFD];
-    mjpq                timerEventQueue;
-    struct list_head    pendingHead;
+    int                 _epfd;       // epoll fd
+    mjfevent            _fileEventList[MJEV_MAXFD];
+    mjpq                _timerEventQueue;
+    struct list_head    _pendingHead;
 };
 typedef struct mjev* mjev;
 
 // 3 types: file event/timer/pending
-extern bool         mjev_add_fevent(mjev ev, int fd, int mask, mjProc Proc, void* data);
+extern bool         mjev_add_fevent(mjev ev, int fd, int mask, mjProc Proc, void* arg);
 extern bool         mjev_del_fevent(mjev ev, int fd, int mask);
-extern mjtevent*    mjev_add_timer(mjev ev, long long ms, mjProc Proc, void* data);
+extern mjtevent*    mjev_add_timer(mjev ev, long long ms, mjProc TimerProc, void* arg);
 extern bool         mjev_del_timer(mjev ev, mjtevent* te);
-extern bool         mjev_add_pending(mjev ev, mjProc Proc, void* data);
-extern bool         mjev_del_pending(mjev ev, void* data);
+extern bool         mjev_add_pending(mjev ev, mjProc PendingProc, void* arg);
+extern bool         mjev_del_pending(mjev ev, void* arg);
 extern void         mjev_run(mjev ev);
 
 extern mjev         mjev_new();
