@@ -7,18 +7,18 @@
 #include "mjmap.h"
 
 struct mjconnb {
-  int         fd;           // fd to control
-  mjstr       rbuf;         // read read buffer 
+  int         _fd;           // fd to control
+  mjstr       _rbuf;         // read read buffer 
 
-  int         readtype;     // read type
-  const char* delim;        // the delim when readtype is READUNTIL 
-  int         rbytes;       // read data size when readtype is READBYTES 
+  int         _readtype;     // read type
+  const char* _delim;        // the delim when readtype is READUNTIL 
+  int         _rbytes;       // read data size when readtype is READBYTES 
 
   mjmap       _arg_map;
 
-  bool        timeout;      // peer timeout
-  bool        error;        // peer error  
-  bool        closed;       // peer closed
+  bool        _timeout;      // peer timeout
+  bool        _error;        // peer error  
+  bool        _closed;       // peer closed
 };  
 typedef struct mjconnb* mjconnb;
 
