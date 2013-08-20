@@ -3,16 +3,15 @@
 
 #include "mjstr.h"
 
-struct mjIO {
-  const char* fileName;
-  int         fd;
-  mjstr       rbuf;
+struct mjio {
+  int 	_fd;
+  mjstr	_read_buf;
 };
-typedef struct mjIO* mjIO;
+typedef struct mjio* mjio;
 
-extern int  mjIO_Read(mjIO io, mjstr data, int len);
-extern int  mjIO_ReadLine(mjIO io, mjstr data);
-extern mjIO mjIO_New(const char* fileName);
-extern bool mjIO_Delete(mjIO io);
+extern int  mjio_read(mjio io, mjstr data, int len);
+extern int  mjio_readline(mjio io, mjstr data);
+extern mjio mjio_new(const char* fileName);
+extern bool mjio_delete(mjio io);
 
 #endif

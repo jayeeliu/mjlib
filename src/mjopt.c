@@ -85,7 +85,7 @@ bool mjopt_parse_conf(const char* fileName) {
   char key[MAX_KEY_LEN];
   char value[MAX_VALUE_LEN];
 
-  mjIO io = mjIO_New(fileName);
+  mjio io = mjio_new(fileName);
   if (!io) {
     MJLOG_ERR("mjio alloc error");
     return false;
@@ -93,19 +93,17 @@ bool mjopt_parse_conf(const char* fileName) {
   mjstr line = mjstr_new();
   if (!line) {
     MJLOG_ERR("mjstr_New error");
-    mjIO_Delete(io);
+    mjio_delete(io);
     return false;
   }
   // set default section
   strcpy(section, "global");
   while (1) {
     // get one line from file
-    if (mjIO_ReadLine(io, line) <= 0) break;
+    if (mjio_readline(io, line) <= 0) break;
     mjstr_strim(line);
-    // ignore empty line
-    if (line->length == 0) continue;
-    // ignore comment line
-    if (line->data[0] == '#') continue;
+    // ignore empty and comment line
+    if (line->length == 0 || line->data[0] == '#') continue;
     // section line, get section
     if (line->data[0] == '[' && line->data[line->length-1] == ']') {
       mjstr_consume(line, 1);
@@ -114,7 +112,7 @@ bool mjopt_parse_conf(const char* fileName) {
       // section can't be null
       if (line->length == 0) {
         MJLOG_ERR("section is null");
-        mjIO_Delete(io);
+        mjio_delete(io);
         mjstr_delete(line);
         return false;
       }
@@ -128,7 +126,7 @@ bool mjopt_parse_conf(const char* fileName) {
       MJLOG_ERR("conf error");
       mjstrlist_delete(strList);
       mjstr_delete(line);
-      mjIO_Delete(io);
+      mjio_delete(io);
       return false;
     }
     mjstr keyStr = mjstrlist_get(strList, 0);
@@ -142,6 +140,6 @@ bool mjopt_parse_conf(const char* fileName) {
     mjopt_set_value(section, key, value);
   }
   mjstr_delete(line);
-  mjIO_Delete(io);
+  mjio_delete(io);
   return true;
 }

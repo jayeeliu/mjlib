@@ -2,6 +2,7 @@
 #include "mjmainsrv.h"
 #include "mjconn.h"
 #include "mjsock.h"
+#include "mjsql.h"
 
 static void* on_close(void* arg)
 {

@@ -9,10 +9,10 @@
 #define MAX_VALUE_LEN   128
 
 struct mjopt {
-    char                section[MAX_SECTION_LEN];
-    char                key[MAX_KEY_LEN];
-    char                value[MAX_VALUE_LEN];      // string value
-    struct list_head    node;
+	char                section[MAX_SECTION_LEN];
+ 	char                key[MAX_KEY_LEN];
+	char                value[MAX_VALUE_LEN];      // string value
+	struct list_head    node;
 };
 typedef struct mjopt* mjopt;
 
