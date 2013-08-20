@@ -14,44 +14,47 @@
 // file event struct
 #define MJEV_MAXFD          60000
 
-typedef struct mjfevent {
+struct mjfevent {
     int     _mask;
     mjProc  _ReadProc;
     mjProc  _WriteProc;
     void*   _arg;
-} mjfevent;
+};
+typedef struct mjfevent* mjfevent;
 // timer event struct
-typedef struct mjtevent {
+struct mjtevent {
     bool        _valid;
     long long   _time;
     mjProc      _TimerProc;
     void*       _arg;
-} mjtevent;
+};
+typedef struct mjtevent* mjtevent;
 // pending proc to be run
-typedef struct mjpending {
+struct mjpending {
     mjProc              _PendingProc;
     void*               _arg;
     struct list_head    _pending_node;
-} mjpending;
+};
+typedef struct mjpending* mjpending;
 // mjev struct
 struct mjev {
     int                 _epfd;       // epoll fd
-    mjfevent            _file_event_list[MJEV_MAXFD];
+    struct mjfevent    	_file_event_list[MJEV_MAXFD];
     mjpq                _timer_event_queue;
     struct list_head    _pending_head;
 };
 typedef struct mjev* mjev;
 
 // 3 types: file event/timer/pending
-extern bool         mjev_add_fevent(mjev ev, int fd, int mask, mjProc Proc, void* arg);
-extern bool         mjev_del_fevent(mjev ev, int fd, int mask);
-extern mjtevent*    mjev_add_timer(mjev ev, long long ms, mjProc TimerProc, void* arg);
-extern bool         mjev_del_timer(mjev ev, mjtevent* te);
-extern bool         mjev_add_pending(mjev ev, mjProc PendingProc, void* arg);
-extern bool         mjev_del_pending(mjev ev, void* arg);
-extern void         mjev_run(mjev ev);
+extern bool     mjev_add_fevent(mjev ev, int fd, int mask, mjProc Proc, void* arg);
+extern bool     mjev_del_fevent(mjev ev, int fd, int mask);
+extern mjtevent	mjev_add_timer(mjev ev, long long ms, mjProc TimerProc, void* arg);
+extern bool     mjev_del_timer(mjev ev, mjtevent te);
+extern bool     mjev_add_pending(mjev ev, mjProc PendingProc, void* arg);
+extern bool   	mjev_del_pending(mjev ev, void* arg);
+extern void     mjev_run(mjev ev);
 
-extern mjev         mjev_new();
-extern bool         mjev_delete(mjev ev);
+extern mjev     mjev_new();
+extern bool     mjev_delete(mjev ev);
 
 #endif

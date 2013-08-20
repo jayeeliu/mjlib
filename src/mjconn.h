@@ -6,36 +6,34 @@
 #include "mjthread.h"
 
 struct mjconn {
-  int           fd;                     // fd 
-  void*         server;                 // tcpserver for server side conn 
-  mjev          ev;
+  int           _fd;                   		// fd 
+  mjev          _ev;
 
-  mjstr         rbuf;                   // read buffer 
-  mjstr         wbuf;                   // write buffer
-  mjstr         data;                   // data get from rbuf
+  mjstr         _rbuf;                   	// read buffer 
+  mjstr         _wbuf;                   	// write buffer
+  mjstr         _data;                   	// data get from rbuf
 
-  int           connect_type;            // connect type
-  mjProc        ConnectCallback;        // ConnectCallback
-  unsigned int  connect_timeout;         // connect timeout 
-  mjtevent*     connect_timeout_event;    // connect timeout event
+  int           _connect_type;            // connect type
+  mjProc        _ConnectCallback;        	// ConnectCallback
+  unsigned int  _connect_timeout;        	// connect timeout 
+  mjtevent			_connect_timeout_event;  	// connect timeout event
 
-  int           read_type;               // readType
-  mjProc        ReadCallBack;           // read callback 
-  char*         delim;                  // the delim when readType is READUNTIL
-  int           rbytes;                 // read data size when readType is READBYTES
-  unsigned int  read_timeout;            // read timeout 
-  mjtevent*     read_timeout_event;       // read timeout event 
+  int           _read_type;              	// readType
+  mjProc        _ReadCallBack;           	// read callback 
+  char*         _delim;                  	// the delim when readType is READUNTIL
+  int           _rbytes;                 	// read data size when readType is READBYTES
+  unsigned int  _read_timeout;            // read timeout 
+  mjtevent      _read_timeout_event;     	// read timeout event 
 
-  int           write_type;              // write type 
-  mjProc        WriteCallBack;          // write callback 
-  unsigned int  write_timeout;           // write timeout
-  mjtevent*     write_timeout_event;      // write timeout event 
+  int           _write_type;              // write type 
+  mjProc        _WriteCallBack;          	// write callback 
+  unsigned int  _write_timeout;          	// write timeout
+  mjtevent      _write_timeout_event;    	// write timeout event 
 
-  int           error;                  // some error happened 
-  int           closed;                 // fd closed 
+  bool          _error;                  	// some error happened 
+  bool          _closed;                 	// fd closed 
 
-  mjProc        FreePrivte;             // free private callback 
-  void*         private;                // user conn private data 
+	mjmap					_arg_map;
 };
 typedef struct mjconn* mjconn;
 
@@ -51,11 +49,12 @@ extern bool mjconn_buf_write(mjconn conn, mjstr buf);
 extern bool mjconn_flush(mjconn conn, mjProc CallBack);
 // conn func
 extern bool mjconn_connect(mjconn conn, const char* ipaddr, int port, mjProc CallBack);
-
+// timeout func
 extern bool mjconn_set_connect_timeout(mjconn conn, unsigned int connect_timeout);
 extern bool mjconn_set_timeout(mjconn conn, unsigned int read_timeout, unsigned int write_timeout);
-extern bool mjconn_set_private(mjconn conn, void* private, mjProc FreePrivte);
-extern bool mjconn_set_server(mjconn conn, void* server);
+// get or set  objs
+extern void*	mjconn_get_obj(mjconn conn, const char* key);
+extern bool		mjconn_set_obj(mjconn conn, const char* key, void* obj, mjProc obj_free);
 
 extern mjconn   mjconn_new(mjev ev, int fd);
 extern bool     mjconn_delete(mjconn conn);

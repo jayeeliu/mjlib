@@ -36,22 +36,22 @@ static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
   for (;;) {
     // buffer has enough data, copy and return
     if (conn->_readtype == MJCONNB_READBYTES) {
-      if (conn->_rbytes <= conn->_rbuf->length) { 
-        mjstr_copyb(data, conn->_rbuf->data, conn->_rbytes);
-        mjstr_consume(conn->_rbuf, conn->_rbytes);
+      if (conn->_rbytes <= conn->_read_buf->length) { 
+        mjstr_copyb(data, conn->_read_buf->data, conn->_rbytes);
+        mjstr_consume(conn->_read_buf, conn->_rbytes);
         return data->length;
       }
     } else if (conn->_readtype == MJCONNB_READUNTIL) {
-      int pos = mjstr_search(conn->_rbuf, conn->_delim);
+      int pos = mjstr_search(conn->_read_buf, conn->_delim);
       if (pos != -1) {
-        mjstr_copyb(data, conn->_rbuf->data, pos);
-        mjstr_consume(conn->_rbuf, pos + strlen(conn->_delim));
+        mjstr_copyb(data, conn->_read_buf->data, pos);
+        mjstr_consume(conn->_read_buf, pos + strlen(conn->_delim));
         return data->length;
       }
     } else if (conn->_readtype == MJCONNB_READ) {
-      if (conn->_rbuf && conn->_rbuf->length > 0) {
-        mjstr_copyb(data, conn->_rbuf->data, conn->_rbuf->length);
-        mjstr_consume(conn->_rbuf, conn->_rbuf->length);
+      if (conn->_read_buf && conn->_read_buf->length > 0) {
+        mjstr_copyb(data, conn->_read_buf->data, conn->_read_buf->length);
+        mjstr_consume(conn->_read_buf, conn->_read_buf->length);
         return data->length;
       }
     }
@@ -70,18 +70,18 @@ static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
       }
       break;         
     }
-    // read close, break, copy data to rbuf
+    // read close, break, copy data to read_buf
     if (ret == 0) {
       MJLOG_ERR("conn close");
       conn->_closed = true;
       break;
     }
-    // read ok put data to rbuf, try again
-    mjstr_catb(conn->_rbuf, buf, ret);
+    // read ok put data to read_buf, try again
+    mjstr_catb(conn->_read_buf, buf, ret);
   }
   // read error or read close, copy data
-  mjstr_copy(data, conn->_rbuf);
-  mjstr_consume(conn->_rbuf, conn->_rbuf->length);
+  mjstr_copy(data, conn->_read_buf);
+  mjstr_consume(conn->_read_buf, conn->_read_buf->length);
   return ret;
 }
 
@@ -198,7 +198,7 @@ mjconnb_get_obj
 void* mjconnb_get_obj(mjconnb conn, const char* key) {
   if (!conn || !key) {
     MJLOG_ERR("conn or key is null");
-    return false;
+    return NULL;
   }
   return mjmap_get_obj(conn->_arg_map, key);
 }
@@ -281,19 +281,18 @@ mjconnb mjconnb_new(int fd) {
     return NULL;
   }
   // get mjconnb struct
-  mjconnb conn  = &_conn[fd];
-  conn->_fd      = fd;      
-  // create rbuf
-  if (!conn->_rbuf) {
+  mjconnb conn	= &_conn[fd];
+  conn->_fd    	= fd;      
+  // create read_buf
+  if (!conn->_read_buf) {
     // create read buffer
-    conn->_rbuf = mjstr_new();
-    if (!conn->_rbuf) {
+    conn->_read_buf = mjstr_new();
+    if (!conn->_read_buf) {
       MJLOG_ERR("mjstr create error");
-      mjsock_close(fd);
       return NULL;
     }
   }
-  conn->_rbuf->length = 0;
+  conn->_read_buf->length = 0;
   // init read
   conn->_readtype  = MJCONNB_NONE;
   conn->_delim     = NULL;

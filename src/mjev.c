@@ -33,7 +33,7 @@ bool mjev_add_fevent(mjev ev, int fd, int mask, mjProc Proc, void* arg) {
       return false; 
   }
   // get mjfevent correspond to fd
-  mjfevent* fdev = &(ev->_file_event_list[fd]);     
+  mjfevent fdev = &(ev->_file_event_list[fd]);     
   int newmask = fdev->_mask | mask;            // get new mask 
   // we should change epoll
   if (fdev->_mask != newmask) {
@@ -82,7 +82,7 @@ bool mjev_del_fevent(mjev ev, int fd, int mask) {
     return false; 
   }
   // set mjev status
-  mjfevent* fdev = &ev->_file_event_list[fd];
+  mjfevent fdev = &ev->_file_event_list[fd];
   int newmask = fdev->_mask & (~mask);         // get newmask
   // we should change epoll
   if (fdev->_mask != newmask) { 
@@ -111,13 +111,13 @@ mjev_AddTimer
     add timer event to mjev
 ===============================================================================
 */
-mjtevent* mjev_add_timer(mjev ev, long long ms, mjProc TimerProc, void* arg) {
+mjtevent mjev_add_timer(mjev ev, long long ms, mjProc TimerProc, void* arg) {
   if (!ev || !TimerProc) {
     MJLOG_ERR("ev or Proc is null");
     return NULL;
   }
   // create mjTimerEvent struct
-  mjtevent* te = (mjtevent*) calloc(1, sizeof(mjtevent));
+  mjtevent te = (mjtevent) calloc(1, sizeof(struct mjtevent));
   if (!te) {
     MJLOG_ERR("mjtevent alloc error");
     return NULL; 
@@ -142,7 +142,7 @@ mjev_DelTimer
     invalid mjtevent
 ===============================================================================
 */
-bool mjev_del_timer(mjev ev, mjtevent* te) {
+bool mjev_del_timer(mjev ev, mjtevent te) {
   if (!ev || !te) {
     MJLOG_ERR("ev or te is null");
     return false;
@@ -163,7 +163,7 @@ bool mjev_add_pending(mjev ev, mjProc PendingProc, void* arg) {
     return false;
   }
   // alloc and set new pending
-  mjpending* newPending = (mjpending*) calloc(1, sizeof(mjpending));
+  mjpending newPending = (mjpending) calloc(1, sizeof(struct mjpending));
   if (!newPending) {
     MJLOG_ERR("pending struct alloc error");
     return false;
@@ -186,8 +186,7 @@ mjev_DelPending
 */
 bool mjev_del_pending(mjev ev, void* arg) {
   if (list_empty(&ev->_pending_head)) return false;
-  mjpending* entry;
-  mjpending* tmp;
+  mjpending entry, tmp;
   list_for_each_entry_safe(entry, tmp, &ev->_pending_head, _pending_node) {
     if (entry->_arg == arg) {
       list_del(&entry->_pending_node);
@@ -213,8 +212,8 @@ GetFirstTimerEvent
     get first time event from queue
 ===============================================================================
 */
-static mjtevent* get_first_timerevent(mjev ev) {
-  mjtevent* te = mjpq_get_minvalue(ev->_timer_event_queue);
+static mjtevent get_first_timerevent(mjev ev) {
+  mjtevent te = mjpq_get_minvalue(ev->_timer_event_queue);
   if (!te) return NULL;
   // delete timer event from queue
   mjpq_delmin(ev->_timer_event_queue);
@@ -259,7 +258,7 @@ void mjev_run(mjev ev) {
   first = get_first_timer(ev);                       
   currTime = GetCurrentTime();        
   if (first != -1 && first <= currTime) {           // run timer event
-    mjtevent *te = get_first_timerevent(ev);        // get timer event from queue
+    mjtevent te = get_first_timerevent(ev);        // get timer event from queue
     if (te && te->_valid && te->_TimerProc) te->_TimerProc(te->_arg);   // call timer proc
     free(te);                                       // free timer event, alloc in addtimer
   }
@@ -269,7 +268,7 @@ void mjev_run(mjev ev) {
     // get file event fd, and mjfevent struct
 	  struct epoll_event* e = &epEvents[i];
 	  int fd = e->data.fd;
-	  mjfevent* fdev = &ev->_file_event_list[fd];
+	  mjfevent fdev = &ev->_file_event_list[fd];
     // check file op mask
 	  int mask = 0;
 	  if (e->events & EPOLLIN) mask |= MJEV_READABLE;
@@ -295,8 +294,7 @@ void mjev_run(mjev ev) {
   INIT_LIST_HEAD(&savedPendingHead);
   list_splice_init(&ev->_pending_head, &savedPendingHead);
   // run pending proc
-  mjpending* entry;
-  mjpending* tmp;
+  mjpending entry, tmp;
   list_for_each_entry_safe(entry, tmp, &savedPendingHead, _pending_node) {
     list_del(&entry->_pending_node);
     entry->_PendingProc(entry->_arg);
@@ -347,8 +345,7 @@ mjev_ReleasePending
 static void mjev_release_pending(mjev ev) {
   if (list_empty(&ev->_pending_head)) return;
   // release pending struct 
-  mjpending* entry;
-  mjpending* tmp;
+  mjpending entry, tmp;
   list_for_each_entry_safe(entry, tmp, &ev->_pending_head, _pending_node) {
     list_del(&entry->_pending_node);
     free(entry);

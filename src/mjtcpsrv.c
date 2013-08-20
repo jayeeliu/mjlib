@@ -44,7 +44,8 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     mjsock_close(cfd);
     return NULL;
   }
-  mjconn_set_server(conn, srv);
+	mjconn_set_obj(conn, "server", srv, NULL);
+//  mjconn_set_server(conn, srv);
   srv->Routine(conn);
   return NULL;
 }

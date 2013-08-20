@@ -34,7 +34,7 @@ static void* mjlf_routine(void* arg) {
   mjconnb conn = mjconnb_new(cfd);
   if (!conn) {
     MJLOG_ERR("create mjconnb error");
-    close(cfd);
+    mjsock_close(cfd);
     return NULL;
   }
   mjconnb_set_obj(conn, "server", srv, NULL);
