@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <string.h>
+#include <errno.h>
 #include "mjmainsrv.h"
 #include "mjconn.h"
 #include "mjcomm.h"
@@ -94,7 +96,7 @@ bool mjmainsrv_async(mjtcpsrv srv, mjProc WorkerRoutine, void* w_arg,
   // alloc notify pipe and add callback event to eventloop
   int notifyFd[2];
   if (pipe(notifyFd)) {
-    MJLOG_ERR("pipe alloc error");
+    MJLOG_ERR("pipe alloc error: %s", strerror(errno));
     free(async_data);
     return false;
   }
@@ -133,7 +135,7 @@ bool mjmainsrv_run(mjmainsrv mainSrv) {
   while (!mainSrv->_stop) {
     int cfd = mjsock_accept(mainSrv->_sfd);
     if (cfd < 0) {
-      MJLOG_ERR("mjSock_Accept Error continue");
+      MJLOG_ERR("mjSock_Accept Error continue: %s", strerror(errno));
       continue;
     }
     dispatchServer = (dispatchServer + 1) % mainSrv->_srv_num;

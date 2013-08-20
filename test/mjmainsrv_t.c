@@ -5,8 +5,8 @@
 
 static void* on_close(void* arg)
 {
-    mjConn conn = (mjConn) arg;
-    mjConn_Delete(conn);
+    mjconn conn = (mjconn) arg;
+    mjconn_delete(conn);
     return NULL;
 }
 
@@ -16,16 +16,17 @@ static void* calRoutine(void* arg) {
 
 static void* on_write(void* arg)
 {
-    mjConn conn = (mjConn) arg;
-    mjConn_WriteS(conn, "Final Server Ready!!!\r\n", NULL);
-    mjmainsrv_async(conn->server, calRoutine, NULL, on_close, conn);
+    mjconn conn = (mjconn) arg;
+    mjconn_writes(conn, "Final Server Ready!!!\r\n", NULL);
+		mjtcpsrv server = (mjtcpsrv) mjconn_get_obj(conn, "server");
+    mjmainsrv_async(server, calRoutine, NULL, on_close, conn);
     return NULL;
 }
 
 static void* Routine(void* arg)
 {
-    mjConn conn = (mjConn) arg;
-    mjConn_ReadUntil(conn, "\r\n\r\n", on_write);
+    mjconn conn = (mjconn) arg;
+    mjconn_readuntil(conn, "\r\n\r\n", on_write);
     return NULL;
 }
 

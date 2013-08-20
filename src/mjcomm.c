@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 
 #include "mjcomm.h"
 #include "mjlog.h"
@@ -156,6 +157,14 @@ GetCPUNumer
 int get_cpu_count() {
   int cpu_num = sysconf(_SC_NPROCESSORS_ONLN);
   return cpu_num;
+}
+
+bool set_max_open_file(int files_num) {
+	struct rlimit r;
+	r.rlim_cur = 10240;
+	r.rlim_max = 10240;
+	if (setrlimit(RLIMIT_NOFILE, &r) < 0) return false;
+	return true;
 }
 
 /*
