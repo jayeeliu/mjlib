@@ -25,6 +25,7 @@ bool mjtxt_run_cmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     return false;  
   }
 	mjconnb_writes(conn, "+ sdalkfjasldfjasdf\r\n");
+	conn->_closed = true;
 	return false;
   int ret = mjconnb_readuntil(conn, "\r\n", data);
   if (ret == -2) {
