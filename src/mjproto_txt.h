@@ -9,13 +9,18 @@ struct mjproto_txt_data {
   mjstr     cmd;
   mjstrlist args;
   mjconnb   conn;
+	bool			finished;
 };
+typedef struct mjproto_txt_data* mjproto_txt_data;
 
-typedef struct PROTO_TXT_ROUTINE {
-  const char  *cmd;
+struct mjproto_txt_routine_list {
+  const char*	cmd;
   mjProc      Routine;
-} PROTO_TXT_ROUTINE;
+};
+typedef struct mjproto_txt_routine_list* mjproto_txt_routine_list;
 
-extern bool   mjtxt_run_cmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn);
+extern void*	mjproto_txt_init(void* arg);
+extern void* 	mjproto_txt_routine(void* arg);
+extern bool 	mjproto_txt_finished(mjproto_txt_data cmd_data);
 
 #endif

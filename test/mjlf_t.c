@@ -5,50 +5,40 @@
 #include "mjsock.h"
 #include "mjconnb.h"
 #include "mjcomm.h"
-#include "mjopt.h"
 #include "mjproto_txt.h"
 
 void* GetRoutine(void* arg) {
-  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
-  mjconnb_writes(cmdData->conn, "Get Called\r\n");
+  mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
+  mjconnb_writes(cmd_data->conn, "Get Called\r\n");
   return NULL; 
 } 
 
 void* PutRoutine(void* arg) {
-  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
-  mjconnb_writes(cmdData->conn, "Put Called\r\n");
+  mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
+  mjconnb_writes(cmd_data->conn, "Put Called\r\n");
   return NULL;
 }
 
 void* StatRoutine(void* arg) {
-  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
-  mjconnb_writes(cmdData->conn, "OK Here\r\n");
+  mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
+  mjconnb_writes(cmd_data->conn, "OK Here\r\n");
   return NULL;
 }
 
 void* QuitRoutine(void* arg) {
-  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
-  mjconnb conn = cmdData->conn;
-  mjconnb_writes(cmdData->conn, "Quit\r\n");
-  conn->_closed = true;
+  mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
+  mjconnb_writes(cmd_data->conn, "Quit\r\n");
+	mjproto_txt_finished(cmd_data);
   return NULL;
 }
 
-PROTO_TXT_ROUTINE routineList[] = {
+struct mjproto_txt_routine_list routine_list[] = {
   {"get", GetRoutine},
   {"put", PutRoutine},
   {"stat", StatRoutine},
   {"quit", QuitRoutine},
+	{NULL, NULL},
 };
-
-void* Routine(void* arg) {
-  mjconnb conn = (mjconnb) arg;
-  while (!conn->_closed && !conn->_timeout) {
-    mjtxt_run_cmd(routineList, 
-				sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn);
-  }
-  return NULL;
-}
 
 int main() {
   int sfd = mjsock_tcp_server(7879);
@@ -57,7 +47,8 @@ int main() {
     return 1;
   }
 
-  mjlf server = mjlf_new(sfd, Routine, 4, NULL, NULL, NULL, NULL);
+  mjlf server = mjlf_new(sfd, mjproto_txt_routine, 4, mjproto_txt_init,
+			routine_list, NULL, NULL);
   if (!server) {
     printf("mjlf_New error");
     return 1;

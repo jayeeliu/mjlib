@@ -26,14 +26,6 @@ struct mjhttpurl {
   mjreg   reg;
 };
 
-/*
-extern void*  http_Worker(void *arg);
-extern void*  http_InitTcpSrv(void *arg);
-extern void*  http_InitMainSrv(void *arg);
-extern void*  http_ExitTcpSrv(void *arg);
-extern void*  http_ExitMainSrv(void *arg);
-extern mjstr  FileToStr(const char *fileName);
-*/
 extern void*  http_mjlf_init(void* arg);
 extern void*  http_mjlf_exit(void* arg);
 extern void*  http_mjlf_routine(void* arg);
