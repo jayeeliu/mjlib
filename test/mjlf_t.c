@@ -8,33 +8,29 @@
 #include "mjopt.h"
 #include "mjproto_txt.h"
 
-struct server_data {
-  char id[1024];
-};
-
 void* GetRoutine(void* arg) {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
   mjconnb_writes(cmdData->conn, "Get Called\r\n");
   return NULL; 
 } 
 
 void* PutRoutine(void* arg) {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
   mjconnb_writes(cmdData->conn, "Put Called\r\n");
   return NULL;
 }
 
 void* StatRoutine(void* arg) {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
   mjconnb_writes(cmdData->conn, "OK Here\r\n");
   return NULL;
 }
 
 void* QuitRoutine(void* arg) {
-  struct mjProtoTxtData* cmdData = (struct mjProtoTxtData*) arg;
+  struct mjproto_txt_data* cmdData = (struct mjproto_txt_data*) arg;
   mjconnb conn = cmdData->conn;
   mjconnb_writes(cmdData->conn, "Quit\r\n");
-  conn->closed = true;
+  conn->_closed = true;
   return NULL;
 }
 
@@ -47,32 +43,21 @@ PROTO_TXT_ROUTINE routineList[] = {
 
 void* Routine(void* arg) {
   mjconnb conn = (mjconnb) arg;
-  while (!conn->closed && !conn->timeout) {
-    mjTxt_RunCmd(routineList, sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), 
-      conn);
+  while (!conn->_closed && !conn->_timeout) {
+    mjtxt_run_cmd(routineList, 
+				sizeof(routineList) / sizeof(PROTO_TXT_ROUTINE), conn);
   }
-  mjconnb_delete(conn);
   return NULL;
 }
 
 int main() {
-  int port;
-  int threadNum;
-
-  mjOpt_Define(NULL, "port", MJOPT_INT, &port, "7879");
-  mjOpt_Define(NULL, "threadnum", MJOPT_INT, &threadNum, "20");
-  mjOpt_ParseConf("test.conf");
-
-  int sfd = mjSock_TcpServer(port);
+  int sfd = mjsock_tcp_server(7879);
   if (sfd < 0) {
     printf("mjSock_TcpServer error");
     return 1;
   }
 
-  struct server_data s_data;
-  strcpy(s_data.id, "1013\r\n");
-  
-  mjlf server = mjlf_new(sfd, Routine, threadNum, NULL, NULL);
+  mjlf server = mjlf_new(sfd, Routine, 4, NULL, NULL, NULL, NULL);
   if (!server) {
     printf("mjlf_New error");
     return 1;

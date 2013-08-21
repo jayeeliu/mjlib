@@ -8,7 +8,7 @@ mjTxt_RunCmd
   run txt protocol command
 ===============================================================================
 */
-bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
+bool mjtxt_run_cmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
   // sanity check
   if (!conn) {
     MJLOG_ERR("conn is null");
@@ -24,6 +24,8 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     MJLOG_ERR("data create error");
     return false;  
   }
+	mjconnb_writes(conn, "+ sdalkfjasldfjasdf\r\n");
+	return false;
   int ret = mjconnb_readuntil(conn, "\r\n", data);
   if (ret == -2) {
     mjconnb_writes(conn, "+ read timetout\r\n");
@@ -42,17 +44,15 @@ bool mjTxt_RunCmd(PROTO_TXT_ROUTINE routineList[], int length, mjconnb conn) {
     goto failout1;
   }
   mjstr_split(data, " ", strList);
-  if (strList->length < 2) {
+  if (strList->length < 1) {
     mjconnb_writes(conn, "+ command error\r\n");
     goto failout2;
   }
   // get tag and cmd
-  struct mjProtoTxtData cmdData;
-  cmdData.tag = mjstrlist_get(strList, 0);
-  mjstr_strim(cmdData.tag);
-  cmdData.cmd = mjstrlist_get(strList, 1);
+  struct mjproto_txt_data cmdData;
+  cmdData.cmd = mjstrlist_get(strList, 0);
   mjstr_strim(cmdData.cmd);
-  cmdData.arg = strList;
+  cmdData.args = strList;
   cmdData.conn = conn;
   // run routine
   for (int i = 0; i < length; i++) {
