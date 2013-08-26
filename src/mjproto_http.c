@@ -70,7 +70,7 @@ FileToStr
 */
 mjstr FileToStr(const char* fileName)
 {
-  mjstr out = mjstr_new();
+  mjstr out = mjstr_new(80);
   if (!out) {
     MJLOG_ERR("mjstr alloc error");
     return NULL;
@@ -195,7 +195,7 @@ http_mjlf_routine
 void* http_mjlf_routine(void* arg) {
   mjconnb conn = (mjconnb) arg;
   // alloc data for readuntil
-  mjstr data = mjstr_new();
+  mjstr data = mjstr_new(128);
   if (!data) {
     MJLOG_ERR("mjstr alloc error");
     return NULL;
@@ -215,13 +215,13 @@ void* http_mjlf_routine(void* arg) {
   }
   // expand location
   mjstr location = httpdata->req->location;
-  if (location->data[location->length - 1] != '/') mjstr_cats(location, "/");
+  if (location->_data[location->_start + location->_length - 1] != '/') mjstr_cats(location, "/");
   // match proc and run
   mjlf srv = (mjlf) mjconnb_get_obj(conn, "server");
   struct mjhttpurl* urls = (struct mjhttpurl*) mjlf_get_obj(srv, "urls");
   int i;
   for (i = 0; urls[i].url != NULL; i++) {
-    if (mjreg_search(urls[i].reg, location->data, httpdata->params)) break;
+    if (mjreg_search(urls[i].reg, mjstr_tochar(location), httpdata->params)) break;
   }
   // set private data
   mjconnb_set_obj(conn, "httpdata", httpdata, free_httpdata);

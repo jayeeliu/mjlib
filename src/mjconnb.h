@@ -2,7 +2,7 @@
 #define _MJCONNB_H
 
 #include <stdbool.h>
-#include "mjstr.h"
+#include "mjstr2.h"
 #include "mjproc.h"
 #include "mjmap.h"
 

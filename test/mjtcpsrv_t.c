@@ -7,9 +7,16 @@
 #include "mjcomm.h"
 #include "mjlog.h"
 
+static int count = 0;
+
 void* on_close(void *data)
 {
     mjconn conn = (mjconn)data;
+		count++;
+		if (count > 100000) {
+			mjtcpsrv server = (mjtcpsrv) mjconn_get_obj(conn, "server");
+			mjtcpsrv_set_stop(server, true);
+		}
     mjconn_delete(conn);
     return NULL;
 }
