@@ -4,7 +4,6 @@
 #include <string.h>
 #include "mjlog.h"
 #include "mjmap.h"
-#include "mjstr.h"
 
 /*
 ===============================================================================
@@ -20,8 +19,8 @@ static mjitem mjitem_new_strs(const char* key, const char* value_str) {
     return NULL;
   }
   // set key and value 
-  item->key   = mjstr_new();
-  item->value_str = mjstr_new();
+  item->key   = mjstr_new(32);
+  item->value_str = mjstr_new(32);
   item->value_obj = NULL;
   item->type = MJITEM_STR;
   if (!item->key || !item->value_str) {
@@ -53,7 +52,7 @@ static mjitem mjitem_new_obj(const char* key, void* value_obj,
     MJLOG_ERR("mjitem calloc error");
     return NULL;
   }
-  item->key = mjstr_new();
+  item->key = mjstr_new(32);
   item->value_str = NULL;
   item->value_obj = value_obj;
   item->value_obj_free = value_obj_free;
@@ -153,7 +152,7 @@ static mjitem mjmap_search(mjmap map, const char* key) {
   mjitem item = NULL;
   struct hlist_node *entry;
   hlist_for_each_entry(item, entry, &map->elem[index], mapNode) { 
-    if (strcmp(item->key->data, key) == 0) return item;
+    if (strcmp(mjstr_tochar(item->key), key) == 0) return item;
   }
   return NULL;
 }
@@ -168,7 +167,7 @@ mjmap_Add
 ===============================================================================
 */
 int mjmap_set_str(mjmap map, const char* key, mjstr value) {
-  return mjmap_set_strs(map, key, value->data);
+  return mjmap_set_strs(map, key, mjstr_tochar(value));
 }
 
 /*
@@ -314,6 +313,7 @@ bool mjmap_delete(mjmap map) {
   // sanity check
   if (!map) return false;
   // get and clean mjitem
+	/*
   for (int i = 0; i < map->len; i++) {
     mjitem item = NULL;
     struct hlist_node *entry, *next;
@@ -322,6 +322,12 @@ bool mjmap_delete(mjmap map) {
       mjitem_delete(item);
     }
   }
+	*/
+	mjitem item, tmp;
+	list_for_each_entry_safe(item, tmp, &map->listHead, listNode) {
+		list_del(&item->listNode);
+		mjitem_delete(item);
+	}
   free(map);
   return true;
 }

@@ -22,7 +22,7 @@ Daemonize
                 -1  --- fail
 ===========================================================
 */
-int Daemonize() {
+int daemonize() {
     switch(fork()) {
 	case -1:
 	    return -1;
@@ -84,22 +84,21 @@ long long GetCurrentTime()
     return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
-int ProcessSpawn(int nProcs)
-{
-    Daemonize();
-    for(int i = 0; i < nProcs; i++) {
-        pid_t pid = fork();
-        // child return
-        if (!pid) return 0;
-        // error return
-        if (pid < 0) {
-            MJLOG_ERR("frok error");
-            return -1;
-        }
+int process_spawn(int nProcs) {
+  daemonize();
+  for(int i = 0; i < nProcs; i++) {
+    pid_t pid = fork();
+    // child return
+    if (!pid) return 0;
+    // error return
+    if (pid < 0) {
+      MJLOG_ERR("frok error");
+      return -1;
     }
-    // parent run here
-    exit(0);
-    return 1;
+  }
+  // parent run here
+  exit(0);
+  return 1;
 }
 
 /*

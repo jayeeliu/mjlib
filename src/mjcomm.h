@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 
-extern int        Daemonize();
+extern int        daemonize();
 extern long long  GetCurrentTime();
-extern int        ProcessSpawn(int nProcs);
+extern int        process_spawn(int nProcs);
 extern void       RemovePid(const char *pidFile);
 extern void       SavePid(const char *pidFile);
 extern int        get_cpu_count();

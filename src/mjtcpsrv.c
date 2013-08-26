@@ -126,7 +126,7 @@ mjtcpsrv_New
 mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, mjProc InitSrv, void* init_arg,
     int type) {
   // alloc mjtcpsrv struct
-  mjtcpsrv srv = (mjtcpsrv) calloc (1, sizeof(struct mjtcpsrv));  
+  mjtcpsrv srv = (mjtcpsrv) calloc(1, sizeof(struct mjtcpsrv));  
   if (!srv) {
     MJLOG_ERR("create server error");
     goto failout1;

@@ -15,5 +15,12 @@ all:$(OBJS)
 	gcc -g -fPIC -shared -pthread $(OBJS) $(JPWOBJS) -o $(BUILD)/libmj.so
 	ar -r $(BUILD)/libmj.a $(OBJS) $(JPWOBJS)
 
+test:
+	gcc -pg -g -std=gnu99 mjsig.c mjcomm.c mjpq.c mjev.c mjstr2.c mjtcpsrv.c mjlog.c mjsock.c mjconn.c mjmap.c mjtcpsrv_t.c -o mjtcpsrv_t
+
+test_str:
+	gcc -std=gnu99 -g mjlog.c mjstr2.c mjstr2_t.c -o mjstr2_t
+
 clean:
 	rm -rf $(OBJS)
+	rm -rf mjtcpsrv_t gmon.out
