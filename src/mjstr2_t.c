@@ -4,9 +4,9 @@
 void t1() {
   mjstr str = mjstr_new(0);
   mjstr_copys(str, "t");
-  printf("%s\n", mjstr_tochar(str));
+  printf("%s\n", str->data);
   mjstr_cats(str, "123412312");
-  printf("%s\n", mjstr_tochar(str));
+  printf("%s\n", str->data);
   mjstr_consume(str, 5);
   printf("%d\n", mjstr_search(str, "3"));
   mjstr_delete(str);
@@ -16,8 +16,8 @@ void t2() {
   mjstr str = mjstr_new(1024);
   mjstr_copys(str, " this is a test");
   mjstr_strim(str);
-  printf("%s\n", mjstr_tochar(str));
-  printf("%d\n", mjstr_get_length(str));
+  printf("%s\n", str->data);
+  printf("%d\n", str->length);
   mjstr_delete(str);
 }
 
@@ -32,7 +32,7 @@ void t3() {
   while (1) {
     inner = mjstrlist_get(str_list, i);
     if (!inner) break;
-    printf("%s\n", mjstr_tochar(inner));
+    printf("%s\n", inner->data);
     i++;
   }
   mjstrlist_delete(str_list);

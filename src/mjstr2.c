@@ -10,28 +10,26 @@ mjstr_Ready
 ===============================================================================
 */
 static bool mjstr_ready(mjstr str, unsigned int need_size) {
-  // string must not be null
-  if (!str) return false;
   // 1. have enough size, return true
-  if (need_size <= str->_total - str->_start) return true;
+  if (need_size <= str->_total - (str->data - str->_data_start)) return true;
   // 2. no need to realloc
   if (need_size <= str->_total) {
-    memmove(str->_data, str->_data + str->_start, str->_length);
-    str->_start = 0;
+    memmove(str->_data_start, str->data, str->length);
+    str->_data_start = str->data;
     return true;
   }
   // 3. need to realloc, get new size to alloc
   unsigned int new_total = 30 + need_size + (need_size >> 3);
   char* new_data = (char*) malloc(new_total);
   if (!new_data) return false;
-  memcpy(new_data, str->_data + str->_start, str->_length); 
+  memcpy(new_data, str->data, str->length); 
   // free old buffer
-  if (str->_data != str->_data_buf) free(str->_data);
+  if (str->_data_start != str->_data_buf) free(str->_data_start);
   // set str
-  str->_start = 0;
   str->_total = new_total; 
-  str->_data  = new_data;
-  str->_data[str->_start + str->_length] = 0;
+  str->_data_start = new_data;
+  str->data = str->_data_start;
+  str->data[str->length] = 0;
   return true;
 }
 
@@ -42,7 +40,7 @@ mjstr_ReadyPlus
 ===============================================================================
 */
 static bool mjstr_readyplus(mjstr str, unsigned int need_size_plus) {
-  return mjstr_ready(str, str->_length + need_size_plus);
+  return mjstr_ready(str, str->length + need_size_plus);
 }
 
 /*
@@ -53,8 +51,7 @@ mjstr_Copy
 */
 bool mjstr_copy(mjstr str_to, mjstr str_from) {
   if (!str_to || !str_from) return false;
-  return mjstr_copyb(str_to, str_from->_data + str_from->_start, 
-      str_from->_length);
+  return mjstr_copyb(str_to, str_from->data, str_from->length);
 }
 
 /*
@@ -75,14 +72,16 @@ mjstr_CopyB
 ===============================================================================
 */
 bool mjstr_copyb(mjstr str, const char* src, unsigned int len) {
+  // sanity check
+  if (!str || !src) return false;
   // extend if needed
   if (!mjstr_ready(str, len + 1)) return false;
   // copy string
-  memcpy(str->_data, src, len);
+  memcpy(str->_data_start, src, len);
   // set length and data
-  str->_start   = 0;
-  str->_length  = len;          
-  str->_data[str->_start + str->_length] = 0;
+  str->length = len;          
+  str->data   = str->_data_start;
+  str->data[str->length] = 0;
   return true;
 }
 
@@ -93,8 +92,8 @@ mjstr_Cat
 ===============================================================================
 */
 bool mjstr_cat(mjstr str_to, mjstr str_from) {
-  return mjstr_catb(str_to, str_from->_data + str_from->_start, 
-      str_from->_length);
+  if (!str_to || !str_from) return false;
+  return mjstr_catb(str_to, str_from->data, str_from->length);
 }
 
 /*
@@ -104,6 +103,7 @@ mjstr_CatS
 ===============================================================================
 */
 bool mjstr_cats(mjstr str, const char* src) {
+  if (!str || !src) return false;
   return mjstr_catb(str, src, strlen(src));
 }
 
@@ -114,12 +114,13 @@ mjstr_CatB
 ===============================================================================
 */
 bool mjstr_catb(mjstr str, const char* src, unsigned int len) {
+  if (!str || !src) return false;
   // extend if needed
   if (!mjstr_readyplus(str, len + 1)) return false;
   // copy string
-  memcpy(str->_data + str->_start + str->_length, src, len);            
-  str->_length += len;
-  str->_data[str->_start + str->_length] = 0;                
+  memcpy(str->data + str->length, src, len);            
+  str->length += len;
+  str->data[str->length] = 0;                
   return true;
 }
 
@@ -131,11 +132,12 @@ mjstr_clean
 */
 bool mjstr_clean(mjstr str) {
   if (!str) return false;
-  str->_start = 0;
-  str->_length = 0;
-  str->_data[0] = 0;
+  str->data = str->_data_start;
+  str->length = 0;
+  str->data[str->length] = 0;
   return true;
 }
+
 /*
 ===============================================================================
 mjstr_Consume
@@ -144,39 +146,18 @@ mjstr_Consume
 */
 int mjstr_consume(mjstr str, unsigned int len) {
   // sanity check
-  if (len <= 0) return 0;
+  if (!str || len <= 0) return 0;
   // len is too large
-  if (len >= str->_length) {
-    int ret = str->_length;
+  if (len >= str->length) {
+    int ret = str->length;
     mjstr_clean(str);
     return ret; 
   }
   // move data and consume
-  str->_start   += len;
-  str->_length  -= len;
-  str->_data[str->_start + str->_length] = 0;
+  str->data   += len;
+  str->length -= len;
+  str->data[str->length] = 0;
   return len;
-}
-
-/*
-===============================================================================
-mjstr_tostr
-  return mjstr char*
-===============================================================================
-*/
-char* mjstr_tochar(mjstr str) {
-  return str->_data + str->_start;
-}
-
-/*
-===============================================================================
-mjstr_get_length
-  get mjstr length
-===============================================================================
-*/
-int mjstr_get_length(mjstr str) {
-  if (!str) return -1;
-  return str->_length;
 }
 
 /*
@@ -187,15 +168,15 @@ mjstr_RConsume
 */
 int mjstr_rconsume(mjstr str, unsigned int len) {
   // sanity check
-  if (len <= 0) return 0;
+  if (!str || len <= 0) return 0;
   // adjust length
-  if (str->_length < len) {
-    str->_start = 0;
-    str->_length = 0;
+  if (str->length < len) {
+    str->data = str->_data_start;
+    str->length = 0;
   } else {
-    str->_length -= len;
+    str->length -= len;
   }
-  str->_data[str->_start + str->_length] = 0;
+  str->data[str->length] = 0;
   return len;
 }
 
@@ -209,12 +190,11 @@ mjstr_Search
 */
 int mjstr_search(mjstr str, const char* split) {
   // sanity check
-  if (str == NULL || str->_data == NULL || str->_length == 0 || split == NULL)
-    return -1;
+  if (!str || !str->length || !split) return -1;
   // get split point
-  char* point = strstr(str->_data + str->_start, split);
-  if (point == NULL) return -1;
-  return point - str->_data - str->_start;
+  char* point = strstr(str->data, split);
+  if (!point) return -1;
+  return point - str->data;
 }
 
 /*
@@ -228,9 +208,9 @@ void mjstr_lstrim(mjstr str) {
   if (!str) return;
   // get pos 
   int pos;
-  for (pos = str->_start; pos < str->_start + str->_length; pos++) {
-    if (str->_data[pos] == '\t' || str->_data[pos] == ' ' ||
-        str->_data[pos] == '\r' || str->_data[pos] == '\n') continue;
+  for (pos = 0; pos < str->length; pos++) {
+    if (str->data[pos] == '\t' || str->data[pos] == ' ' ||
+        str->data[pos] == '\r' || str->data[pos] == '\n') continue;
     break;
   }
   mjstr_consume(str, pos);
@@ -247,13 +227,13 @@ void mjstr_rstrim(mjstr str) {
   if (!str) return;
   // get pos from right
   int pos;
-  for (pos = str->_start + str->_length - 1; pos >= str->_start; pos--) {
-    if (str->_data[pos] == '\t' || str->_data[pos] == ' ' ||
-        str->_data[pos] == '\r' || str->_data[pos] == '\n') continue;
+  for (pos = str->length - 1; pos >= 0; pos--) {
+    if (str->data[pos] == '\t' || str->data[pos] == ' ' ||
+        str->data[pos] == '\r' || str->data[pos] == '\n') continue;
     break;
   }
-  str->_length = pos + 1 - str->_start;
-  str->_data[str->_start + str->_length] = 0;
+  str->length = pos + 1;
+  str->data[str->length] = 0;
 }
 
 /*
@@ -276,22 +256,20 @@ mjstr_Split
 */
 bool mjstr_split(mjstr str, const char* split, mjstrlist str_list) {
   // sanity check
-  if (!str || !str_list) return false;
+  if (!str || !split || !str_list) return false;
   // split from left to right
   int start = 0;
-  while (start < str->_length) {
+  while (start < str->length) {
     // split one by one
-    char* point = strstr(str->_data + str->_start + start, split);
+    char* point = strstr(str->data + start, split);
     if (!point) break;
     // add to string
-    if (point - str->_data - str->_start != start) {
-      mjstrlist_addb(str_list, str->_data + str->_start + start, 
-          point - str->_data - str->_start - start);
+    if (point != str->data + start) {
+      mjstrlist_addb(str_list, str->data + start, point - str->data - start);
     }
-    start = point - str->_data - str->_start + strlen(split);
+    start = point - str->data + strlen(split);
   }
-  mjstrlist_addb(str_list, str->_data + str->_start + start, 
-      str->_length - start);  
+  mjstrlist_addb(str_list, str->data + start, str->length - start);  
   return true;
 }
 
@@ -302,17 +280,16 @@ mjstr_Cmp
 ===============================================================================
 */
 int mjstr_cmp(mjstr str1, mjstr str2) {
-  if (str1 == NULL && str2 == NULL) return 0;
-  if (str1 == NULL && str2 != NULL) return -1;
-  if (str1 != NULL && str2 == NULL) return 1;
+  if (!str1 && !str2) return 0;
+  if (!str1 && str2) return -1;
+  if (str1 && !str2) return 1;
   // get minlen
-  int minlen = (str1->_length > str2->_length) ? str2->_length : str1->_length;
-  int ret = memcmp(str1->_data + str1->_start, str2->_data + str2->_start, 
-      minlen);
-  if (ret != 0) return ret;
+  int minlen = (str1->length > str2->length) ? str2->length : str1->length;
+  int ret = memcmp(str1->data, str2->data, minlen);
+  if (ret) return ret;
   // length is equal  
-  if (str1->_length == str2->_length) return 0;
-  if (str1->_length > str2->_length) return 1;
+  if (str1->length == str2->length) return 0;
+  if (str1->length > str2->length) return 1;
   return -1;
 }
 
@@ -324,13 +301,10 @@ mjstr_ToLower
 */
 bool mjstr_tolower(mjstr str) {
   // sanity check
-  if (!str) {
-    MJLOG_ERR("str is null");
-    return false;
-  }
+  if (!str) return false;
   // change string
-  for (int i = str->_start; i < str->_start + str->_length; i++) {
-    if (str->_data[i] >= 'A' && str->_data[i] <= 'Z') str->_data[i] += 32;
+  for (int i = 0; i < str->length; i++) {
+    if (str->data[i] >= 'A' && str->data[i] <= 'Z') str->data[i] += 32;
   }
   return true;
 }
@@ -343,13 +317,10 @@ mjstr_ToUpper
 */
 bool mjstr_toupper(mjstr str) {
   // sanity check
-  if (!str) {
-    MJLOG_ERR( "str is Null" );
-    return false;
-  }
+  if (!str) return false;
   // change string
-  for (int i = str->_start; i < str->_start + str->_length; i++) {
-    if (str->_data[i] >= 'a' && str->_data[i] <= 'z') str->_data[i] -= 32;
+  for (int i = 0; i < str->length; i++) {
+    if (str->data[i] >= 'a' && str->data[i] <= 'z') str->data[i] -= 32;
   }
   return true;
 }
@@ -364,7 +335,8 @@ mjstr mjstr_new(unsigned int default_len) {
   mjstr str = (mjstr) calloc(1, sizeof(struct mjstr) + 
       default_len * sizeof(char));
   if (!str) return NULL;
-  str->_data = str->_data_buf;
+  str->_data_start = str->_data_buf;
+  str->data = str->_data_start;
   str->_total = default_len;
   return str;
 }
@@ -377,7 +349,7 @@ mjstr_Delete
 */
 bool mjstr_delete(mjstr str) {
   if (!str) return false;
-  if (str->_data != str->_data_buf) free(str->_data);
+  if (str->_data_start != str->_data_buf) free(str->_data_start);
   free(str);
   return true;
 }
@@ -426,7 +398,7 @@ mjstrlist_Add
 ===============================================================================
 */
 bool mjstrlist_add(mjstrlist str_list, mjstr str) {
-  return mjstrlist_addb(str_list, str->_data + str->_start, str->_length);
+  return mjstrlist_addb(str_list, str->data, str->length);
 }
 
 /*

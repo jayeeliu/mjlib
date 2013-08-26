@@ -5,10 +5,11 @@
 
 // mjstr struct 
 struct mjstr {
-  unsigned int  _start;         // start pos in data
-  unsigned int  _length;        // used length, string length
+//  unsigned int  _start;         // start pos in data
+  char*         data;
+  unsigned int  length;        // used length, string length
   unsigned int  _total;         // total length
-  char*         _data;          // point to the string
+  char*         _data_start;    // point to the string
   char          _data_buf[0];   // default data buffer
 };
 typedef struct mjstr* mjstr;
@@ -30,7 +31,7 @@ extern bool   mjstr_cats(mjstr str_to, const char* src);
 extern bool   mjstr_catb(mjstr str_to, const char* src, unsigned int len);
 extern bool   mjstr_clean(mjstr str);
 extern int    mjstr_cmp(mjstr str1, mjstr str2);
-extern int    mjstr_get_length(mjstr str);
+//extern int    mjstr_get_length(mjstr str);
 extern int    mjstr_consume(mjstr str, unsigned int len);
 extern int    mjstr_rconsume(mjstr str, unsigned int len);
 extern int    mjstr_search(mjstr str, const char* split);
@@ -38,7 +39,7 @@ extern bool   mjstr_split(mjstr str, const char* split, mjstrlist str_list);
 extern void   mjstr_strim(mjstr str);
 extern void   mjstr_lstrim(mjstr str);
 extern void   mjstr_rstrim(mjstr str);
-extern char*  mjstr_tochar(mjstr str);
+//extern char*  mjstr_tochar(mjstr str);
 extern bool   mjstr_tolower(mjstr str);
 extern bool   mjstr_toupper(mjstr str);
 
