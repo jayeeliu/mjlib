@@ -46,7 +46,7 @@ static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
       if (pos != -1) {
         mjstr_copyb(data, conn->_read_buf->data, pos);
         mjstr_consume(conn->_read_buf, pos + strlen(conn->_delim));
-        return data->length;
+        return data->length + strlen(conn->_delim);
       }
     } else if (conn->_readtype == MJCONNB_READ) {
       if (conn->_read_buf && conn->_read_buf->length > 0) {

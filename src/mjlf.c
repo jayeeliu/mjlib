@@ -38,6 +38,7 @@ static void* mjlf_routine(void* arg) {
     return NULL;
   }
   mjconnb_set_obj(conn, "server", srv, NULL);
+  mjconnb_set_obj(conn, "thread", thread, NULL);
   mjconnb_set_timeout(conn, srv->_read_timeout, srv->_write_timeout);
   // run server routine
   srv->_Routine(conn);
