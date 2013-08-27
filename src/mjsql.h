@@ -19,8 +19,12 @@ typedef struct mjsql* mjsql;
 
 extern bool      	mjsql_conn(mjsql handle, int retry);
 extern int       	mjsql_query(mjsql handle, const char* sql_str, int sql_len);
+extern bool       mjsql_store_result(mjsql handle);
 extern long long 	mjsql_real_escape_string(mjsql handle, char* to, 
                   		const char* from, unsigned long to_len, unsigned long from_len);
+
+extern int        mjsql_get_fields_num(mjsql handle);
+extern int        mjsql_get_rows_num(mjsql handle);
 
 extern bool				mjsql_next_row(mjsql handle);
 extern char*			mjsql_fetch_row_field(mjsql handle, unsigned int field_num);

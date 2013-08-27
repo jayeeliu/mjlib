@@ -5,7 +5,6 @@
 
 // mjstr struct 
 struct mjstr {
-//  unsigned int  _start;         // start pos in data
   char*         data;
   unsigned int  length;        // used length, string length
   unsigned int  _total;         // total length

@@ -17,6 +17,7 @@ struct mjsql_data {
 	MYSQL_RES*	result;
 	MYSQL_ROW		row;
 	int 				num_fields;
+  int         num_rows;
 };
 typedef struct mjsql_data* mjsql_data;
 
@@ -116,11 +117,16 @@ int mjsql_query(mjsql handle, const char* sql_str, int sql_len) {
     mysql_free_result(handle->data->result);
 		handle->data->result = NULL;
 	}
+  handle->data->row = NULL;
 	handle->data->num_fields = -1;
+  handle->data->num_rows = -1;
 	// run query
 	while (1) {
   	int retval = mysql_real_query(handle->data->msp, sql_str, sql_len);
-    if (!retval) return 0; // success
+    if (!retval) {
+      handle->data->num_rows = mysql_affected_rows(handle->data->msp);
+      return 0; // success
+    }
     // Here!!! some error happens
    	MJLOG_ERR("mysql query error:[%s][%s][%d][%d]:[%s]", sql_str, 
 				handle->db_host, handle->db_port, retval, 
@@ -156,7 +162,7 @@ mjsql_store_result
 	store result to mjsql
 ===============================================================================
 */
-static bool mjsql_store_result(mjsql handle) {
+bool mjsql_store_result(mjsql handle) {
 	// sanity check 
   if (!handle || !handle->data->msp) {
   	MJLOG_ERR("handle or handle->msp is null");
@@ -165,7 +171,10 @@ static bool mjsql_store_result(mjsql handle) {
 	// get result set
 	while (1) {
   	handle->data->result = mysql_store_result(handle->data->msp);
-    if (handle->data->result) return handle->data->result;
+    if (handle->data->result) {
+      handle->data->num_rows = mysql_affected_rows(handle->data->msp);
+      return true;
+    }
   	// get error number 
   	int err = mysql_errno(handle->data->msp);
     if (!err) break;  // no error return 
@@ -188,7 +197,7 @@ static bool mjsql_store_result(mjsql handle) {
    	MJLOG_EMERG("Mysql Unknow error. mysql failed.");
     break;
 	}
- 	return true;
+ 	return false;
 }
 
 bool mjsql_next_row(mjsql handle) {
@@ -203,19 +212,40 @@ bool mjsql_next_row(mjsql handle) {
 	}
 	handle->data->num_fields = mysql_num_fields(handle->data->result);
 	handle->data->row = mysql_fetch_row(handle->data->result);
+  if (!handle->data->row) return false;
 	return true;
 }
 
-char* mjsql_fetch_row(mjsql handle, unsigned int field_num) {
+char* mjsql_fetch_row_field(mjsql handle, unsigned int field_num) {
 	if (!handle) {
 		MJLOG_ERR("mjsql handle is null");
 		return NULL;
 	}
-	if (field_num > handle->data->num_fields) {
+	if (field_num >= handle->data->num_fields) {
 		MJLOG_ERR("field_num outof index");
 		return NULL;
 	}
-	return handle->data->row[field_num - 1];
+  if (!handle->data->row) {
+    MJLOG_ERR("row is null");
+    return NULL;
+  }
+	return handle->data->row[field_num];
+}
+
+int mjsql_get_fields_num(mjsql handle) {
+  if (!handle) {
+    MJLOG_ERR("mjsql handle is null");
+    return -1;
+  }
+  return handle->data->num_fields;
+}
+
+int mjsql_get_rows_num(mjsql handle) {
+  if (!handle) {
+    MJLOG_ERR("mjsql handle is null");
+    return -1;
+  }
+  return handle->data->num_rows;
 }
 
 /*
@@ -282,6 +312,7 @@ mjsql mjsql_new(const char* db_host, const char* db_user, const char* db_pass,
 	}
  	handle->data->msp 				= NULL;    
 	handle->data->result 			= NULL;
+  handle->data->row         = NULL;
 	handle->data->num_fields 	= -1;
   // store parameter
 	strncpy(handle->db_host, db_host, MAX_NAME_LEN);
@@ -306,10 +337,9 @@ bool mjsql_delete(mjsql handle) {
   	MJLOG_ERR("handle is null");
   	return false;
  	}
-	if (handle->data) {
-		if (handle->data->msp) mysql_close(handle->data->msp);
-		free(handle->data);
-	}
+  if (handle->data->result) mysql_free_result(handle->data->result); 
+	if (handle->data->msp) mysql_close(handle->data->msp);
+  free(handle->data);
 	free(handle);
 	return true;
 }
