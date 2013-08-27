@@ -368,16 +368,17 @@ static bool mjstrlist_ready(mjstrlist str_list, unsigned int need_size) {
   if (need_size <= total) return true;
   // realloc space
   str_list->_total = 30 + need_size + (need_size >> 3);
-  mjstr* new_data = (mjstr*) realloc(str_list->_data, 
+  mjstr* new_data = (mjstr*) realloc(str_list->data, 
       str_list->_total * sizeof(mjstr));
   if (!new_data) {
     str_list->_total = total;
     return false;
   }
-  str_list->_data = new_data;
+  str_list->data = new_data;
   // clean other
-  for (int i = str_list->_length; i < str_list->_total; i++) 
-    str_list->_data[i] = NULL;
+  for (int i = str_list->length; i < str_list->_total; i++) {
+    str_list->data[i] = NULL;
+  }
   return true;
 }
 
@@ -388,7 +389,8 @@ mjstrlist_ReadyPlus
 ===============================================================================
 */
 static bool mjstrlist_readyplus(mjstrlist str_list, unsigned int n) {
-  return mjstrlist_ready(str_list, str_list->_length + n);
+  if (!str_list) return false;
+  return mjstrlist_ready(str_list, str_list->length + n);
 }
  
 /*
@@ -398,6 +400,7 @@ mjstrlist_Add
 ===============================================================================
 */
 bool mjstrlist_add(mjstrlist str_list, mjstr str) {
+  if (!str_list || !str) return false;
   return mjstrlist_addb(str_list, str->data, str->length);
 }
 
@@ -407,8 +410,9 @@ mjstrlist_AddS
   add str to strList
 ===============================================================================
 */
-bool mjstrlist_adds(mjstrlist strList, char* str) {
-  return mjstrlist_addb(strList, str, strlen(str));
+bool mjstrlist_adds(mjstrlist str_list, char* str) {
+  if (!str_list || !str) return false;
+  return mjstrlist_addb(str_list, str, strlen(str));
 }
 
 /*
@@ -419,16 +423,16 @@ mjstrlist_AddB
 */
 bool mjstrlist_addb(mjstrlist str_list, char* str, int len) {
   // sanity check
-  if (!str_list) return false;
+  if (!str_list || !str) return false;
   // alloc enough space
   if (!mjstrlist_readyplus(str_list, 1)) return false;
   // copy string
-  if (!str_list->_data[str_list->_length]) {
-    str_list->_data[str_list->_length] = mjstr_new(80);
-    if (!str_list->_data[str_list->_length]) return false;
+  if (!str_list->data[str_list->length]) {
+    str_list->data[str_list->length] = mjstr_new(80);
+    if (!str_list->data[str_list->length]) return false;
   }
-  mjstr_copyb(str_list->_data[str_list->_length], str, len);
-  str_list->_length++;
+  mjstr_copyb(str_list->data[str_list->length], str, len);
+  str_list->length++;
   return true;
 }
 
@@ -439,8 +443,8 @@ mjstrlist_Get
 ===============================================================================
 */
 mjstr mjstrlist_get(mjstrlist str_list, unsigned int idx) {
-  if (!str_list || idx >= str_list->_length) return NULL;
-  return str_list->_data[idx];
+  if (!str_list || idx >= str_list->length) return NULL;
+  return str_list->data[idx];
 }
 
 /*
@@ -451,7 +455,7 @@ mjstrlist_Clean
 */
 bool mjstrlist_clean(mjstrlist str_list) {
   if (!str_list) return false;
-  str_list->_length = 0;    
+  str_list->length = 0;    
   return true;
 }
 
@@ -477,9 +481,9 @@ bool mjstrlist_delete(mjstrlist str_list) {
   if (!str_list) return false;
   // clean strlist
   for (int i = 0; i < str_list->_total; i++) {
-    if (str_list->_data[i]) mjstr_delete(str_list->_data[i]);
+    if (str_list->data[i]) mjstr_delete(str_list->data[i]);
   }
-  free(str_list->_data);
+  free(str_list->data);
   free(str_list);
   return true;
 }

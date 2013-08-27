@@ -64,14 +64,14 @@ bool mjhttpreq_init(mjhttpreq req, mjstr data) {
     MJLOG_ERR("mjstrlist_New error");
     goto failout1;
   }
-  mjstr_split(header->_data[0], " ", field);
+  mjstr_split(header->data[0], " ", field);
   // check cmd length
-  if (field->_length < 2) {
+  if (field->length < 2) {
     MJLOG_ERR("parse header error");
     goto failout2;
   }
   // get method type
-  const char* method = mjstr_tochar(field->_data[0]);
+  const char* method = field->data[0]->data;
   if (!strcasecmp(method, "GET")) { 
     req->method = GET_METHOD;
   } else if (!strcasecmp(method, "POST")) {
@@ -80,14 +80,14 @@ bool mjhttpreq_init(mjhttpreq req, mjstr data) {
     req->method = UNKNOWN_METHOD;
   }
   // get access location
-  mjstr_copy(req->location, field->_data[1]);
+  mjstr_copy(req->location, field->data[1]);
   mjstrlist_clean(field);
   // parse other header
-  for (int i = 1; i < header->_length; i++) {
-    if (!header->_data[i]) break;
-    mjstr_split(header->_data[i], ":", field);
-    if (!field || field->_length < 2) continue;
-    mjmap_set_str(req->req_header, mjstr_tochar(field->_data[0]), field->_data[1]);
+  for (int i = 1; i < header->length; i++) {
+    if (!header->data[i]) break;
+    mjstr_split(header->data[i], ":", field);
+    if (!field || field->length < 2) continue;
+    mjmap_set_str(req->req_header, field->data[0]->data, field->data[1]);
     mjstrlist_clean(field);
   }
   // clean strlist

@@ -3,7 +3,7 @@
 #include "mjsock.h"
 #include "mjlf.h"
 
-int count = 0;
+//int count = 0;
 
 void* def(void* arg) {
   mjconnb conn = (mjconnb) arg;
@@ -14,9 +14,9 @@ void* def(void* arg) {
 void* main0(void* arg) {
   mjconnb conn = (mjconnb) arg;
   mjconnb_writes(conn, "main0");
-  count++;
-  mjlf server = mjconnb_get_obj(conn, "server");
-  if (count > 10000) mjlf_set_stop(server, true);
+//  count++;
+//  mjlf server = mjconnb_get_obj(conn, "server");
+//  if (count > 10000) mjlf_set_stop(server, true);
   return NULL;
 }
 
@@ -34,7 +34,7 @@ struct mjhttpurl urls[] = {
 
 int main() {
   int srv_sock = mjsock_tcp_server(7879);
-  mjlf srv = mjlf_new(srv_sock, http_mjlf_routine, 2, http_mjlf_init, urls,
+  mjlf srv = mjlf_new(srv_sock, http_mjlf_routine, 20, http_mjlf_init, urls,
       NULL, NULL);
   mjlf_run(srv);
   mjlf_delete(srv);

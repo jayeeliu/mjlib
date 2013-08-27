@@ -152,7 +152,7 @@ static mjitem mjmap_search(mjmap map, const char* key) {
   mjitem item = NULL;
   struct hlist_node *entry;
   hlist_for_each_entry(item, entry, &map->elem[index], mapNode) { 
-    if (strcmp(mjstr_tochar(item->key), key) == 0) return item;
+    if (strcmp(item->key->data, key) == 0) return item;
   }
   return NULL;
 }
@@ -167,7 +167,7 @@ mjmap_Add
 ===============================================================================
 */
 int mjmap_set_str(mjmap map, const char* key, mjstr value) {
-  return mjmap_set_strs(map, key, mjstr_tochar(value));
+  return mjmap_set_strs(map, key, value->data);
 }
 
 /*

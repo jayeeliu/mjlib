@@ -36,24 +36,24 @@ static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
   for (;;) {
     // buffer has enough data, copy and return
     if (conn->_readtype == MJCONNB_READBYTES) {
-      if (conn->_rbytes <= conn->_read_buf->_length) { 
-        mjstr_copyb(data, mjstr_tochar(conn->_read_buf), conn->_rbytes);
+      if (conn->_rbytes <= conn->_read_buf->length) { 
+        mjstr_copyb(data, conn->_read_buf->data, conn->_rbytes);
         mjstr_consume(conn->_read_buf, conn->_rbytes);
-        return data->_length;
+        return data->length;
       }
     } else if (conn->_readtype == MJCONNB_READUNTIL) {
       int pos = mjstr_search(conn->_read_buf, conn->_delim);
       if (pos != -1) {
-        mjstr_copyb(data, mjstr_tochar(conn->_read_buf), pos);
+        mjstr_copyb(data, conn->_read_buf->data, pos);
         mjstr_consume(conn->_read_buf, pos + strlen(conn->_delim));
-        return data->_length;
+        return data->length;
       }
     } else if (conn->_readtype == MJCONNB_READ) {
-      if (conn->_read_buf && conn->_read_buf->_length > 0) {
-        mjstr_copyb(data, mjstr_tochar(conn->_read_buf), 
-            conn->_read_buf->_length);
-        mjstr_consume(conn->_read_buf, conn->_read_buf->_length);
-        return data->_length;
+      if (conn->_read_buf && conn->_read_buf->length > 0) {
+        mjstr_copyb(data, conn->_read_buf->data, 
+            conn->_read_buf->length);
+        mjstr_consume(conn->_read_buf, conn->_read_buf->length);
+        return data->length;
       }
     }
     // we must read data  
@@ -82,7 +82,7 @@ static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
   }
   // read error or read close, copy data
   mjstr_copy(data, conn->_read_buf);
-  mjstr_consume(conn->_read_buf, conn->_read_buf->_length);
+  mjstr_consume(conn->_read_buf, conn->_read_buf->length);
   return ret;
 }
 
@@ -143,11 +143,11 @@ mjconnb_Write
 ===============================================================================
 */
 int mjconnb_write(mjconnb conn, mjstr data) {
-  if (!conn || !data || !data->_length) {
+  if (!conn || !data || !data->length) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
-  return mjconnb_writeb(conn, mjstr_tochar(data), data->_length);
+  return mjconnb_writeb(conn, data->data, data->length);
 }
 
 /*

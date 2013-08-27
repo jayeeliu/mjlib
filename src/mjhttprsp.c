@@ -25,7 +25,7 @@ mjHttpRsp_HeaderToStr
 */
 mjstr mjHttpRsp_HeaderToStr(mjHttpRsp rsp) {
     // alloc new mjstr
-    mjstr str = mjstr_new();
+    mjstr str = mjstr_new(80);
     if (!str) {
         MJLOG_ERR("mjstr_New error");
         return NULL;

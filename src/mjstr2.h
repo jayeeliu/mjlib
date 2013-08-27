@@ -16,9 +16,9 @@ typedef struct mjstr* mjstr;
 
 // mjstrlist struct
 struct mjstrlist {
-  unsigned int  _length;         // used length
   unsigned int  _total;          // count of mjstr
-  mjstr*        _data;           // mjstr list
+  mjstr*        data;           // mjstr list
+  unsigned int  length;         // used length
 };
 typedef struct mjstrlist* mjstrlist;
 
@@ -31,7 +31,6 @@ extern bool   mjstr_cats(mjstr str_to, const char* src);
 extern bool   mjstr_catb(mjstr str_to, const char* src, unsigned int len);
 extern bool   mjstr_clean(mjstr str);
 extern int    mjstr_cmp(mjstr str1, mjstr str2);
-//extern int    mjstr_get_length(mjstr str);
 extern int    mjstr_consume(mjstr str, unsigned int len);
 extern int    mjstr_rconsume(mjstr str, unsigned int len);
 extern int    mjstr_search(mjstr str, const char* split);
@@ -39,7 +38,6 @@ extern bool   mjstr_split(mjstr str, const char* split, mjstrlist str_list);
 extern void   mjstr_strim(mjstr str);
 extern void   mjstr_lstrim(mjstr str);
 extern void   mjstr_rstrim(mjstr str);
-//extern char*  mjstr_tochar(mjstr str);
 extern bool   mjstr_tolower(mjstr str);
 extern bool   mjstr_toupper(mjstr str);
 
