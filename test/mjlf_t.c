@@ -8,6 +8,13 @@
 #include "mjproto_txt.h"
 #include "mjsql.h"
 
+static mjsql get_sql_conn(mjproto_txt_data cmd_data) {
+  mjconnb conn = (mjconnb) cmd_data->conn;
+  mjthread thread = mjconnb_get_obj(conn, "thread");
+  mjsql sql_conn = mjthread_get_obj(thread, "sql_conn");
+  return sql_conn;
+}
+
 void* GetRoutine(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
@@ -16,9 +23,7 @@ void* GetRoutine(void* arg) {
     return NULL;
   }
 
-  mjconnb conn = (mjconnb) cmd_data->conn;
-  mjthread thread = mjconnb_get_obj(conn, "thread");
-  mjsql sql_conn = mjthread_get_obj(thread, "sql_conn");
+  mjsql sql_conn = get_sql_conn(cmd_data);
   char sql_str[1024];
   sprintf(sql_str, "select value from kv where key_name=\"%s\"", args->data[1]->data);
   mjsql_query(sql_conn, sql_str, strlen(sql_str));
