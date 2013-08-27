@@ -10,11 +10,24 @@
 
 void* GetRoutine(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
+  mjstrlist args = cmd_data->args;
+  if (args->length != 2) {
+    mjconnb_writes(cmd_data->conn, "+ get command error\r\n");
+    return NULL;
+  }
+
   mjconnb conn = (mjconnb) cmd_data->conn;
   mjthread thread = mjconnb_get_obj(conn, "thread");
   mjsql sql_conn = mjthread_get_obj(thread, "sql_conn");
-  char* sql_str = "select * from t";
+  char sql_str[1024];
+  sprintf(sql_str, "select value from kv where key_name=\"%s\"", args->data[1]->data);
   mjsql_query(sql_conn, sql_str, strlen(sql_str));
+  mjsql_store_result(sql_conn);
+  if (mjsql_get_rows_num(sql_conn) == 0) {
+    mjconnb_writes(cmd_data->conn, "+ no value found\r\n");
+    return NULL;
+  }
+
   while (mjsql_next_row(sql_conn)) {
     mjconnb_writes(cmd_data->conn, mjsql_fetch_row_field(sql_conn, 0));
     mjconnb_writes(cmd_data->conn, "\r\n");
@@ -24,6 +37,11 @@ void* GetRoutine(void* arg) {
 
 void* PutRoutine(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
+  mjstrlist args = cmd_data->args;
+  if (args->length != 3) {
+    mjconnb_writes(cmd_data->conn, "+ put command error\r\n");
+    return NULL;
+  }
   mjconnb_writes(cmd_data->conn, "Put Called\r\n");
   return NULL;
 }
