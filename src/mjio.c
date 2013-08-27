@@ -94,7 +94,7 @@ mjio mjio_new(const char* fileName) {
     goto failout2;
   }
   // alloc mjio rbuf
-  io->_read_buf = mjstr_new();
+  io->_read_buf = mjstr_new(128);
   if (!io->_read_buf) {
     MJLOG_ERR("mjstr_New error");
     goto failout3;

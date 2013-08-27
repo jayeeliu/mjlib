@@ -21,7 +21,7 @@ mjTxt_RunCmd
 static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
 		mjproto_txt_routine_list routine_list) {
   // read data
-  mjstr data = mjstr_new();
+  mjstr data = mjstr_new(80);
   if (!data) {
 		mjconnb_writes(conn, "+ inner error\r\n");
     MJLOG_ERR("data create error");

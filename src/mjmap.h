@@ -2,7 +2,7 @@
 #define _MJMAP_H
 
 #include "mjlist.h"
-#include "mjstr2.h"
+#include "mjstr.h"
 #include "mjproc.h"
 
 #define MJITEM_STR  1

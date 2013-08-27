@@ -1,4 +1,4 @@
-#include "mjstr2.h"
+#include "mjstr.h"
 #include <stdio.h>
 
 void t1() {

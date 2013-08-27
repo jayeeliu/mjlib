@@ -4,7 +4,7 @@
 #include "mjproc.h"
 #include "mjhttpreq.h"
 #include "mjhttprsp.h"
-#include "mjstr2.h"
+#include "mjstr.h"
 #include "mjreg.h"
 
 // per conn http data

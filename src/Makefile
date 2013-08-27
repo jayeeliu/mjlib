@@ -15,13 +15,5 @@ all:$(OBJS)
 	gcc -g -fPIC -shared -pthread $(OBJS) $(JPWOBJS) -o $(BUILD)/libmj.so
 	ar -r $(BUILD)/libmj.a $(OBJS) $(JPWOBJS)
 
-test:
-	gcc -pg -g -std=gnu99 mjsig.c mjcomm.c mjpq.c mjev.c mjstr2.c mjtcpsrv.c mjlog.c mjsock.c mjconn.c mjmap.c mjtcpsrv_t.c -o mjtcpsrv_t
-	gcc -pg -g -std=gnu99 -lpthread mjhttpreq.c mjreg.c mjproto_http.c mjsig.c mjthread.c mjthreadpool.c mjlf.c mjlog.c mjsock.c mjstr2.c mjmap.c mjconnb.c mjproto_http3_t.c -o mjproto_http3_t
-
-test_str:
-	gcc -std=gnu99 -g mjlog.c mjstr2.c mjstr2_t.c -o mjstr2_t
-
 clean:
 	rm -rf $(OBJS)
-	rm -rf mjtcpsrv_t gmon.out mjproto_http3_t

@@ -1,7 +1,7 @@
 #ifndef _MJCONN_H
 #define _MJCONN_H
 
-#include "mjstr2.h"
+#include "mjstr.h"
 #include "mjev.h"
 #include "mjthread.h"
 

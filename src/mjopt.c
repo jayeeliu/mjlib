@@ -90,7 +90,7 @@ bool mjopt_parse_conf(const char* fileName) {
     MJLOG_ERR("mjio alloc error");
     return false;
   }
-  mjstr line = mjstr_new();
+  mjstr line = mjstr_new(128);
   if (!line) {
     MJLOG_ERR("mjstr_New error");
     mjio_delete(io);

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mjlog.h"
-#include "mjstr2.h"
+#include "mjstr.h"
 
 /*
 ===============================================================================

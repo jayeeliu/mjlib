@@ -1,7 +1,7 @@
 #ifndef __MJHTTPREQ_H
 #define __MJHTTPREQ_H
 
-#include "mjstr2.h"
+#include "mjstr.h"
 #include "mjmap.h"
 
 #define NONE_METHOD     0
