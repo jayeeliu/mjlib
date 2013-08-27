@@ -7,6 +7,8 @@
 
 #define MJITEM_STR  1
 #define MJITEM_OBJ  2
+#define MJITEM_MAP  3
+#define MJITEM_LIST 4
 
 struct mjitem {
   mjstr             key;

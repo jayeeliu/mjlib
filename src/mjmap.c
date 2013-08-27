@@ -313,16 +313,6 @@ bool mjmap_delete(mjmap map) {
   // sanity check
   if (!map) return false;
   // get and clean mjitem
-	/*
-  for (int i = 0; i < map->len; i++) {
-    mjitem item = NULL;
-    struct hlist_node *entry, *next;
-    hlist_for_each_entry_safe(item, entry, next, &map->elem[i], mapNode) {
-      hlist_del(&item->mapNode);
-      mjitem_delete(item);
-    }
-  }
-	*/
 	mjitem item, tmp;
 	list_for_each_entry_safe(item, tmp, &map->listHead, listNode) {
 		list_del(&item->listNode);
