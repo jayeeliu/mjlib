@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
       mjopt_get_value_int(NULL, "thread", &conf.thread);
       mjopt_get_value_int(NULL, "readtimeout", &conf.readtimeout);
       mjopt_get_value_int(NULL, "writetimeout", &conf.writetimeout);
-      mjopt_get_value_string(NULL, "mode", &conf.mode);
+      mjopt_get_value_string(NULL, "mode", conf.mode);
     }
   }
 
