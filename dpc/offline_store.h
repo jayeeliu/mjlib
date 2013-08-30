@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <ctype.h>
 #include "validator.h"
-#include "offline_store.h"
 #include "mjlf.h"
 #include "mjsock.h"
 #include "mjconnb.h"
@@ -35,5 +34,13 @@
     ) ENGINE = InnoDB DEFAULT CHARACTER SET = latin1", table)
 #define MJ_DROP(sql, table) sprintf(sql, "DROP TABLE `%s`", table)
 
+
+extern void* offline_get(void* arg);
+extern void* offline_put(void* arg);
+extern void* offline_del(void* arg);
+extern void* offline_quit(void* arg);
+extern void* offline_create(void* arg);
+extern void* offline_drop(void* arg);
+extern void* offline_thread_init(void* arg);
 
 #endif

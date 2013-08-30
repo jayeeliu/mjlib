@@ -68,7 +68,7 @@ static mjstr read_value(mjconnb conn, mjstr len) {
 /*
  * command: get table key\r\n
  */
-void* GetRoutine(void* arg) {
+void* offline_get(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
 
@@ -100,7 +100,7 @@ void* GetRoutine(void* arg) {
 /*
  * command: put table key value-length\r\nvalue-content
  */
-void* PutRoutine(void* arg) {
+void* offline_put(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
 
@@ -131,7 +131,7 @@ void* PutRoutine(void* arg) {
   return NULL;
 }
 
-void* DelRoutine(void* arg) {
+void* offline_del(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
 
@@ -154,7 +154,7 @@ void* DelRoutine(void* arg) {
   return NULL;
 }
 
-void* CreateRoutine(void* arg) {
+void* offline_create(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
 
@@ -175,7 +175,7 @@ void* CreateRoutine(void* arg) {
   return NULL;
 }
 
-void* DropRoutine(void* arg) {
+void* offline_drop(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
 
@@ -196,52 +196,25 @@ void* DropRoutine(void* arg) {
   return NULL;
 }
 
-void* QuitRoutine(void* arg) {
+void* offline_quit(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjproto_txt_finished(cmd_data);
   show_succ(cmd_data->conn, NULL);
   return NULL;
 }
 
-struct mjproto_txt_routine_list routine_list[] = {
-  {"get", GetRoutine},
-  {"put", PutRoutine},
-  {"del", DelRoutine},
-  {"create", CreateRoutine},
-  {"drop", DropRoutine},
-  {"quit", QuitRoutine},
-  {NULL, NULL},
-};
 
-static void* sql_quit(void* arg) {
+static void* online_clean(void* arg) {
   mjsql sql_conn = (mjsql) arg;
   mjsql_delete(sql_conn);
   return NULL;
 }
 
-static void* thread_init(void* arg) {
+void* offline_thread_init(void* arg) {
   mjthread thread = (mjthread) arg;
   mjsql sql_conn = mjsql_new("172.16.139.60", "test", "test", "test", 3308);
-  mjthread_set_obj(thread, "sql_conn", sql_conn, sql_quit);
+  mjthread_set_obj(thread, "sql_conn", sql_conn, online_clean);
   return NULL;
 }
 
-int main() {
-  int sfd = mjsock_tcp_server(17879);
-  if (sfd < 0) {
-    printf("mjsock_tcp_server error");
-    return 1;
-  }
-
-  mjlf server = mjlf_new(sfd, mjproto_txt_routine, 4, mjproto_txt_init,
-          routine_list, thread_init, NULL);
-  if (!server) {
-    printf("mjlf_New error");
-    return 1;
-  }
-  mjlf_set_timeout(server, 10000, 10000);
-  mjlf_run(server);
-  mjlf_delete(server);
-  return 0;
-}
 
