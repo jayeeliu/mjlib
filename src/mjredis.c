@@ -25,6 +25,12 @@ static bool mjredis_connect(mjredis handle) {
   return true;
 }
 
+/*
+===============================================================================
+mjredis_cmd_generic
+  run redis cmd
+===============================================================================
+*/
 static redisReply* mjredis_cmd_generic(mjredis handle, int* retval, 
     const char* format, ...) {
   // link is invalid try connect
@@ -178,6 +184,24 @@ int mjredis_lpush(mjredis handle, const char* key, const char* value) {
   return 0;
 }
 
+int mjredis_rpop(mjredis handle, const char* key, mjstr out_value) {
+  // sanity check
+  if (!handle || !key) {
+    MJLOG_ERR("redis handle or key is null");
+    return -1;
+  }
+  // call rpop
+  int retval;
+  redisReply* reply = mjredis_cmd_generic(handle, &retval, "RPOP %s", key);
+  if (!reply) {
+    MJLOG_ERR("mjredis_rpop error");
+    return retval;
+  }
+  MJLOG_ERR("type: %d", reply->type);
+  if (out_value) mjstr_copyb(out_value, reply->str, reply->len);
+  freeReplyObject(reply);
+  return 0;
+}
 
 /*
 ===============================================================================

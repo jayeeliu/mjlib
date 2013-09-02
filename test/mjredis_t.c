@@ -31,6 +31,16 @@ void fun2(mjredis redis_handle) {
   retval = mjredis_lpush(redis_handle, key, "value2");
   printf("lpush2 %d\n", retval);
 
+  mjstr out_value = mjstr_new(128);
+  retval = mjredis_rpop(redis_handle, key, out_value);
+  printf("retval: %d, rpop1 %s\n", retval, out_value->data);
+
+  retval = mjredis_rpop(redis_handle, key, out_value);
+  printf("retval: %d, rpop2 %s\n", retval, out_value->data);
+
+  retval = mjredis_rpop(redis_handle, key, out_value);
+  printf("retval: %d, rpop3 %s\n", retval, out_value->data);
+
   retval = mjredis_del(redis_handle, key);
   printf("del %d\n", retval);
 }
