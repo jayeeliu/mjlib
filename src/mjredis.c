@@ -1,29 +1,94 @@
 #include "mjredis.h"
 #include "mjlog.h"
 #include <stdlib.h>
+#include <string.h>
+
+/*
+===============================================================================
+mjredis_connect
+  connect to redis server
+  return 
+    true --- connect ok
+    false --- connect failure
+===============================================================================
+*/
+static bool mjredis_connect(mjredis handle) {
+  if (handle->_context) redisFree(handle->_context);
+  handle->_context = redisConnect(handle->_ip, handle->_port);
+  if (!handle->_context) return false; 
+  // check err code
+  if (handle->_context->err) {
+    redisFree(handle->_context);
+    handle->_context = NULL;
+    return false;
+  }
+  return true;
+}
+
+static redisReply* mjredis_cmd_generic(mjredis handle, int* retval, 
+    const char* format, ...) {
+  // link is invalid try connect
+  if (!handle->_context && !mjredis_connect(handle)) {
+    *retval = -2;
+    return NULL;
+  }
+  // run command
+  int retry = 1;
+  va_list ap;
+  redisReply* reply = NULL;
+  for (;;) {
+    // call redis command
+    va_start(ap, format);
+    reply = redisvCommand(handle->_context, format, ap);
+    va_end(ap);
+    // no link error break
+    if (reply) break;
+    if (!retry) {
+      MJLOG_ERR("max retry reached");
+      *retval = -2;
+      return NULL;
+    }
+    // re connect
+    if (!mjredis_connect(handle)) {
+      MJLOG_ERR("reconnect failed");
+      *retval = -2;
+      return NULL;
+    }
+    retry--;
+  }
+  // check reply error
+  if (reply->type == REDIS_REPLY_ERROR) {
+    freeReplyObject(reply);
+    *retval = -1;
+    return NULL;
+  }
+  *retval = 0;
+  return reply;
+}
 
 /*
 ===============================================================================
 mjredis_get
   get value from redis
   return 
+    -2 -- link error
     -1 -- error
     0 -- success, but no value found
     1 -- success, value in out_value
 ===============================================================================
 */
-int mjredis_get(mjredis redis_handle, const char* key, mjstr out_value) {
+int mjredis_get(mjredis handle, const char* key, mjstr out_value) {
   // sanity check
-  if (!redis_handle || !key) {
+  if (!handle || !key) {
     MJLOG_ERR("redis handle or key or value is null");
     return -1;
   }
-  // call get
-  redisReply* reply = redisCommand(redis_handle->context, "GET %s", key);
-  if (!reply || reply->type == REDIS_REPLY_ERROR) {
-    MJLOG_ERR("mjredis_get error");
-    freeReplyObject(reply);
-    return -1;
+  // call generic cmd
+  int retval;
+  redisReply* reply = mjredis_cmd_generic(handle, &retval, "GET %s", key);
+  if (!reply) {
+    MJLOG_ERR("mjredis get error");
+    return retval;
   }
   // no value found
   if (reply->type == REDIS_REPLY_NIL) {
@@ -31,9 +96,7 @@ int mjredis_get(mjredis redis_handle, const char* key, mjstr out_value) {
     return 0;
   }
   // copy value
-  if (out_value) {
-    mjstr_copyb(out_value, reply->str, reply->len);
-  }
+  if (out_value) mjstr_copyb(out_value, reply->str, reply->len);
   freeReplyObject(reply);
   return 1;
 }
@@ -46,19 +109,18 @@ mjredis_set
           0 -- success
 ===============================================================================
 */
-int mjredis_set(mjredis redis_handle, const char* key, const char* value) {
+int mjredis_set(mjredis handle, const char* key, const char* value) {
   // sanity check
-  if (!redis_handle || !key || !value) {
+  if (!handle || !key || !value) {
     MJLOG_ERR("redis handle or key or value is null");
     return -1;
   }
-  // call and return
-  redisReply* reply = redisCommand(redis_handle->context, "SET %s %s", key,
+  int retval;
+  redisReply* reply = mjredis_cmd_generic(handle, &retval, "SET %s %s", key, 
       value);
-  if (!reply || reply->type == REDIS_REPLY_ERROR) {
+  if (!reply) {
     MJLOG_ERR("mjredis_set error");
-    freeReplyObject(reply);
-    return -1;
+    return retval;
   }
   freeReplyObject(reply);
   return 0;
@@ -73,28 +135,49 @@ mjredis_del
         other -- numbers of deleted key 
 ===============================================================================
 */
-int mjredis_del(mjredis redis_handle, const char* key) {
+int mjredis_del(mjredis handle, const char* key) {
   // sanity check
-  if (!redis_handle || !key) {
+  if (!handle || !key) {
     MJLOG_ERR("redis handle or key is null");
     return -1;
   }
-  // call del
-  redisReply* reply = redisCommand(redis_handle->context, "DEL %s", key);
-  if (!reply || reply->type == REDIS_REPLY_ERROR) {
+  // call generic cmd
+  int retval;
+  redisReply* reply = mjredis_cmd_generic(handle, &retval, "DEL %s", key);
+  if (!reply) {
     MJLOG_ERR("mjredis_del error");
-    freeReplyObject(reply);
-    return -1;
+    return retval;
   }
+  // reply error check
   if (reply->type != REDIS_REPLY_INTEGER) {
     MJLOG_ERR("Oops it can't happen");
     freeReplyObject(reply);
     return -1;
   }
-  int retval = reply->integer;
+  // return number of deleted
+  retval = reply->integer;
   freeReplyObject(reply);
   return retval;
 }
+
+int mjredis_lpush(mjredis handle, const char* key, const char* value) {
+  // sanity check
+  if (!handle || !key || !value) {
+    MJLOG_ERR("redis handle or key or value is null");
+    return -1;
+  }
+  // call lpush
+  int retval;
+  redisReply* reply = mjredis_cmd_generic(handle, &retval, "LPUSH %s %s", key, 
+      value);
+  if (!reply) {
+    MJLOG_ERR("mjredis_lpush error");
+    return retval;
+  }
+  freeReplyObject(reply);
+  return 0;
+}
+
 
 /*
 ===============================================================================
@@ -103,21 +186,16 @@ mjredis_new
 ===============================================================================
 */
 mjredis mjredis_new(const char* ip, int port) {
-  mjredis redis_handle = (mjredis) calloc(1, sizeof(struct mjredis));
-  if (!redis_handle) return NULL;
+  mjredis handle = (mjredis) calloc(1, sizeof(struct mjredis));
+  if (!handle) return NULL;
+  strcpy(handle->_ip, ip); 
+  handle->_port = port;
   // connect to redis
-  redis_handle->context = redisConnect(ip, port);
-  if (!redis_handle->context) {
-    free(redis_handle);
+  if (!mjredis_connect(handle)) {
+    free(handle);
     return NULL;
   }
-  // connect error ?
-  if (redis_handle->context->err) {
-    redisFree(redis_handle->context);
-    free(redis_handle);
-    return NULL;
-  }
-  return redis_handle;
+  return handle;
 }
 
 /*
@@ -126,9 +204,9 @@ mjredis_delete
   delete mjredis
 ===============================================================================
 */
-bool mjredis_delete(mjredis redis_handle) {
-  if (!redis_handle) return false;
-  if (redis_handle->context) redisFree(redis_handle->context);
-  free(redis_handle);
+bool mjredis_delete(mjredis handle) {
+  if (!handle) return false;
+  if (handle->_context) redisFree(handle->_context);
+  free(handle);
   return true;
 }

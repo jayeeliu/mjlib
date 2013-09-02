@@ -1,23 +1,48 @@
 #include "mjredis.h"
 
+void fun1(mjredis redis_handle) {
+  const char* key = "test_mjredis";
+
+  int retval = mjredis_del(redis_handle, key);
+  printf("del %d\n", retval);
+  
+  retval = mjredis_set(redis_handle, key, "mjredis_value11111");
+  printf("set %d\n", retval);
+ 
+  mjstr result = mjstr_new(128);
+  mjredis_get(redis_handle, key, result);
+  if (result) {
+    printf("value: %s\n", result->data);
+    mjstr_delete(result);
+  }
+  retval = mjredis_del(redis_handle, key);
+  printf("del %d\n", retval);
+}
+
+void fun2(mjredis redis_handle) {
+  const char* key = "test_mjlist";
+
+  int retval = mjredis_del(redis_handle, key);
+  printf("del %d\n", retval);
+
+  retval = mjredis_lpush(redis_handle, key, "value1");
+  printf("lpush1 %d\n", retval);
+  
+  retval = mjredis_lpush(redis_handle, key, "value2");
+  printf("lpush2 %d\n", retval);
+
+  retval = mjredis_del(redis_handle, key);
+  printf("del %d\n", retval);
+}
+
 int main() {
   mjredis redis_handle = mjredis_new("127.0.0.1", 6379);
   if (!redis_handle) {
     printf("redis handle error\n");
     return 1;
   }
-  int retval = mjredis_del(redis_handle, "test_mjredis");
-  printf("del %d\n", retval);
-  retval = mjredis_set(redis_handle, "test_mjredis", "mjredis_value11111");
-  printf("set %d\n", retval);
-  mjstr result = mjstr_new(128);
-  mjredis_get(redis_handle, "test_mjredis", result);
-  if (result) {
-    printf("value: %s\n", result->data);
-    mjstr_delete(result);
-  }
-  retval = mjredis_del(redis_handle, "test_mjredis");
-  printf("del %d\n", retval);
+  fun1(redis_handle);
+  fun2(redis_handle);
   mjredis_delete(redis_handle);
   return 0;
 }

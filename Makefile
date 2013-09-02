@@ -5,6 +5,7 @@ BASE=$(PWD)
 all:
 	mkdir -p build
 	cd deps/libjpw; make
+	cd deps/hiredis; make noopt
 	cd src;	make
 	cd test; make
 	cd example; make
@@ -14,6 +15,7 @@ install:
 	cp build/libmj.so /usr/local/lib
 clean:
 	cd deps/libjpw; make clean
+	cd deps/hiredis; make clean
 	cd src; make clean
 	cd test; make clean
 	cd example; make clean
