@@ -35,14 +35,20 @@ void fun2(mjredis redis_handle) {
   retval = mjredis_rpop(redis_handle, key, out_value);
   printf("retval: %d, rpop1 %s\n", retval, out_value->data);
 
+  retval = mjredis_llen(redis_handle, key);
+  printf("llen retval: %d\n", retval);
+
   retval = mjredis_rpop(redis_handle, key, out_value);
   printf("retval: %d, rpop2 %s\n", retval, out_value->data);
 
+  mjstr_clean(out_value);
   retval = mjredis_rpop(redis_handle, key, out_value);
   printf("retval: %d, rpop3 %s\n", retval, out_value->data);
 
   retval = mjredis_del(redis_handle, key);
   printf("del %d\n", retval);
+
+  mjstr_delete(out_value);
 }
 
 int main() {

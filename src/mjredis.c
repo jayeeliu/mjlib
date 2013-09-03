@@ -184,6 +184,16 @@ int mjredis_lpush(mjredis handle, const char* key, const char* value) {
   return 0;
 }
 
+/*
+===============================================================================
+mjredis_rpop
+  rpop list
+  return -2 -- link error
+          -1 -- run error
+          0 -- success no data
+          1 -- success
+===============================================================================
+*/
 int mjredis_rpop(mjredis handle, const char* key, mjstr out_value) {
   // sanity check
   if (!handle || !key) {
@@ -197,10 +207,38 @@ int mjredis_rpop(mjredis handle, const char* key, mjstr out_value) {
     MJLOG_ERR("mjredis_rpop error");
     return retval;
   }
-  MJLOG_ERR("type: %d", reply->type);
+  // no value found
+  if (reply->type == REDIS_REPLY_NIL) {
+    freeReplyObject(reply);
+    return 0;
+  }
   if (out_value) mjstr_copyb(out_value, reply->str, reply->len);
   freeReplyObject(reply);
-  return 0;
+  return 1;
+}
+
+int mjredis_llen(mjredis handle, const char* key) {
+  // sanity check
+  if (!handle || !key) {
+    MJLOG_ERR("redis handle or key is null");
+    return -1;
+  }
+  // call llen
+  int retval;
+  redisReply* reply = mjredis_cmd_generic(handle, &retval, "LLEN %s", key);
+  if (!reply) {
+    MJLOG_ERR("mjredis_llen error");
+    return retval;
+  }
+  // check result
+  if (reply->type != REDIS_REPLY_INTEGER) {
+    MJLOG_ERR("Oops llen result is not integer");
+    freeReplyObject(reply);
+    return -1;
+  }
+  retval = reply->integer;
+  freeReplyObject(reply);
+  return retval;
 }
 
 /*
