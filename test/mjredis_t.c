@@ -51,6 +51,14 @@ void fun2(mjredis redis_handle) {
   mjstr_delete(out_value);
 }
 
+void fun3(mjredis handle) {
+  int retval = mjredis_select(handle, "2");
+  printf("select 2: %d\n", retval);
+
+  retval = mjredis_select(handle, "1000");
+  printf("select 1000: %d\n", retval);
+}
+
 int main() {
   mjredis redis_handle = mjredis_new("127.0.0.1", 6379);
   if (!redis_handle) {
@@ -59,6 +67,7 @@ int main() {
   }
   fun1(redis_handle);
   fun2(redis_handle);
+  fun3(redis_handle);
   mjredis_delete(redis_handle);
   return 0;
 }
