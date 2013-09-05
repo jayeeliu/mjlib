@@ -8,19 +8,65 @@
 
 #include "offline_store.h"
 
-/*
- * mysql connect
- * @TODO R/W and sharding
- */
-static mjsql get_sql_conn(mjproto_txt_data cmd_data) {
-  mjconnb conn = (mjconnb) cmd_data->conn;
-  mjthread thread = mjconnb_get_obj(conn, "thread");
-  mjsql sql_conn = mjthread_get_obj(thread, "sql_conn");
-  return sql_conn;
+void* offline_thread_init(void* arg) {
+  return NULL;
 }
 
-/*
- * for mysql escape key and value
+static void* offline_clean(void* arg) {/*{{{*/
+  mjsql handle = (mjsql) arg;
+  mjsql_delete(handle);
+  return NULL;
+}/*}}}*/
+
+/* mysql connect
+ * {{{
+ * @param mode OFFLINE_MODE_WRITE / OFFLINE_MODE_READ
+ * @TODO sharding
+ */
+static mjsql get_connection(mjconnb conn, const char* mode,
+    const char* tn, const char* key) {
+  char table[32];
+  strcpy(table, tn);
+  char table_name[35];
+  sprintf(table_name, "%s##%s", mode, table);
+
+  mjthread thread = mjconnb_get_obj(conn, "thread");
+  mjsql handle = mjthread_get_obj(thread, table_name);
+  if (!handle) {
+    struct offline_dsn dsn = {};
+    if (mode == DPC_MODE_WRITE) {
+      mjopt_get_value_string(table, "master", dsn.host);
+      mjopt_get_value_string(table, "user_w", dsn.user);
+      mjopt_get_value_string(table, "password_w", dsn.password);
+    } else {
+      mjopt_get_value_string(table, "slave", dsn.host);
+      mjopt_get_value_string(table, "user_r", dsn.user);
+      mjopt_get_value_string(table, "password_r", dsn.password);
+    }
+    mjopt_get_value_int(table, "port", &dsn.port);
+    mjopt_get_value_string(table, "database", dsn.database);
+
+    if (!dsn.host || !dsn.user || !dsn.password || !dsn.database || !dsn.port) {
+      MJLOG_ERR("config not find or config error in %s", table);
+      show_error(ERR_SERVER_CONFIG, conn);
+      return NULL;
+    }
+
+    handle = mjsql_new(dsn.host, dsn.user, dsn.password, dsn.database, dsn.port);
+    if (!handle) {
+      MJLOG_ERR("mysql connect fail %s@%s:%d@%s", dsn.user, dsn.host,
+          dsn.port, dsn.database);
+      show_error(ERR_STORE_CONNECT_FAIL, conn);
+      return NULL;
+    }
+    mjthread_set_obj(thread, table_name, handle, offline_clean);
+  }
+
+  return handle;
+}/* }}} */
+
+/* for mysql escape key and value
+ * {{{
  */
 static mjstrlist filter_kv(mjstrlist args, mjsql handle, mjconnb conn) {
   if (args->length < 3) {
@@ -50,23 +96,11 @@ static mjstrlist filter_kv(mjstrlist args, mjsql handle, mjconnb conn) {
   }
 
   return query_params;
-}
-
-static mjstr read_value(mjconnb conn, mjstr len) {
-  int length = atoi(len->data);
-  mjstr content = mjstr_new(1024);
-  mjconnb_readbytes(conn, content, length);
-  if (length != content->length) {
-    mjstr_delete(content);
-    show_error(ERR_VALUE_READ_FAIL, conn);
-    return NULL;
-  }
-  return content;
-}
+}/*}}}*/
 
 
-/*
- * command: get table key\r\n
+/* command: get table key\r\n
+ * {{{
  */
 void* offline_get(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
@@ -76,29 +110,30 @@ void* offline_get(void* arg) {
     return NULL;
   }
 
-  mjsql sql_conn = get_sql_conn(cmd_data);
+  mjsql handle = get_connection(cmd_data->conn, DPC_MODE_READ,
+      args->data[1]->data, args->data[2]->data);
   char sql_str[MJLF_MAX_SQL_LENGTH];
-  mjstrlist query_params = filter_kv(args, sql_conn, cmd_data->conn);
+  mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
   MJ_GET(sql_str, args->data[1]->data, query_params->data[0]->data);
   mjstrlist_clean(query_params);
 
-  if (mjsql_query(sql_conn, sql_str, strlen(sql_str)) != 0) {
-    show_error(ERR_SQL_QUERY_FAILE, cmd_data->conn);
+  if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
+    show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
     return NULL;
   }
-  mjsql_store_result(sql_conn);
-  if (mjsql_get_rows_num(sql_conn) == 0) {
+  mjsql_store_result(handle);
+  if (mjsql_get_rows_num(handle) == 0) {
     show_succ(cmd_data->conn, NULL);
     return NULL;
   }
-  mjsql_next_row(sql_conn);
-  show_succ(cmd_data->conn, mjsql_fetch_row_field(sql_conn, 0));
+  mjsql_next_row(handle);
+  show_succ(cmd_data->conn, mjsql_fetch_row_field(handle, 0));
 
   return NULL;
-}
+}/*}}}*/
 
-/*
- * command: put table key value-length\r\nvalue-content
+/* command: put table key value-length\r\nvalue-content
+ * {{{
  */
 void* offline_put(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
@@ -117,20 +152,25 @@ void* offline_put(void* arg) {
   mjstr_delete(value);
 
   char sql_str[MJLF_MAX_SQL_LENGTH];
-  mjsql sql_conn = get_sql_conn(cmd_data);
-  mjstrlist query_params = filter_kv(args, sql_conn, cmd_data->conn);
-  MJ_SET(sql_str, args->data[1]->data, args->data[2]->data, args->data[4]->data);
+  mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
+      args->data[1]->data, args->data[2]->data);
+  mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
+  MJ_SET(sql_str, args->data[1]->data, query_params->data[0]->data,
+      query_params->data[1]->data);
   mjstrlist_clean(query_params);
 
-  if (mjsql_query(sql_conn, sql_str, strlen(sql_str)) != 0) {
-    show_error(ERR_SQL_QUERY_FAILE, cmd_data->conn);
+  if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
+    show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
   } else {
     show_succ(cmd_data->conn, NULL);
   }
 
   return NULL;
-}
+}/*}}}*/
 
+/* command: del table key
+ * {{{
+ */
 void* offline_del(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
@@ -140,20 +180,25 @@ void* offline_del(void* arg) {
   }
 
   char sql_str[MJLF_MAX_SQL_LENGTH];
-  mjsql sql_conn = get_sql_conn(cmd_data);
-  mjstrlist query_params = filter_kv(args, sql_conn, cmd_data->conn);
-  MJ_DEL(sql_str, args->data[1]->data, args->data[2]->data);
+  mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
+      args->data[1]->data, args->data[2]->data);
+  mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
+  MJ_DEL(sql_str, args->data[1]->data, query_params->data[0]->data);
   mjstrlist_clean(query_params);
 
-  if (mjsql_query(sql_conn, sql_str, strlen(sql_str)) != 0) {
-    show_error(ERR_SQL_QUERY_FAILE, cmd_data->conn);
+
+  if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
+    show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
   } else {
     show_succ(cmd_data->conn, NULL);
   }
 
   return NULL;
-}
+}/*}}}*/
 
+/* command: create table
+ * {{{
+ */
 void* offline_create(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
@@ -165,16 +210,20 @@ void* offline_create(void* arg) {
   char sql_str[MJLF_MAX_SQL_LENGTH];
   MJ_CREATE(sql_str, args->data[1]->data);
 
-  mjsql sql_conn = get_sql_conn(cmd_data);
-  if (mjsql_query(sql_conn, sql_str, strlen(sql_str)) != 0) {
-    show_error(ERR_SQL_QUERY_FAILE, cmd_data->conn);
+  mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
+      args->data[1]->data, NULL);
+  if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
+    show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
   } else {
     show_succ(cmd_data->conn, NULL);
   }
 
   return NULL;
-}
+}/*}}}*/
 
+/* command: drop table
+ * {{{
+ */
 void* offline_drop(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjstrlist args = cmd_data->args;
@@ -186,35 +235,24 @@ void* offline_drop(void* arg) {
   char sql_str[MJLF_MAX_SQL_LENGTH];
   MJ_DROP(sql_str, args->data[1]->data);
 
-  mjsql sql_conn = get_sql_conn(cmd_data);
-  if (mjsql_query(sql_conn, sql_str, strlen(sql_str)) != 0) {
-    show_error(ERR_SQL_QUERY_FAILE, cmd_data->conn);
+  mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
+      args->data[1]->data, NULL);
+  if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
+    show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
   } else {
     show_succ(cmd_data->conn, NULL);
   }
 
   return NULL;
-}
+}/*}}}*/
 
+/* command: quit
+ * {{{
+ */
 void* offline_quit(void* arg) {
   mjproto_txt_data cmd_data = (mjproto_txt_data) arg;
   mjproto_txt_finished(cmd_data);
   show_succ(cmd_data->conn, NULL);
   return NULL;
-}
-
-
-static void* online_clean(void* arg) {
-  mjsql sql_conn = (mjsql) arg;
-  mjsql_delete(sql_conn);
-  return NULL;
-}
-
-void* offline_thread_init(void* arg) {
-  mjthread thread = (mjthread) arg;
-  mjsql sql_conn = mjsql_new("172.16.139.60", "test", "test", "test", 3308);
-  mjthread_set_obj(thread, "sql_conn", sql_conn, online_clean);
-  return NULL;
-}
-
+}/*}}}*/
 

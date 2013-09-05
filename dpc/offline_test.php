@@ -1,7 +1,7 @@
 <?php
 error_reporting(E_ALL ^ E_NOTICE);
 
-$kv = new KVStore('172.16.139.60', 17879);
+$kv = new KVStore('172.16.139.60', 20000);
 $table 	= 'tkv';
 $key 	= 'key';
 $value	= 'breuicnerofneromfoermfoermfoermfoemnroferofoerim';
@@ -77,14 +77,14 @@ class KVStore {
 	}
 
 	private function _is_ok($ret) {
-		// var_dump($ret);
+		var_dump($ret);
 		return $ret && substr($ret, 0, 2) === self::IS_OK ? true : false;
 	}
 
 	public function __destruct() {
 		if ($this->_fp) {
 			fwrite($this->_fp, sprintf(self::CMD_QUIT));
-			fclose($this->_fp);			
+			fclose($this->_fp);
 		}
 	}
 }

@@ -5,13 +5,22 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
-#include "validator.h"
+#include "dpc_util.h"
 #include "mjlf.h"
-#include "mjsock.h"
 #include "mjconnb.h"
-#include "mjcomm.h"
-#include "mjproto_txt.h"
 #include "mjsql.h"
+#include "mjopt.h"
+#include "mjlog.h"
+#include "mjproto_txt.h"
+
+
+struct offline_dsn {
+  char host[32];
+  int port;
+  char user[32];
+  char password[32];
+  char database[32];
+};
 
 
 #define MJ_GET(sql, table, key) sprintf(sql, \
