@@ -62,6 +62,7 @@ static redisReply* mjredis_cmd_generic(mjredis handle, int* retval,
     }
     retry--;
   }
+//  MJLOG_ERR("type: %d, integer: %lld, str: %s", reply->type, reply->integer, reply->str);
   // check reply error
   if (reply->type == REDIS_REPLY_ERROR) {
     freeReplyObject(reply);
@@ -217,6 +218,15 @@ int mjredis_rpop(mjredis handle, const char* key, mjstr out_value) {
   return 1;
 }
 
+/*
+===============================================================================
+mjredis_llen
+  llen key
+  return -2 -- link error
+          -1 -- command error
+          other -- length of list
+===============================================================================
+*/
 int mjredis_llen(mjredis handle, const char* key) {
   // sanity check
   if (!handle || !key) {
@@ -239,6 +249,32 @@ int mjredis_llen(mjredis handle, const char* key) {
   retval = reply->integer;
   freeReplyObject(reply);
   return retval;
+}
+
+/*
+===============================================================================
+mjredis_select
+  select db
+  return -2 -- link error
+         -1 -- command error
+         0 -- success
+===============================================================================
+*/
+int mjredis_select(mjredis handle, const char* db) {
+  // sanity check
+  if (!handle || !db) {
+    MJLOG_ERR("redis handle or db is null");
+    return -1;
+  }
+  // call llen
+  int retval;
+  redisReply* reply = mjredis_cmd_generic(handle, &retval, "SELECT %s", db);
+  if (!reply) {
+    MJLOG_ERR("mjredis_select error");
+    return retval;
+  }
+  freeReplyObject(reply);
+  return 0;
 }
 
 /*
