@@ -87,7 +87,7 @@ void* online_get(void* arg) {
       args->data[1]->data, args->data[2]->data);
 
   mjstr ret = mjstr_new(128);
-  if (mjredis_get(handle, args->data[2]->data, ret) == REDIS_EXEC_FAIL_CODE) {
+  if (mjredis_get(handle, args->data[2]->data, ret) <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
     mjstr_delete(ret);
     return NULL;
@@ -117,7 +117,7 @@ void* online_put(void* arg) {
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
 
-  if (mjredis_set(handle, args->data[2]->data, value->data) == REDIS_EXEC_FAIL_CODE) {
+  if (mjredis_set(handle, args->data[2]->data, value->data) <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
   } else {
     show_succ(cmd_data->conn, NULL);
@@ -141,7 +141,7 @@ void* online_del(void* arg) {
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
 
-  if (mjredis_del(handle, args->data[2]->data) == REDIS_EXEC_FAIL_CODE) {
+  if (mjredis_del(handle, args->data[2]->data) <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
   } else {
     show_succ(cmd_data->conn, NULL);
@@ -165,7 +165,7 @@ void* online_rpop(void* arg) {
       args->data[1]->data, args->data[2]->data);
 
   mjstr ret = mjstr_new(128);
-  if (mjredis_rpop(handle, args->data[2]->data, ret) == REDIS_EXEC_FAIL_CODE) {
+  if (mjredis_rpop(handle, args->data[2]->data, ret) <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
     mjstr_delete(ret);
     return NULL;
@@ -196,7 +196,7 @@ void* online_lpush(void* arg) {
       args->data[1]->data, args->data[2]->data);
 
   int code = mjredis_lpush(handle, args->data[2]->data, value->data);
-  if (code == REDIS_EXEC_FAIL_CODE) {
+  if (code <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
   } else {
     char ret[12];
@@ -228,7 +228,7 @@ void* online_llen(void* arg) {
       args->data[1]->data, args->data[2]->data);
 
   int code = mjredis_llen(handle, args->data[2]->data);
-  if (code == REDIS_EXEC_FAIL_CODE) {
+  if (code <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
   } else {
     char ret[12];
