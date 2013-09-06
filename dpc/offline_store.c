@@ -4,6 +4,7 @@
  * command format: command table [key] [length]\r\n[value\r\n]
  * user command  : get / put / del / quit
  * admin command : create / drop / reload
+ * @TODO LOG
  */
 
 #include "offline_store.h"
@@ -89,9 +90,9 @@ static mjstrlist filter_kv(mjstrlist args, mjsql handle, mjconnb conn) {
 
   // value data
   if (args->length >= 5) {
-    int length = args->data[3]->length * 2 + 1;
+    int length = args->data[4]->length * 2 + 1;
     char to[length];
-    mjsql_real_escape_string(handle, to, args->data[2]->data, length, args->data[2]->length);
+    mjsql_real_escape_string(handle, to, args->data[4]->data, length, args->data[4]->length);
     mjstrlist_adds(query_params, to);
   }
 
@@ -112,6 +113,10 @@ void* offline_get(void* arg) {
 
   mjsql handle = get_connection(cmd_data->conn, DPC_MODE_READ,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
+
   char sql_str[MJLF_MAX_SQL_LENGTH];
   mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
   MJ_GET(sql_str, args->data[1]->data, query_params->data[0]->data);
@@ -154,6 +159,10 @@ void* offline_put(void* arg) {
   char sql_str[MJLF_MAX_SQL_LENGTH];
   mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
+
   mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
   MJ_SET(sql_str, args->data[1]->data, query_params->data[0]->data,
       query_params->data[1]->data);
@@ -182,10 +191,13 @@ void* offline_del(void* arg) {
   char sql_str[MJLF_MAX_SQL_LENGTH];
   mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
+
   mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
   MJ_DEL(sql_str, args->data[1]->data, query_params->data[0]->data);
   mjstrlist_clean(query_params);
-
 
   if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
     show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
@@ -212,6 +224,10 @@ void* offline_create(void* arg) {
 
   mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, NULL);
+  if (!handle) {
+    return NULL;
+  }
+
   if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
     show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
   } else {
@@ -235,9 +251,14 @@ void* offline_drop(void* arg) {
   char sql_str[MJLF_MAX_SQL_LENGTH];
   MJ_DROP(sql_str, args->data[1]->data);
 
-  mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
-      args->data[1]->data, NULL);
-  if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
+  mjsql handle = get_connection(cmd_data->conn, DPC_MODE_WRITE, args->data[1]->data, NULL);
+  if (!handle) {
+    return NULL;
+  }
+
+  int errno = 0;
+  // skip table not exist error
+  if ((errno = mjsql_query(handle, sql_str, strlen(sql_str))) != 0 && errno != 1051) {
     show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
   } else {
     show_succ(cmd_data->conn, NULL);
