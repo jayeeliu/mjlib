@@ -66,7 +66,7 @@ bool mjopt_get_value_string(char* section, char* key, char* retval) {
   mjopt entry = NULL;
   list_for_each_entry(entry, &options, node) {
     if (!strcmp(section, entry->section) && !strcmp(key, entry->key)) {
-      strncpy(retval, entry->value, MAX_VALUE_LEN);
+      strcpy(retval, entry->value);
       return true;
     }
   }

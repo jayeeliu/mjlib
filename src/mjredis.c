@@ -181,8 +181,16 @@ int mjredis_lpush(mjredis handle, const char* key, const char* value) {
     MJLOG_ERR("mjredis_lpush error");
     return retval;
   }
+  // reply error check
+  if (reply->type != REDIS_REPLY_INTEGER) {
+    MJLOG_ERR("Oops it can't happen");
+    freeReplyObject(reply);
+    return -1;
+  }
+  // return number of deleted
+  retval = reply->integer;
   freeReplyObject(reply);
-  return 0;
+  return retval;
 }
 
 /*
