@@ -26,7 +26,9 @@ static void* online_connection_clean(void* arg) {/*{{{*/
  */
 static mjredis get_connection(mjconnb conn, char* mode, char* table, char* key) {
   char table_name[35];
-  sprintf(table_name, "%s##%s", mode, table);
+  //sprintf(table_name, "%s##%s", mode, table);
+  // only support read/write master now
+  sprintf(table_name, "%s", table);
 
   mjthread thread = mjconnb_get_obj(conn, "thread");
   mjredis handle = mjthread_get_obj(thread, table_name);
@@ -49,7 +51,7 @@ static mjredis get_connection(mjconnb conn, char* mode, char* table, char* key) 
       return NULL;
     }
 
-    mjredis handle = mjredis_new(dsn.host, dsn.port);
+    handle = mjredis_new(dsn.host, dsn.port);
 
     if (!handle) {
       MJLOG_ERR("redis connect fail %s:%d@db%d", dsn.host, dsn.port, dsn.database);
@@ -85,6 +87,9 @@ void* online_get(void* arg) {
 
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_READ,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
 
   mjstr ret = mjstr_new(128);
   if (mjredis_get(handle, args->data[2]->data, ret) <= REDIS_EXEC_FAIL_CODE) {
@@ -116,6 +121,9 @@ void* online_put(void* arg) {
 
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
 
   if (mjredis_set(handle, args->data[2]->data, value->data) <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
@@ -140,6 +148,9 @@ void* online_del(void* arg) {
 
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
 
   if (mjredis_del(handle, args->data[2]->data) <= REDIS_EXEC_FAIL_CODE) {
     show_error(ERR_REDIS_EXEC_FAIL, cmd_data->conn);
@@ -163,6 +174,9 @@ void* online_rpop(void* arg) {
 
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_READ,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
 
   mjstr ret = mjstr_new(128);
   if (mjredis_rpop(handle, args->data[2]->data, ret) <= REDIS_EXEC_FAIL_CODE) {
@@ -194,6 +208,9 @@ void* online_lpush(void* arg) {
 
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
 
   int code = mjredis_lpush(handle, args->data[2]->data, value->data);
   if (code <= REDIS_EXEC_FAIL_CODE) {
@@ -219,13 +236,11 @@ void* online_llen(void* arg) {
     return NULL;
   }
 
-  mjstr value = read_value(cmd_data->conn, args->data[3]);
-  if (!value) {
-    return NULL;
-  }
-
   mjredis handle = get_connection(cmd_data->conn, DPC_MODE_WRITE,
       args->data[1]->data, args->data[2]->data);
+  if (!handle) {
+    return NULL;
+  }
 
   int code = mjredis_llen(handle, args->data[2]->data);
   if (code <= REDIS_EXEC_FAIL_CODE) {
@@ -235,7 +250,6 @@ void* online_llen(void* arg) {
     sprintf(ret, "%d", code);
     show_succ(cmd_data->conn, ret);
   }
-  mjstr_delete(value);
 
   return NULL;
 }/*}}}*/
