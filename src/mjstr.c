@@ -15,7 +15,7 @@ static bool mjstr_ready(mjstr str, unsigned int need_size) {
   // 2. no need to realloc
   if (need_size <= str->_total) {
     memmove(str->_data_start, str->data, str->length);
-    str->_data_start = str->data;
+    str->data = str->_data_start;
     return true;
   }
   // 3. need to realloc, get new size to alloc

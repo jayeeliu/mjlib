@@ -1,31 +1,10 @@
 #include <stdio.h>
 #include "mjstr.h"
 
-int main()
-{
-    struct mjStr str;
-    mjStr_Init( &str );
-    mjStr_CopyS( &str, "this is a test");
-    mjStr_CatS( &str, "test2");
-
-    int ret = mjStr_Search( &str, "is" );
-    printf( "found in %d\n", ret );
-
-    mjStr_ToUpper( &str );
-    printf("%s\n", str.data );
-
-    mjStrList strList = mjStrList_New();
-    if ( !strList ) {
-        printf( "mjStr_Split2 error" );
-        return 1;
-    }
-    mjStr_Split( &str, "TE", strList );
-    
-    for (int i = 0; i < strList->length; i++) {
-        printf("%s\n", strList->data[i]->data);
-    }
-
-    mjStr_DeInit( &str );
-    mjStrList_Delete(strList);
-    return 0;
+int main() {
+  mjstr str = mjstr_new(1);
+  mjstr_cats(str, "th");
+  mjstr_cats(str, "this is the second line this is the second line this is the second line this is the second line this is the second line this is the second line this is the second line this is the second line");
+  mjstr_delete(str); 
+  return 0;
 }

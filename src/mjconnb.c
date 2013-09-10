@@ -94,7 +94,7 @@ mjconnb_Read
 */
 int mjconnb_read(mjconnb conn, mjstr data) {
   // sanity check
-  if (!conn || !data) {
+  if (!conn || !data || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
@@ -110,7 +110,7 @@ mjconnb_ReadBytes
 */
 int mjconnb_readbytes(mjconnb conn, mjstr data, int len) {
   // sanity check
-  if (!conn || !data || len <= 0) {
+  if (!conn || !data || len <= 0 || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
@@ -127,7 +127,7 @@ mjconnb_ReadUntil
 */
 int mjconnb_readuntil(mjconnb conn, const char* delim, mjstr data) {
   // sanity check
-  if (!conn || !data || !delim) {
+  if (!conn || !data || !delim || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
@@ -143,7 +143,7 @@ mjconnb_Write
 ===============================================================================
 */
 int mjconnb_write(mjconnb conn, mjstr data) {
-  if (!conn || !data || !data->length) {
+  if (!conn || !data || !data->length || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
@@ -160,7 +160,7 @@ mjconnb_WriteB
 ===============================================================================
 */
 int mjconnb_writeb(mjconnb conn, char *buf , int length) {
-  if (!conn || !buf || !length) {
+  if (!conn || !buf || !length || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
@@ -183,7 +183,7 @@ mjconnb_WriteS
 ===============================================================================
 */
 int mjconnb_writes(mjconnb conn, char *buf) {
-  if (!conn || !buf) {
+  if (!conn || !buf || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
