@@ -166,7 +166,7 @@ int mjconnb_writeb(mjconnb conn, char *buf , int length) {
   }
   int total_write = 0;
   while (total_write < length) {
-    int ret = write(conn->_fd, buf, length);
+    int ret = write(conn->_fd, buf + total_write, length);
     if (ret == -1) {
       MJLOG_ERR("mjconnb Write Error");
       if (errno == EAGAIN || errno == EWOULDBLOCK) ret = -2;
