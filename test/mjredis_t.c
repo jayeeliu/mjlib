@@ -59,15 +59,26 @@ void fun3(mjredis handle) {
   printf("select 1000: %d\n", retval);
 }
 
+void fun4(mjredis handle) {
+  char buf[65536] = {0};
+  for (int i=0; i<65536; i++) {
+    buf[i] = '1';
+  }
+  for (int i=0; i<20; i++) {
+    mjredis_lpush(handle, "test_push", buf);
+  }
+}
+
 int main() {
   mjredis redis_handle = mjredis_new("127.0.0.1", 6379);
   if (!redis_handle) {
     printf("redis handle error\n");
     return 1;
   }
-  fun1(redis_handle);
-  fun2(redis_handle);
-  fun3(redis_handle);
+//  fun1(redis_handle);
+//  fun2(redis_handle);
+//  fun3(redis_handle);
+  fun4(redis_handle);
   mjredis_delete(redis_handle);
   return 0;
 }
