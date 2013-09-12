@@ -84,7 +84,7 @@ static mjstrlist filter_kv(mjstrlist args, mjsql handle, mjconnb conn) {
   if (args->length >= 3) {
     int length = args->data[2]->length * 2 + 1;
     char to[length];
-    mjsql_real_escape_string(handle, to, args->data[2]->data, 129, args->data[2]->length);
+    mjsql_real_escape_string(handle, to, args->data[2]->data, length, args->data[2]->length);
     mjstrlist_adds(query_params, to);
   }
 
@@ -120,7 +120,7 @@ void* offline_get(void* arg) {
   char sql_str[MJLF_MAX_SQL_LENGTH];
   mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
   MJ_GET(sql_str, args->data[1]->data, query_params->data[0]->data);
-  mjstrlist_clean(query_params);
+  mjstrlist_delete(query_params);
 
   if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
     show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
@@ -166,7 +166,7 @@ void* offline_put(void* arg) {
   mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
   MJ_SET(sql_str, args->data[1]->data, query_params->data[0]->data,
       query_params->data[1]->data);
-  mjstrlist_clean(query_params);
+  mjstrlist_delete(query_params);
 
   if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
     show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);
@@ -197,7 +197,7 @@ void* offline_del(void* arg) {
 
   mjstrlist query_params = filter_kv(args, handle, cmd_data->conn);
   MJ_DEL(sql_str, args->data[1]->data, query_params->data[0]->data);
-  mjstrlist_clean(query_params);
+  mjstrlist_delete(query_params);
 
   if (mjsql_query(handle, sql_str, strlen(sql_str)) != 0) {
     show_error(ERR_SQL_QUERY_FAIL, cmd_data->conn);

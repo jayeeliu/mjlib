@@ -52,6 +52,7 @@ if ($mode === 'offline') {
 	assert($kv->rpop($table, $qkey) === $v3);
 	assert($kv->rpop($table, $qkey) === '');
 }
+$kv->quit();
 
 
 
@@ -85,7 +86,7 @@ class KVStore {
 	public function get($table, $key) {
 		fwrite($this->_fp, sprintf(self::CMD_GET, $table, $key));
 		$len = $this->_length();
-		return $len === false ? false : ($len > 0 ? fread($this->_fp, $len) : '');
+		return $len === false ? false : ($len > 0 ? stream_get_contents($this->_fp, $len) : '');
 	}
 
 	public function put($table, $key, $value) {
@@ -96,6 +97,14 @@ class KVStore {
 	public function del($table, $key) {
 		fwrite($this->_fp, sprintf(self::CMD_DEL, $table, $key));
 		return self::_is_ok($this->_gets());
+	}
+
+	public function quit() {
+		if ($this->_fp) {
+			fwrite($this->_fp, sprintf(self::CMD_QUIT));
+			fclose($this->_fp);
+			$this->_fp = null;
+		}
 	}
 
 /************************* offline only *******************************/
