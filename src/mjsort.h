@@ -4,22 +4,15 @@
 #include <stdbool.h>
 #include "mjrbtree.h"
 
-struct mjSortItem {
-  struct rb_node  node;
-  long long       key;
-  void            *value;
+struct mjsort {
+  struct rb_root tree_root;
 };
-typedef struct mjSortItem *mjSortItem;
+typedef struct mjsort *mjsort;
 
-struct mjSort {
-  struct rb_root treeRoot;
-};
-typedef struct mjSort *mjSort;
-
-extern bool   mjSort_Erase(mjSort sort, long long key);
-extern bool   mjSort_Insert(mjSort sort, long long key, void *value);
-extern void*  mjSort_Search(mjSort sort, long long key);
-extern mjSort mjSort_New();
-extern bool   mjSort_Delete(mjSort sort);
+extern bool   mjsort_erase(mjsort sort, long long key);
+extern bool   mjsort_insert(mjsort sort, long long key, void *value);
+extern void*  mjsort_search(mjsort sort, long long key);
+extern mjsort mjsort_new();
+extern bool   mjsort_delete(mjsort sort);
 
 #endif
