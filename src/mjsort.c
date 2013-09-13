@@ -2,13 +2,6 @@
 #include "mjsort.h"
 #include "mjlog.h"
 
-struct mjsortitem {
-  struct rb_node  node;
-  long long       key;
-  void*           value;
-};
-typedef struct mjsortitem* mjsortitem;
-
 /*
 ===============================================================================
 mjsortitem_New
@@ -118,6 +111,21 @@ bool mjsort_erase(mjsort sort, long long key) {
   rb_erase(&item->node, &sort->tree_root);
   mjsortitem_delete(item);
   return true;
+}
+
+mjsortitem mjsort_next(mjsort sort, mjsortitem item) {
+  struct rb_node* node;
+  // get node
+  if (item) {
+    node = rb_next(&item->node);
+  } else if (sort) {
+    node = rb_first(&sort->tree_root);
+  } else {
+    return NULL;
+  }
+  // get entry
+  if (!node) return NULL;
+  return rb_entry(node, struct mjsortitem, node);
 }
 
 /*
