@@ -2,7 +2,7 @@ BUILD=../build
 
 IFLAGS= -I../deps
 
-OBJS=mjstr.o mjsock.o mjlog.o mjconnb.o mjcomm.o mjpq.o mjmap.o mjhttpreq.o mjreg.o mjpool.o mjsig.o mjsql.o mjopt.o mjhttprsp.o mjio.o mjjson.o mjthread.o mjthreadpool.o mjproto_txt.o mjconn.o mjev.o mjtcpsrv.o mjmd5.o mjsort.o mjrbtree.o mjlf.o mjmainsrv.o mjproto_http.o mjredis.o
+OBJS=mjstr.o mjsock.o mjlog.o mjconnb.o mjcomm.o mjpq.o mjmap.o mjhttpreq.o mjreg.o mjpool.o mjsig.o mjsql.o mjopt.o mjhttprsp.o mjio.o mjjson.o mjthread.o mjthreadpool.o mjproto_txt.o mjconn.o mjev.o mjtcpsrv.o mjmd5.o mjsort.o mjrbtree.o mjlf.o mjmainsrv.o mjproto_http.o mjredis.o mjlockless.o
 
 JPWDIR=../deps/libjpw
 JPWOBJS=$(JPWDIR)/libjpw.a
