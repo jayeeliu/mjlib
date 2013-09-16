@@ -7,22 +7,14 @@
 #include "mjthread.h"
 #include "mjlockless.h"
 
-struct mjthreadpool;
-
-struct mjthreadentry {
-  struct mjthreadpool*  tpool;
-  mjthread              _thread;
-};
-typedef struct mjthreadentry* mjthreadentry;
-
 // threadpool struct
 struct mjthreadpool {
-  bool                  _shutdown;         // shutdown this thread pool?
-  int                   _max_thread;
-  mjProc                _Init;
-  void*                 init_arg;
-  mjlockless            _free_list;
-  struct mjthreadentry  _thread_entrys[0];
+  bool        _shutdown;         // shutdown this thread pool?
+  int         _max_thread;
+  mjProc      _Init;
+  void*       init_arg;
+  mjlockless  _free_list;
+  mjthread    _threads[0];
 };
 typedef struct mjthreadpool* mjthreadpool;
 

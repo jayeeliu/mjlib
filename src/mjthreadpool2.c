@@ -20,16 +20,14 @@ bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg) {
     return false;
   }
   // get free thread
-  mjthreadentry entry = mjlockless_pop(tpool->_free_list); 
-  if (!entry) return false;
-  if (entry->_thread->_running) {
-    MJLOG_ERR("Oops get running thread, %u, %u", tpool->_free_list->_head,
-        tpool->_free_list->_tail);
+  mjthread thread = mjlockless_pop(tpool->_free_list); 
+  if (!thread) return false;
+  if (thread->_running) {
+    MJLOG_ERR("Oops get running thread");
   }
   // dispatch work to thread
-  int ret = mjthread_add_routine(entry->_thread, Routine, arg);
+  int ret = mjthread_add_routine(thread, Routine, arg);
   if (!ret) {
-    MJLOG_ERR("Oops running %d", entry->_thread->_running);
     MJLOG_ERR("Oops AddWork Error, Thread Lost");
   }
   return ret;
@@ -68,7 +66,7 @@ mjthreadpool_New
 mjthreadpool mjthreadpool_new(int max_thread, mjProc Init, void* init_arg) {
   // alloc threadpool struct
   mjthreadpool tpool = (mjthreadpool) calloc(1, sizeof(struct mjthreadpool) + 
-      max_thread * sizeof(struct mjthreadentry));
+      max_thread * sizeof(struct mjthread));
   if (!tpool) {
     MJLOG_ERR("mjthreadpool alloc error");
     return NULL;
@@ -85,12 +83,9 @@ mjthreadpool mjthreadpool_new(int max_thread, mjProc Init, void* init_arg) {
   }
   // init thread
   for (int i = 0; i < tpool->_max_thread; i++) {
-    tpool->_thread_entrys[i].tpool = tpool;
-    mjlockless_push(tpool->_free_list, &tpool->_thread_entrys[i]);
-    // create new thread
-    tpool->_thread_entrys[i]._thread = mjthread_new(Init, init_arg);
-    mjthread_set_obj(tpool->_thread_entrys[i]._thread, "entry", 
-        &tpool->_thread_entrys[i], NULL);
+    tpool->_threads[i] = mjthread_new(Init, init_arg);
+    mjthread_set_obj(tpool->_threads[i], "tpool", tpool, NULL); 
+    mjlockless_push(tpool->_free_list, tpool->_threads[i]);
   }
   return tpool; 
 } 
@@ -112,7 +107,7 @@ bool mjthreadpool_delete(mjthreadpool tpool) {
   tpool->_shutdown = true; 
   // free all thread
   for (int i = 0; i < tpool->_max_thread; i++) {
-    mjthread_delete(tpool->_thread_entrys[i]._thread);
+    mjthread_delete(tpool->_threads[i]);
   }
   mjlockless_delete(tpool->_free_list);
   free(tpool);

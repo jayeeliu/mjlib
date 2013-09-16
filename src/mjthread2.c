@@ -82,15 +82,12 @@ static void* mjthread_normal_routine(void* arg) {
     thread->arg = NULL;
     thread->_running = false;
     // if in threadpool, add to freelist
-    mjthreadentry entry = mjmap_get_obj(thread->_arg_map, "entry");
-    if (entry->_thread != thread) {
-      MJLOG_ERR("Oops: not equal !!!!!!!!!!!!!!!!!!!!!!");
-    }
-    if (entry) {
+    mjthreadpool tpool = mjmap_get_obj(thread->_arg_map, "tpool");
+    if (tpool) {
       if (thread->_running) {
         MJLOG_ERR("Oops: Put running thread into free list");
       }
-      mjlockless_push(entry->tpool->_free_list, entry);
+      mjlockless_push(tpool->_free_list, thread);
     }
   }
   thread->_closed = true;
@@ -120,8 +117,8 @@ bool mjthread_add_routine(mjthread thread, mjProc Routine, void* arg) {
     pthread_cond_signal(&thread->_thread_ready);
     retval = true; 
   } else {
-    mjthreadentry entry = mjmap_get_obj(thread->_arg_map, "entry");
-    if (entry) {
+    mjthreadpool tpool = mjmap_get_obj(thread->_arg_map, "tpool");
+    if (tpool) {
       MJLOG_ERR("Oops: thread is busy, can't happen in threadpool");
     }
   }
