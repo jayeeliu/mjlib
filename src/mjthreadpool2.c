@@ -23,8 +23,8 @@ bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg) {
   mjthreadentry entry = mjlockless_pop(tpool->_free_list); 
   if (!entry) return false;
   if (entry->_thread->_running) {
-    MJLOG_ERR("Oops get running thread, %u, %u", tpool->_free_list->head,
-        tpool->_free_list->tail);
+    MJLOG_ERR("Oops get running thread, %u, %u", tpool->_free_list->_head,
+        tpool->_free_list->_tail);
   }
   // dispatch work to thread
   int ret = mjthread_add_routine(entry->_thread, Routine, arg);

@@ -8,9 +8,8 @@ mjlockless_push
 ===============================================================================
 */
 void mjlockless_push(mjlockless lockless, void* value) {
-  uint32_t tail = __sync_fetch_and_add(&lockless->tail, 1) % lockless->_size;
-  lockless->_queue[tail] = value;
-  __sync_synchronize();
+  uint32_t _tail = __sync_fetch_and_add(&lockless->_tail, 1) % lockless->_size;
+  lockless->_queue[_tail] = value;
 }
 
 /*
@@ -19,19 +18,18 @@ mjlockless_pop
 ===============================================================================
 */
 void* mjlockless_pop(mjlockless lockless) {
-  uint32_t head = lockless->head;
-  if (lockless->head % lockless->_size == lockless->tail % lockless->_size) {
+  uint32_t _head = lockless->_head;
+  if (lockless->_head % lockless->_size == lockless->_tail % lockless->_size) {
     return NULL;
   }
-  // get value, tail mybe add, but tail value not set
-  void* value = lockless->_queue[head % lockless->_size];
+  // get value, _tail mybe add, but _tail value not set
+  void* value = lockless->_queue[_head % lockless->_size];
   if (!value) return NULL;
   // compare and swap
-  if (!__sync_bool_compare_and_swap(&lockless->head, head, head + 1)) {
+  if (!__sync_bool_compare_and_swap(&lockless->_head, _head, _head + 1)) {
     return NULL;
   }
-  lockless->_queue[head % lockless->_size] = NULL;
-  __sync_synchronize();
+  lockless->_queue[_head % lockless->_size] = NULL;
   return value;
 }
 

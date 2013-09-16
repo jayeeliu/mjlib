@@ -5,8 +5,8 @@
 #include <stdbool.h>
 
 struct mjlockless {
-  uint32_t  head;
-  uint32_t  tail;
+  uint32_t  _head;
+  uint32_t  _tail;
   int       _size;
   void*     _queue[0];
 };
