@@ -40,7 +40,7 @@ mjstr_ReadyPlus
   call mjstr_Ready
 ===============================================================================
 */
-static bool mjstr_readyplus(mjstr str, unsigned int need_size_plus) {
+static inline bool mjstr_readyplus(mjstr str, unsigned int need_size_plus) {
   return mjstr_ready(str, str->length + need_size_plus);
 }
 
@@ -362,8 +362,6 @@ mjstrlist_Ready
 ===============================================================================
 */
 static bool mjstrlist_ready(mjstrlist str_list, unsigned int need_size) {
-  // sanity check
-  if (!str_list) return false;
   // have enough space
   unsigned int total = str_list->_total;
   if (need_size <= total) return true;
@@ -389,8 +387,7 @@ mjstrlist_ReadyPlus
   call mjstrlist
 ===============================================================================
 */
-static bool mjstrlist_readyplus(mjstrlist str_list, unsigned int n) {
-  if (!str_list) return false;
+static inline bool mjstrlist_readyplus(mjstrlist str_list, unsigned int n) {
   return mjstrlist_ready(str_list, str_list->length + n);
 }
  

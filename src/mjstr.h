@@ -15,7 +15,7 @@ typedef struct mjstr* mjstr;
 
 // mjstrlist struct
 struct mjstrlist {
-  unsigned int  _total;          // count of mjstr
+  unsigned int  _total;         // count of mjstr
   mjstr*        data;           // mjstr list
   unsigned int  length;         // used length
 };

@@ -84,9 +84,6 @@ static void* mjthread_normal_routine(void* arg) {
     // if in threadpool, add to freelist
     mjthreadpool tpool = mjmap_get_obj(thread->_arg_map, "tpool");
     if (tpool) {
-      if (thread->_running) {
-        MJLOG_ERR("Oops: Put running thread into free list");
-      }
       mjlockless_push(tpool->_free_list, thread);
     }
   }

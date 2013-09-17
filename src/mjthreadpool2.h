@@ -1,10 +1,7 @@
 #ifndef _MJTHREADPOOL_H
 #define _MJTHREADPOOL_H
 
-#include <stdbool.h>
-#include <pthread.h>
-#include "mjlist.h"
-#include "mjthread.h"
+#include "mjthread2.h"
 #include "mjlockless.h"
 
 // threadpool struct

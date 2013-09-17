@@ -1,6 +1,6 @@
-#include <stdlib.h>
 #include "mjthreadpool2.h"
 #include "mjlog.h"
+#include <stdlib.h>
 
 /*
 ===============================================================================

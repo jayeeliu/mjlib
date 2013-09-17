@@ -1,10 +1,9 @@
 #ifndef _MJTHREAD_H
 #define _MJTHREAD_H
 
-#include <stdbool.h>
-#include <pthread.h>
 #include "mjproc.h"
 #include "mjmap.h"
+#include <pthread.h>
 
 struct mjthread {
   pthread_t       _thread_id;
