@@ -19,7 +19,7 @@ static void* mjtcpsrv_accept_routine(void* arg) {
   if (srv->_type == MJTCPSRV_STANDALONE) {
     // standalone mode, accept new socket
     cfd = mjsock_accept(srv->_sfd);
-    if (cfd < 0) return NULL;
+    if (cfd < 0) return NULL; 
   } else if (srv->_type == MJTCPSRV_INNER) {
     // innner mode, read new socket
     int ret = read(srv->_sfd, &cfd, sizeof(int));
@@ -44,7 +44,8 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     mjsock_close(cfd);
     return NULL;
   }
-	mjconn_set_obj(conn, "server", srv, NULL);
+  mjconn_set_obj(conn, "server", srv, NULL);
+  mjconn_set_timeout(conn, 1000, 1000);
   srv->_Routine(conn);
   return NULL;
 }
@@ -137,19 +138,19 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, mjProc InitSrv, void* init_arg,
     goto failout2;
   }
   // set sfd nonblock
-  mjsock_set_blocking(srv->_sfd, 0);
+  mjsock_set_blocking(sfd, 0);
   // set fields
   srv->_sfd     = sfd;
   srv->_type    = type;
   srv->_Routine = Routine;
   srv->_InitSrv = InitSrv;
-	srv->init_arg = init_arg;
-	// set _arg_map
-	srv->_arg_map	= mjmap_new(31);
-	if (!srv->_arg_map) {
-		MJLOG_ERR("mjmap_new error");
-		goto failout2;
-	}
+  srv->init_arg = init_arg;
+  // set _arg_map
+  srv->_arg_map = mjmap_new(31);
+  if (!srv->_arg_map) {
+    MJLOG_ERR("mjmap_new error");
+    goto failout2;
+  }
   // set event Loop
   srv->ev = mjev_new();
   if (!srv->ev) {
@@ -193,7 +194,7 @@ void* mjtcpsrv_delete(void* arg) {
   }
   // call exit proc
   mjev_delete(srv->ev);
-	mjmap_delete(srv->_arg_map);
+  mjmap_delete(srv->_arg_map);
   mjsock_close(srv->_sfd);
   free(srv);
   return NULL;

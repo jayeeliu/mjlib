@@ -23,6 +23,10 @@ void* on_close(void *data)
 
 void* on_write1(void *data) {
   mjconn conn = (mjconn)data;
+  if (conn->_error || conn->_closed || conn->_timeout) {
+    mjconn_delete(conn);
+    return NULL;
+  }
   mjconn_writes(conn, "OK, TCPSERVER READY!!!\n", on_close);
   return NULL;
 }
@@ -41,6 +45,7 @@ int main()
         printf("Error create server socket\n");
         return 1;
     }
+    process_spawn(4);
     mjtcpsrv server = mjtcpsrv_new(sfd, myhandler, NULL, NULL, MJTCPSRV_STANDALONE); 
     if ( !server ) {
         printf("Error create tcpserver\n");

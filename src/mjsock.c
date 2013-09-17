@@ -13,7 +13,7 @@
 #include "mjsock.h"
 #include "mjlog.h"
 
-#define DEFAULT_BACKLOG	4096
+#define DEFAULT_BACKLOG	10240
 
 /*
 ===============================================================================
@@ -117,6 +117,15 @@ bool mjsock_set_blocking(int fd, int blocking) {
     return false;
   }
   return true;
+}
+
+bool mjsock_is_nonblocking(int fd) {
+  int flags;
+  if ((flags = fcntl(fd, F_GETFL, 0)) < 0) {
+    MJLOG_ERR("fcntl F_GETFL error fd--%d  msg--%s", fd, strerror(errno));
+    return false;
+  }
+  return flags & O_NONBLOCK;
 }
 
 

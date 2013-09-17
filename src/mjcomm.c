@@ -29,7 +29,7 @@ int daemonize() {
   case 0:
     break;
   default:
-    _exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
   }
 
   if (setsid() == -1) {

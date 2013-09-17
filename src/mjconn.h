@@ -32,6 +32,7 @@ struct mjconn {
 
   bool          _error;                  	// some error happened 
   bool          _closed;                 	// fd closed 
+  bool          _timeout;                 // conn timeout
 
 	mjmap					_arg_map;
 };
@@ -42,8 +43,10 @@ extern bool mjconn_readbytes(mjconn conn, int len, mjProc CallBack);
 extern bool mjconn_readuntil(mjconn conn, char* delim, mjProc CallBack);
 extern bool mjconn_read(mjconn conn, mjProc CallBack);
 // write func
+extern bool mjconn_writeb(mjconn conn, char* buf, int length, mjProc CallBack);
 extern bool mjconn_writes(mjconn conn, char* buf, mjProc CallBack);
 extern bool mjconn_write(mjconn conn, mjstr buf, mjProc CallBack);
+extern bool mjconn_buf_writeb(mjconn conn, char* buf, int length);
 extern bool mjconn_buf_writes(mjconn conn, char* buf);
 extern bool mjconn_buf_write(mjconn conn, mjstr buf);
 extern bool mjconn_flush(mjconn conn, mjProc CallBack);
