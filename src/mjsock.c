@@ -15,6 +15,12 @@
 
 #define DEFAULT_BACKLOG	4096
 
+/*
+===============================================================================
+mjsock_tcp_socket
+  create tcp socket
+===============================================================================
+*/
 int mjsock_tcp_socket() {
   int fd = socket(AF_INET, SOCK_STREAM, 0);
   return fd;

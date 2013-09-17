@@ -139,10 +139,10 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, mjProc InitSrv, void* init_arg,
   // set sfd nonblock
   mjsock_set_blocking(srv->_sfd, 0);
   // set fields
-  srv->_sfd      = sfd;
-  srv->_type     = type;
-  srv->_Routine  = Routine;
-  srv->_InitSrv  = InitSrv;
+  srv->_sfd     = sfd;
+  srv->_type    = type;
+  srv->_Routine = Routine;
+  srv->_InitSrv = InitSrv;
 	srv->init_arg = init_arg;
 	// set _arg_map
 	srv->_arg_map	= mjmap_new(31);
