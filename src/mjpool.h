@@ -1,18 +1,18 @@
 #ifndef _MJPOOL_H
 #define _MJPOOL_H
 
-#include <stdbool.h>
+#include "mjlockless.h"
 
-struct mjPool {
-    unsigned int    length;             // used length
-    unsigned int    total;              // total length
-    void**          data;               // point to resource
+struct mjpool {
+    unsigned int    _total;              // total length
+    uint32_t        _length; 
+    mjlockless      _data; 
 };
-typedef struct mjPool*  mjPool;
+typedef struct mjpool*  mjpool;
 
-extern void*    mjPool_Alloc( mjPool pool );
-extern bool     mjPool_Free( mjPool pool, void* elem );
-extern mjPool   mjPool_New();                   // create a new mjpool
-extern bool     mjPool_Delete( mjPool pool );   // destory mjpool
+extern void*    mjpool_alloc(mjpool pool);
+extern bool     mjpool_free(mjpool pool, void* value);
+extern mjpool   mjpool_new(int total);                    // create a new mjpool
+extern bool     mjpool_delete(mjpool pool);               // destory mjpool
 
 #endif

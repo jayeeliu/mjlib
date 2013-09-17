@@ -2,7 +2,7 @@
 #define _MJLF_H
 
 #include <stdbool.h>
-#include "mjthreadpool.h"
+#include "mjthreadpool2.h"
 #include "mjmap.h"
 
 struct mjlf {

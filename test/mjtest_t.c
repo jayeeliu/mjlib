@@ -3,30 +3,17 @@
 #include "mjconnb.h"
 #include "mjstr.h"
 #include "mjcomm.h"
-#include "mjthread.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-void* Init(void* arg) {
-  char* buf = (char*) malloc(sizeof(char)*100);
-  strcpy(buf, "Test String");
-  return buf;
-}
-
-void* Exit(void* arg) {
-  mjthread thread = (mjthread) arg;
-  free(thread->thread_local);
-  return NULL;
-}
-
 void* Run(void* arg) {
     mjconnb conn = (mjconnb) arg;
-    mjStr data = mjStr_New();
+    mjstr data = mjstr_new(512);
     mjconnb_readuntil(conn, "\r\n\r\n", data);
-    mjconnb_writes(conn, conn->shared);
-    mjStr_Delete(data);
+    mjconnb_writes(conn, "OK\r\n");
+    mjstr_delete(data);
     return NULL;
 }
 
@@ -36,7 +23,10 @@ int main() {
       printf("server socket create error");
       return 1;
     }
-    mjlf server = mjlf_new(sock, Run, get_cpu_count(), Init, NULL, Exit);
+    mjlf server = mjlf_new(sock, Run, 20, NULL, NULL, NULL, NULL);
+    if (!server) {
+      printf("mjlf_new error\n");
+    }
     mjlf_run(server);
     mjlf_delete(server);
     return 0;

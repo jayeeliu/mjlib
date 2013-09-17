@@ -4,12 +4,12 @@
 
 /*
 ===============================================================================
-mjSortItem_New
+mjsortitem_New
   alloc new mjsortitem struct
 ===============================================================================
 */
-static mjSortItem mjSortItem_New(long long key, void *value) {
-  mjSortItem item = (mjSortItem) calloc(1, sizeof(struct mjSortItem));
+static mjsortitem mjsortitem_new(long long key, void *value) {
+  mjsortitem item = (mjsortitem) calloc(1, sizeof(struct mjsortitem));
   if (!item) return NULL;
   item->key   = key;
   item->value = value;
@@ -18,11 +18,11 @@ static mjSortItem mjSortItem_New(long long key, void *value) {
 
 /*
 ===============================================================================
-mjSortItem_Delete
+mjsortitem_Delete
   delete mjsortitem
 ===============================================================================
 */
-static bool mjSortItem_Delete(mjSortItem item) {
+static bool mjsortitem_delete(mjsortitem item) {
   if (!item) return false;
   free(item);
   return true;
@@ -30,14 +30,14 @@ static bool mjSortItem_Delete(mjSortItem item) {
 
 /*
 ===============================================================================
-mjSort_SearchItem
+mjsort_SearchItem
   search key in mjsort return sortitem 
 ===============================================================================
 */
-static mjSortItem mjSort_SearchItem(mjSort sort, long long key) {
-  struct rb_node* node = sort->treeRoot.rb_node;
+static mjsortitem mjsort_searchitem(mjsort sort, long long key) {
+  struct rb_node* node = sort->tree_root.rb_node;
   while (node) {
-    mjSortItem testItem = rb_entry(node, struct mjSortItem, node);
+    mjsortitem testItem = rb_entry(node, struct mjsortitem, node);
     long long testKey = testItem->key;
     if (testKey > key) {
       node = node->rb_left;
@@ -53,92 +53,107 @@ static mjSortItem mjSort_SearchItem(mjSort sort, long long key) {
 
 /*
 ===============================================================================
-mjSort_Search
+mjsort_Search
   search key in mjsort
 ===============================================================================
 */
-void* mjSort_Search(mjSort sort, long long key) {
-  mjSortItem item = mjSort_SearchItem(sort, key);
+void* mjsort_search(mjsort sort, long long key) {
+  mjsortitem item = mjsort_searchitem(sort, key);
   if (item) return item->value;
   return NULL;
 }
 
 /*
 ===============================================================================
-mjSort_Insert
+mjsort_Insert
   insert key and value into rbtree
 ===============================================================================
 */
-bool mjSort_Insert(mjSort sort, long long key, void *value) {
-  // alloc new mjSortItem
-  mjSortItem item = mjSortItem_New(key, value);
+bool mjsort_insert(mjsort sort, long long key, void *value) {
+  // alloc new mjsortitem
+  mjsortitem item = mjsortitem_new(key, value);
   if (!item) {
-    MJLOG_ERR("mjSortItem_New error");
+    MJLOG_ERR("mjsortitem_New error");
     return false;
   }
   // get position into newNode and parent
-  struct rb_node **newNode = &sort->treeRoot.rb_node;
-  struct rb_node *parent = NULL;
+  struct rb_node** newNode = &sort->tree_root.rb_node;
+  struct rb_node*  parent = NULL;
   while (*newNode) {
-    mjSortItem testItem = rb_entry(*newNode, struct mjSortItem, node);
+    mjsortitem testItem = rb_entry(*newNode, struct mjsortitem, node);
     long long testKey = testItem->key;
     parent = *newNode;
     if (testKey > item->key) {
-      newNode = &((*newNode)->rb_left);
+      newNode = &(*newNode)->rb_left;
       continue;
     } else if (testKey < item->key) {
-      newNode = &((*newNode)->rb_right);
+      newNode = &(*newNode)->rb_right;
       continue;
     }
-    mjSortItem_Delete(item);
+    mjsortitem_delete(item);
     return false;
   }
   // insert into rbtree
   rb_link_node(&item->node, parent, newNode);
-  rb_insert_color(&item->node, &sort->treeRoot);
+  rb_insert_color(&item->node, &sort->tree_root);
   return true;
 }
 
 /*
 ===============================================================================
-mjSort_Erase
+mjsort_Erase
   erase one key
 ===============================================================================
 */
-bool mjSort_Erase(mjSort sort, long long key) {
-  mjSortItem item = mjSort_SearchItem(sort, key);
+bool mjsort_erase(mjsort sort, long long key) {
+  mjsortitem item = mjsort_searchitem(sort, key);
   if (!item) return false;
-  rb_erase(&item->node, &sort->treeRoot);
-  mjSortItem_Delete(item);
+  rb_erase(&item->node, &sort->tree_root);
+  mjsortitem_delete(item);
   return true;
+}
+
+mjsortitem mjsort_next(mjsort sort, mjsortitem item) {
+  struct rb_node* node;
+  // get node
+  if (item) {
+    node = rb_next(&item->node);
+  } else if (sort) {
+    node = rb_first(&sort->tree_root);
+  } else {
+    return NULL;
+  }
+  // get entry
+  if (!node) return NULL;
+  return rb_entry(node, struct mjsortitem, node);
 }
 
 /*
 ===============================================================================
-mjSort_New
-  create mjSort struct
+mjsort_New
+  create mjsort struct
 ===============================================================================
 */
-mjSort mjSort_New() {
-  mjSort sort = (mjSort) calloc(1, sizeof(struct mjSort));
+mjsort mjsort_new() {
+  mjsort sort = (mjsort) calloc(1, sizeof(struct mjsort));
   if (!sort) return NULL;
-  sort->treeRoot = RB_ROOT;
+  sort->tree_root = RB_ROOT;
   return sort;
 }
 
 /*
 ===============================================================================
-mjSort_Delete
+mjsort_Delete
   delete mjsort
 ===============================================================================
 */
-bool mjSort_Delete(mjSort sort) {
+bool mjsort_delete(mjsort sort) {
   if (!sort) return false;
-  for (struct rb_node* node = rb_first(&sort->treeRoot); node;
-        node = rb_first(&sort->treeRoot)) {
-    mjSortItem item = rb_entry(node, struct mjSortItem, node);
-    rb_erase(node, &sort->treeRoot);
-    mjSortItem_Delete(item); 
+  for (struct rb_node* node = rb_first(&sort->tree_root); node;
+        node = rb_first(&sort->tree_root)) {
+    mjsortitem item = rb_entry(node, struct mjsortitem, node);
+    rb_erase(node, &sort->tree_root);
+    mjsortitem_delete(item); 
   }
   free(sort);
   return true;

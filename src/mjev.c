@@ -124,7 +124,7 @@ mjtevent mjev_add_timer(mjev ev, long long ms, mjProc TimerProc, void* arg) {
   }
   // init timerevent struct
   te->_valid      = true;                 
-  te->_time       = ms + GetCurrentTime();
+  te->_time       = ms + get_current_time();
   te->_TimerProc  = TimerProc;
   te->_arg        = arg;
   // insert into queue
@@ -240,7 +240,7 @@ void mjev_run(mjev ev) {
   long long first = get_first_timer(ev); 
   // we got a timer event
   if (first != -1) {          
-    currTime = GetCurrentTime();
+    currTime = get_current_time();
     // adjust wait time, 0 return immediate
     timeWait = (first <= currTime) ? 0 : first - currTime;
   }
@@ -256,7 +256,7 @@ void mjev_run(mjev ev) {
   }
   // get timer event, run it
   first = get_first_timer(ev);                       
-  currTime = GetCurrentTime();        
+  currTime = get_current_time();        
   if (first != -1 && first <= currTime) {           // run timer event
     mjtevent te = get_first_timerevent(ev);        // get timer event from queue
     if (te && te->_valid && te->_TimerProc) te->_TimerProc(te->_arg);   // call timer proc

@@ -1,25 +1,19 @@
 #include "mjsort.h"
 
 int main() {
-  mjSort sort = mjSort_New();
-  mjSort_Insert(sort, 10, "value 10");
-  mjSort_Insert(sort, 20, "value 20");
-  mjSort_Insert(sort, 5, "value 5");
-  mjSort_Insert(sort, 30, "value 30");
-  mjSort_Insert(sort, 10, "value 10--2");
-  mjSort_Erase(sort, 20);
-  mjSort_Erase(sort, 30);
-  mjSort_Erase(sort, 10);
+  mjsort sort = mjsort_new();
+  mjsort_insert(sort, 10, "value 10");
+  mjsort_insert(sort, 20, "value 20");
+  mjsort_insert(sort, 5, "value 5");
+  mjsort_insert(sort, 30, "value 30");
+  mjsort_insert(sort, 10, "value 10--2");
 
-  for (struct rb_node* node = rb_first(&sort->treeRoot); node;
-        node = rb_next(node)) {
-    printf("key:%lld, value:%s\n", 
-        rb_entry(node, struct mjSortItem, node)->key,
-        (char*)rb_entry(node, struct mjSortItem, node)->value);
+  mjsortitem next = mjsort_next(sort, NULL);
+  while (next) {
+    printf("%lld, %s\n", next->key, (char*)next->value);
+    next = mjsort_next(sort, next);
   }
-  char* ret = mjSort_Search(sort, 10);
-  printf("found: %s\n", ret);
 
-  mjSort_Delete(sort);
+  mjsort_delete(sort);
   return 0;
 }
