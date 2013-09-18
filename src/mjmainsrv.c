@@ -57,7 +57,7 @@ static void* mjmainsrv_async_routine(void* data) {
   // get data from asyncData
   mjthread thread = (mjthread) data;
   mjmainsrv_async_data async_data = (mjmainsrv_async_data) thread->arg;
-  int fin_notify_w       = async_data->_fin_notify_w;
+  int fin_notify_w      = async_data->_fin_notify_w;
   mjProc WorkerRoutine  = async_data->_WorkerRoutine;
   void* w_arg           = async_data->_w_arg;
   // run Routine
