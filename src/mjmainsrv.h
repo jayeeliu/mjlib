@@ -12,20 +12,20 @@ struct mjmainsrv {
   int           _sfd;
   int           _stop;
   
-  mjthreadpool  _worker_thread_pool;
+  mjthreadpool  _worker_pool;
 
   int           _srv_num;
-  int           _srv_notify[MAX_SERVER_NUM];
+  int           _srv_n[MAX_SERVER_NUM];
   mjtcpsrv      _srv[MAX_SERVER_NUM];
-  mjthread      _srv_thread[MAX_SERVER_NUM];
+  mjthread      _srv_t[MAX_SERVER_NUM];
 };
 typedef struct mjmainsrv* mjmainsrv;
 
-extern bool       mjmainsrv_async(mjtcpsrv srv, mjProc WorkerRoutine, void* w_arg, mjProc CallBack, void* c_arg);
+extern bool       mjmainsrv_asy(mjtcpsrv srv, mjProc Routine, void* arg, mjProc CallBack, void* c_arg);
 extern bool       mjmainsrv_run(mjmainsrv srv);
 extern bool       mjmainsrv_set_stop(mjmainsrv srv, bool value);
 
-extern mjmainsrv  mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv, void* init_arg, int worker_thread_num);
+extern mjmainsrv  mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv, void* init_arg, int worker_num);
 extern bool       mjmainsrv_delete(mjmainsrv srv);
 
 #endif

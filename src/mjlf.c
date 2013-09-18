@@ -7,13 +7,14 @@
 
 /*
 ===============================================================================
-mjlf_routine
+mjlf_routine(thread_routine)
   Routine Run
 ===============================================================================
 */
 static void* mjlf_routine(void* arg) {
-  mjthread thread = (mjthread) arg;
-  mjlf srv = (mjlf) thread->arg;
+  // get thread and srv
+  mjthread thread = (mjthread)arg;
+  mjlf srv = (mjlf)thread->arg;
   int cfd;
   // leader run this
   while (1) {
@@ -22,12 +23,12 @@ static void* mjlf_routine(void* arg) {
     // choose new leader
     if (mjthreadpool_add_routine_plus(srv->_tpool, mjlf_routine, srv)) break;
     MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
-    close(cfd);
+    mjsock_close(cfd);
   }
   // change to worker
   if (!srv->_Routine) {
     MJLOG_ERR("No Routine Set, Exit!");
-    close(cfd);
+    mjsock_close(cfd);
     return NULL;
   }
   // create new conn 
@@ -40,7 +41,7 @@ static void* mjlf_routine(void* arg) {
   mjconnb_set_obj(conn, "server", srv, NULL);
   mjconnb_set_obj(conn, "thread", thread, NULL);
   mjconnb_set_timeout(conn, srv->_read_timeout, srv->_write_timeout);
-  // run server routine
+  // run server routine(conn routine)
   srv->_Routine(conn);
   mjconnb_delete(conn);
   return NULL; 
@@ -54,7 +55,7 @@ mjlf_get_obj
 void* mjlf_get_obj(mjlf srv, const char* key) {
   if (!srv || !key) {
     MJLOG_ERR("srv or key is null");
-    return false;
+    return NULL;
   }
   return mjmap_get_obj(srv->_arg_map, key);
 }
@@ -126,7 +127,7 @@ mjlf_New
 ===============================================================================
 */
 mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Srv,
-    void* srv_init_arg, mjProc Init_Thrd, void* thrd_init_arg) {
+    void* s_arg, mjProc Init_Thrd, void* t_arg) {
   // alloc mjlf struct
   mjlf srv = (mjlf) calloc(1, sizeof(struct mjlf));
   if (!srv) {
@@ -136,7 +137,7 @@ mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Srv,
   // set server socket and routine
   srv->_sfd      = sfd;
   srv->_Routine  = Routine;
-  srv->srv_init_arg = srv_init_arg;
+  srv->srv_init_arg = s_arg;
   srv->_arg_map = mjmap_new(31);
   if (!srv->_arg_map) {
     MJLOG_ERR("mjmap new error");
@@ -145,7 +146,7 @@ mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Srv,
   }
   if (Init_Srv) Init_Srv(srv);
   // init new pool
-  srv->_tpool = mjthreadpool_new(max_thread, Init_Thrd, thrd_init_arg);
+  srv->_tpool = mjthreadpool_new(max_thread, Init_Thrd, t_arg);
   if (!srv->_tpool) {
     MJLOG_ERR("mjthreadpool create error");
     free(srv);
@@ -166,7 +167,7 @@ mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Srv,
 
 /*
 ===============================================================================
-mjlf_Delete
+mjlf_delete
   Delete server
 ===============================================================================
 */

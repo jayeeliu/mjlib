@@ -21,7 +21,7 @@ void* mjproto_txt_init(void* arg) {
 /*
 ===============================================================================
 mjproto_txt_run_cmd
-  run txt protocol command
+  run txt protocol command(run txt routine)
 ===============================================================================
 */
 static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
@@ -83,7 +83,7 @@ failout1:
 
 /*
 ===============================================================================
-mjproto_txt_routine
+mjproto_txt_routine(conn_routine)
   run by mjlf. the main routine of mjproto_txt.
   arg is mjconnb
 ===============================================================================
