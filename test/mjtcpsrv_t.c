@@ -46,7 +46,7 @@ int main()
         return 1;
     }
 //    process_spawn(4);
-    mjtcpsrv server = mjtcpsrv_new(sfd, myhandler, NULL, NULL, MJTCPSRV_STANDALONE); 
+    mjtcpsrv server = mjtcpsrv_new(sfd, myhandler, MJTCPSRV_STANDALONE); 
     if ( !server ) {
         printf("Error create tcpserver\n");
         return 1;

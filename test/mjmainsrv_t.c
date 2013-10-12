@@ -37,7 +37,7 @@ static void* on_cal(void* arg) {
     return NULL;
   }
   mjtcpsrv server = (mjtcpsrv) mjconn_get_obj(conn, "server");
-  mjmainsrv_async(server, calRoutine, conn, on_fin, conn);
+  mjmainsrv_asy(server, calRoutine, conn, on_fin, conn);
   return NULL;
 }
 
@@ -55,7 +55,7 @@ int main()
     return -1;
   }
 
-  mjmainsrv server = mjmainsrv_new(sfd, Routine, NULL, NULL, 10);
+  mjmainsrv server = mjmainsrv_new(sfd, Routine);
   if (!server) {
     printf("mjmainsrv create error\n");
     return -1;

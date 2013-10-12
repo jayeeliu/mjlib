@@ -80,7 +80,7 @@ bool mjmainsrv_asy(mjtcpsrv srv, mjProc Routine, void* arg, mjProc CallBack,
     MJLOG_ERR("AsycData alloc Error");
     return false;
   }
-  asy_d->_ev        = srv->ev;
+  asy_d->_ev        = mjtcpsrv_get_ev(srv);
   asy_d->_Routine   = Routine;
   asy_d->_arg       = arg;
   asy_d->_CallBack  = CallBack;
@@ -94,7 +94,7 @@ bool mjmainsrv_asy(mjtcpsrv srv, mjProc Routine, void* arg, mjProc CallBack,
   }
   asy_d->_notify_r  = notify_fd[0];
   asy_d->_notify_w  = notify_fd[1];
-  mjev_add_fevent(srv->ev, notify_fd[0], MJEV_READABLE, mjmainsrv_asy_fin, 
+  mjev_add_fevent(asy_d->_ev, notify_fd[0], MJEV_READABLE, mjmainsrv_asy_fin,
       asy_d);
   // add routine to threadpool
   mjmainsrv mainsrv = (mjmainsrv) mjtcpsrv_get_obj(srv, "mainsrv");
@@ -102,13 +102,26 @@ bool mjmainsrv_asy(mjtcpsrv srv, mjProc Routine, void* arg, mjProc CallBack,
       mjmainsrv_asy_routine, asy_d)) {
     MJLOG_ERR("Oops async run Error");
     // del notify event
-    mjev_del_fevent(srv->ev, notify_fd[0], MJEV_READABLE);
+    mjev_del_fevent(asy_d->_ev, notify_fd[0], MJEV_READABLE);
     close(notify_fd[0]);
     close(notify_fd[1]);
     free(asy_d);
     return false;
   }
   return true;
+}
+
+/*
+===============================================================================
+mjmainsrv_srv_run
+  wrap function for srvthread_run
+===============================================================================
+*/
+static void* mjmainsrv_inner_srv_run(void* arg) {
+  mjthread thread = (mjthread) arg;
+  mjtcpsrv srv = mjthread_get_obj(thread, "tcpserver");
+  mjtcpsrv_run(srv);
+  return NULL;
 }
 
 /*
@@ -121,6 +134,23 @@ bool mjmainsrv_run(mjmainsrv srv) {
   // sanity check
   if (!srv) {
     MJLOG_ERR("srv is null");
+    return false;
+  }
+  // create inner server thread
+  for (int i = 0; i < srv->_srv_num; i++) {
+    srv->_srv_t[i] = mjthread_new(NULL, NULL);
+    if (!srv->_srv_t[i]) {
+      MJLOG_ERR("mjthread create error");
+      return false;
+    }
+    mjthread_set_obj(srv->_srv_t[i], "tcpserver", srv->_srv[i], 
+        mjtcpsrv_delete);
+    mjthread_add_routine(srv->_srv_t[i], mjmainsrv_inner_srv_run, NULL);
+  }
+  // create threadpool
+  srv->_worker_pool = mjthreadpool_new(srv->_srv_num * 2, NULL, NULL); 
+  if (!srv->_worker_pool) {
+    MJLOG_ERR("threadpool create error");
     return false;
   }
   // accept and dispatch
@@ -154,34 +184,18 @@ bool mjmainsrv_set_stop(mjmainsrv srv, bool value) {
 
 /*
 ===============================================================================
-mjmainsrv_srv_run
-  wrap function for srvthread_run
-===============================================================================
-*/
-static void* mjmainsrv_srv_run(void* arg) {
-  mjthread thread = (mjthread) arg;
-  mjtcpsrv srv = mjthread_get_obj(thread, "tcpserver");
-  mjtcpsrv_run(srv);
-  return NULL;
-}
-
-/*
-===============================================================================
 mjmainsrv_New
   create new mjsrv struct
 ===============================================================================
 */
-mjmainsrv mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv, 
-    void* init_arg, int worker_num) {
-  // alloc srv struct
-  mjmainsrv srv = (mjmainsrv) calloc(1, sizeof(struct mjmainsrv));
+mjmainsrv mjmainsrv_new(int sfd, mjProc SrvRoutine) {
+  mjmainsrv srv = (mjmainsrv)calloc(1, sizeof(struct mjmainsrv));
   if (!srv) {
     MJLOG_ERR("mjsrv create error");
     return NULL;
   }
-  // set listen socket blocking
   mjsock_set_blocking(sfd, 1);
-  // update fileds and srv
+  // stage1: update server number
   srv->_sfd     = sfd;
   srv->_srv_num = get_cpu_count();
   if (srv->_srv_num <= 0) {
@@ -189,7 +203,7 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv,
     free(srv);
     return NULL;
   }
-  // create srv
+  // stage2: create inner server
   int fd[2];
   for (int i = 0; i < srv->_srv_num; i++) {
     // set srvNotify
@@ -200,31 +214,13 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv,
     }
     srv->_srv_n[i] = fd[0];
     // create new srv struct and set main srv
-    srv->_srv[i] = mjtcpsrv_new(fd[1], SrvRoutine, InitSrv, init_arg, 
-        MJTCPSRV_INNER);
+    srv->_srv[i] = mjtcpsrv_new(fd[1], SrvRoutine, MJTCPSRV_INNER);
     if (!srv->_srv[i]) {
       MJLOG_ERR("mjTcpSrv create error");
       mjmainsrv_delete(srv);
       return NULL;
     }
     mjtcpsrv_set_obj(srv->_srv[i], "mainsrv", srv, NULL);
-    // create new thread
-    srv->_srv_t[i] = mjthread_new(NULL, NULL);
-    if (!srv->_srv_t[i]) {
-      MJLOG_ERR("mjThread create error");
-      mjmainsrv_delete(srv);
-      return NULL;
-    }
-    mjthread_set_obj(srv->_srv_t[i], "tcpserver", srv->_srv[i], 
-        mjtcpsrv_delete);
-    mjthread_add_routine(srv->_srv_t[i], mjmainsrv_srv_run, NULL);
-  }
-  // update threadpool
-  srv->_worker_pool = mjthreadpool_new(worker_num, NULL, NULL); 
-  if (!srv->_worker_pool) {
-    MJLOG_ERR("threadpool create error");
-    mjmainsrv_delete(srv);
-    return NULL;
   }
   return srv;
 }

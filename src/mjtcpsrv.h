@@ -11,24 +11,34 @@ struct mjtcpsrv {
   int     _sfd;       // socket, accept for standalone, read for inner
   int     _type;      // tcpsrv type, standalone or inner
   bool    _stop;      // server stop
-  mjev    ev;         // event loop
+  mjev    _ev;        // event loop
   mjProc  _Routine;   // server routine
-  void*   mainSrv;    // used in inner mode, point to mainSrv
-
-  mjProc  _InitSrv;   // init Server proc
-  void*   init_arg;
-
-  mjmap   _arg_map;
+  mjmap   _map;
 };
 typedef struct mjtcpsrv* mjtcpsrv;
 
-extern void*  mjtcpsrv_run(void *arg);
-extern bool   mjtcpsrv_set_stop(mjtcpsrv srv, bool value);
 
-extern void*  mjtcpsrv_get_obj(mjtcpsrv srv, const char* key);
-extern bool   mjtcpsrv_set_obj(mjtcpsrv srv, const char* key, void* obj, mjProc obj_free);
-
-extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, mjProc InitSrv, void* init_arg, int type);
+extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type);
 extern void*    mjtcpsrv_delete(void *arg);
+extern void*    mjtcpsrv_run(void *arg);
+extern bool     mjtcpsrv_set_stop(mjtcpsrv srv, bool value);
+
+
+static inline mjev mjtcpsrv_get_ev(mjtcpsrv srv) {
+  if (!srv) return NULL;
+  return srv->_ev;
+}
+
+static inline void* mjtcpsrv_get_obj(mjtcpsrv srv, const char* key) {
+  if (!srv || !key) return NULL;
+  return mjmap_get_obj(srv->_map, key);
+}
+
+static inline bool mjtcpsrv_set_obj(mjtcpsrv srv, const char* key, void* obj,
+    mjProc obj_free) {
+  if (!srv || !key) return false;
+  if (mjmap_set_obj(srv->_map, key, obj, obj_free) < 0) return false;
+  return true;
+}
 
 #endif

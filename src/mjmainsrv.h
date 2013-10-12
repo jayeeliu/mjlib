@@ -25,7 +25,7 @@ extern bool       mjmainsrv_asy(mjtcpsrv srv, mjProc Routine, void* arg, mjProc 
 extern bool       mjmainsrv_run(mjmainsrv srv);
 extern bool       mjmainsrv_set_stop(mjmainsrv srv, bool value);
 
-extern mjmainsrv  mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv, void* init_arg, int worker_num);
+extern mjmainsrv  mjmainsrv_new(int sfd, mjProc SrvRoutine);
 extern bool       mjmainsrv_delete(mjmainsrv srv);
 
 #endif
