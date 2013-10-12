@@ -14,10 +14,10 @@ struct mjmainsrv {
   
   mjthreadpool  _worker_pool;
 
-  int           _srv_num;
+  int           _srv_num;               // server number
   int           _srv_n[MAX_SERVER_NUM];
-  mjtcpsrv      _srv[MAX_SERVER_NUM];
-  mjthread      _srv_t[MAX_SERVER_NUM];
+  mjtcpsrv      _srv[MAX_SERVER_NUM];   // inner tcp server
+  mjthread      _srv_t[MAX_SERVER_NUM]; // inner thread run tcp server
 };
 typedef struct mjmainsrv* mjmainsrv;
 

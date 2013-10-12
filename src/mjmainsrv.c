@@ -182,8 +182,8 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv,
   // set listen socket blocking
   mjsock_set_blocking(sfd, 1);
   // update fileds and srv
-  srv->_sfd    	= sfd;
-  srv->_srv_num	= get_cpu_count();
+  srv->_sfd     = sfd;
+  srv->_srv_num = get_cpu_count();
   if (srv->_srv_num <= 0) {
     MJLOG_ERR("cpu count error");
     free(srv);
@@ -207,7 +207,7 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc SrvRoutine, mjProc InitSrv,
       mjmainsrv_delete(srv);
       return NULL;
     }
-		mjtcpsrv_set_obj(srv->_srv[i], "mainsrv", srv, NULL);
+    mjtcpsrv_set_obj(srv->_srv[i], "mainsrv", srv, NULL);
     // create new thread
     srv->_srv_t[i] = mjthread_new(NULL, NULL);
     if (!srv->_srv_t[i]) {
