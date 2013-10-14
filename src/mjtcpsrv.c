@@ -29,7 +29,7 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     }
   }
   // no server routine exit
-  if (!srv->_Routine) {
+  if (!srv->_RT) {
     MJLOG_ERR("no server Routine found");
     mjsock_close(cfd);
     return NULL;
@@ -42,8 +42,8 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     return NULL;
   }
   mjconn_set_obj(conn, "server", srv, NULL);
-  mjconn_set_timeout(conn, 1000, 1000);
-  srv->_Routine(conn);
+  mjconn_set_to(conn, 1000, 1000);
+  srv->_RT(conn);
   return NULL;
 }
 
@@ -67,23 +67,11 @@ void* mjtcpsrv_run(void* arg) {
 
 /*
 ===============================================================================
-mjtcpsrv_SetStop
-  set mjtcpsrv stop
-===============================================================================
-*/
-bool mjtcpsrv_set_stop(mjtcpsrv srv, bool value) {
-  if (!srv) return false;
-  srv->_stop = value ? true : false;
-  return true;
-}
-
-/*
-===============================================================================
-mjtcpsrv_New
+mjtcpsrv_new
   alloc mjtcpsrv struct
 ===============================================================================
 */
-mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type) {
+mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, int type) {
   // alloc mjtcpsrv struct
   mjtcpsrv srv = (mjtcpsrv) calloc(1, sizeof(struct mjtcpsrv));  
   if (!srv) {
@@ -98,9 +86,9 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type) {
   // set sfd nonblock
   mjsock_set_blocking(sfd, 0);
   // set fields
-  srv->_sfd     = sfd;
-  srv->_type    = type;
-  srv->_Routine = Routine;
+  srv->_sfd   = sfd;
+  srv->_type  = type;
+  srv->_RT    = RT;
   // set _map
   srv->_map = mjmap_new(31);
   if (!srv->_map) {

@@ -4,14 +4,23 @@
 #include "mjsock.h"
 #include "mjsql.h"
 
+static int count = 0;
+
 static void* on_close(void* arg) {
   mjconn conn = (mjconn) arg;
+  mjtcpsrv is = mjconn_get_obj(conn, "server");
+  mjmainsrv msrv = mjtcpsrv_get_obj(is, "mainsrv");
   mjconn_delete(conn);
+  count++;
+  if (count > 100000) {
+    mjmainsrv_set_stop(msrv, true);
+  }
   return NULL;
 }
 
 static void* on_fin(void* arg) {
   mjconn conn = (mjconn) arg;
+  mjconn_buf_writes(conn, "OK SERVER HERE\r\n");
   mjconn_flush(conn, on_close);
   return NULL; 
 }
@@ -43,7 +52,7 @@ static void* on_cal(void* arg) {
 
 static void* Routine(void* arg) {
   mjconn conn = (mjconn) arg;
-  mjconn_readuntil(conn, "\r\n\r\n", on_cal);
+  mjconn_readuntil(conn, "\r\n\r\n", on_fin);
   return NULL;
 }
 

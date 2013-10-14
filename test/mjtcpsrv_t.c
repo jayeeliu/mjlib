@@ -7,21 +7,13 @@
 #include "mjcomm.h"
 #include "mjlog.h"
 
-//static int count = 0;
-
-void* on_close(void *data)
-{
-    mjconn conn = (mjconn)data;
-//    count++;
-//    if (count > 100000) {
-//      mjtcpsrv server = (mjtcpsrv) mjconn_get_obj(conn, "server");
-//      mjtcpsrv_set_stop(server, true);
-//    }
-    mjconn_delete(conn);
-    return NULL;
+void* on_close(void *data) {
+  mjconn conn = (mjconn)data;
+  mjconn_delete(conn);
+  return NULL;
 }
 
-void* on_write1(void *data) {
+void* on_write(void *data) {
   mjconn conn = (mjconn)data;
   if (conn->_error || conn->_closed || conn->_timeout) {
     mjconn_delete(conn);
@@ -31,27 +23,24 @@ void* on_write1(void *data) {
   return NULL;
 }
 
-void* myhandler(void *data)
-{
-    mjconn conn = (mjconn)data;
-    mjconn_readuntil(conn, "\r\n\r\n", on_write1);
-    return NULL;
+void* myhandler(void *data) {
+  mjconn conn = (mjconn)data;
+  mjconn_readuntil(conn, "\r\n\r\n", on_write);
+  return NULL;
 }
 
-int main()
-{
-    int sfd = mjsock_tcp_server(7879);
-    if (sfd < 0) {
-        printf("Error create server socket\n");
-        return 1;
-    }
-//    process_spawn(4);
-    mjtcpsrv server = mjtcpsrv_new(sfd, myhandler, MJTCPSRV_STANDALONE); 
-    if ( !server ) {
-        printf("Error create tcpserver\n");
-        return 1;
-    }
-    mjtcpsrv_run(server);
-    mjtcpsrv_delete(server); 
-    return 0;
+int main() {
+  int sfd = mjsock_tcp_server(7879);
+  if (sfd < 0) {
+    printf("Error create server socket\n");
+    return 1;
+  }
+  mjtcpsrv server = mjtcpsrv_new(sfd, myhandler, MJTCPSRV_STANDALONE); 
+  if (!server) {
+    printf("Error create tcpserver\n");
+    return 1;
+  }
+  mjtcpsrv_run(server);
+  mjtcpsrv_delete(server); 
+  return 0;
 }

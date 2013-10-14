@@ -24,23 +24,20 @@
 
 /*
 ===============================================================================
-mjconn_DelReadEvent
+mjconn_del_revent
   read finish del event and run callback
 ===============================================================================
 */
-static void* mjconn_del_read_event(mjconn conn) {
-  // del read event
+static void* mjconn_del_revent(mjconn conn) {
+  // del read event, invalid timer event
   mjev_del_fevent(conn->_ev, conn->_fd, MJEV_READABLE);
-  if (conn->_read_timeout) {
-    // invalid timer event
-    mjev_del_timer(conn->_ev, conn->_read_timeout_event);
-    conn->_read_timeout     	= 0;
-    conn->_read_timeout_event	= NULL;
+  if (conn->_rto_e) {
+    mjev_del_timer(conn->_ev, conn->_rto_e);
+    conn->_rto_e = NULL;
   }
-  // reset read type
-  conn->_read_type = MJCONN_NONE;
+  conn->_rtype = MJCONN_NONE;
   // run callback in the last step
-  if (conn->_ReadCallBack) conn->_ReadCallBack(conn);
+  if (conn->_RCB) conn->_RCB(conn);
   return NULL;
 }
 
@@ -51,7 +48,7 @@ mjconn_ReadEventCallBack
   when error or closed, close conn
 ===============================================================================
 */
-static void* mjconn_read_event_callback(void* arg) {
+static void* mjconn_revent_cb(void* arg) {
   mjconn conn = (mjconn) arg;
   char buf[BUF_SIZE];
 	// read data in a loop
@@ -76,36 +73,34 @@ static void* mjconn_read_event_callback(void* arg) {
     mjstr_catb(conn->_rbuf, buf, ret);
     break;
   }
-  if (conn->_read_type == MJCONN_READBYTES) {
+  if (conn->_rtype == MJCONN_READBYTES) {
     // readtype is readbytes
     if (conn->_rbytes <= conn->_rbuf->length) { 
       mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbytes);
       mjstr_consume(conn->_rbuf, conn->_rbytes);
-      mjconn_del_read_event(conn);
+      mjconn_del_revent(conn);
       return NULL;
     }
-  } else if (conn->_read_type == MJCONN_READUNTIL) { 
+  } else if (conn->_rtype == MJCONN_READUNTIL) { 
     // read type is readuntil
     int pos = mjstr_search(conn->_rbuf, conn->_delim);
     if (pos != -1) {
       mjstr_copyb(conn->_data, conn->_rbuf->data, pos);
       mjstr_consume(conn->_rbuf, pos + strlen(conn->_delim));
-      mjconn_del_read_event(conn);
+      mjconn_del_revent(conn);
       return NULL;
     }
-  } else if (conn->_read_type == MJCONN_READ) { 
+  } else if (conn->_rtype == MJCONN_READ) { 
     // read type is normal read
     if (conn->_rbuf && conn->_rbuf->length > 0) {
       mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbuf->length);
       mjstr_consume(conn->_rbuf, conn->_rbuf->length);
-      mjconn_del_read_event(conn);
+      mjconn_del_revent(conn);
       return NULL;
     }
   }
   // some error happend, close conn
-  if (conn->_closed || conn->_error) {
-    mjconn_del_read_event(conn);
-  }
+  if (conn->_closed || conn->_error) mjconn_del_revent(conn);
   return NULL;
 }
 
@@ -115,85 +110,83 @@ mjconn_TimeoutCallBack
   read/write timeout callback
 ===============================================================================
 */
-static void* mjconn_read_timeout_callback(void* data) {
-  mjconn conn = (mjconn) data;
+static void* mjconn_rto_cb(void* arg) {
+  mjconn conn = (mjconn) arg;
   conn->_timeout = true;
-  mjconn_del_read_event(conn);
+  mjconn_del_revent(conn);
   return NULL;
 }
 
 /*
 ===============================================================================
-mjconn_add_read_event
+mjconn_add_revent
   add read event, read timeout event
   return false -- add error, close conn
       true -- add success
 ===============================================================================
 */
-static bool mjconn_add_read_event(mjconn conn) {
-  // check if conn has closed or error
-  if (conn->_closed || conn->_error || conn->_timeout) {
-    MJLOG_ERR("conn is closed or error");
-    return false;
-  }
+static bool mjconn_add_revent(mjconn conn) {
   // add readevent
-  if (mjev_add_fevent(conn->_ev, conn->_fd, MJEV_READABLE, 
-    mjconn_read_event_callback, conn) < 0) {
+  if (mjev_add_fevent(conn->_ev, conn->_fd, MJEV_READABLE, mjconn_revent_cb, 
+      conn) < 0) {
     MJLOG_ERR("mjev_add error");
-    conn->_error = true;
-    return false;
+    goto failout;
   }
   // add read timeout event
-  if (conn->_read_timeout) {
-    conn->_read_timeout_event = mjev_add_timer(conn->_ev, conn->_read_timeout, 
-        mjconn_read_timeout_callback, conn);
-    if (!conn->_read_timeout_event) {
-      MJLOG_ERR("mjev_addtimer error");
-      conn->_error = true;
+  if (conn->_rto) {
+    if (conn->_rto_e) {
+      MJLOG_ERR("mjconn read time event not null");
       mjev_del_fevent(conn->_ev, conn->_fd, MJEV_READABLE);
-      return false;
+      goto failout;
+    }
+    conn->_rto_e = mjev_add_timer(conn->_ev, conn->_rto, mjconn_rto_cb, conn);
+    if (!conn->_rto_e) {
+      MJLOG_ERR("mjev_addtimer error");
+      mjev_del_fevent(conn->_ev, conn->_fd, MJEV_READABLE);
+      goto failout;
     }
   }
   return true;
+
+failout:
+  conn->_error = true;
+  return false;
 }
 
 /*
 ================================================================================
-mjconn_ReadBytes
-  read len bytes
+mjconn_readbytes
+  read len bytes, if finished call CB(connect routine)
   return false -- error, true -- success
 ================================================================================
 */
-bool mjconn_readbytes(mjconn conn, int len, mjProc CallBack) {
+bool mjconn_readbytes(mjconn conn, int len, mjProc CB) {
   // sanity check
-  if (!conn || !CallBack || conn->_error || conn->_closed || conn->_timeout) {
-    MJLOG_ERR("conn is error");  
+  if (!conn || !CB || conn->_error || conn->_closed || conn->_timeout) {
+    MJLOG_ERR("conn error");  
     return false;
   }
   // can't re enter
-  if (conn->_read_type != MJCONN_NONE) {
+  if (conn->_rtype != MJCONN_NONE) {
     MJLOG_ERR("readType must be MJCONN_NONE");
     return false;
   }
   // set read type
-  conn->_read_type       = MJCONN_READBYTES;    
-  conn->_rbytes          = len;
-  conn->_ReadCallBack    = CallBack;
+  conn->_rtype  = MJCONN_READBYTES;    
+  conn->_rbytes = len;
+  conn->_RCB    = CB;
   // check rbuf
   if (conn->_rbytes <= conn->_rbuf->length) { 
-    // copy rbytes to data
+    // read finish, copy rbytes to data
     mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbytes);
     mjstr_consume(conn->_rbuf, conn->_rbytes);
-    // read finish
-    conn->_read_type = MJCONN_NONE;
-    // run callback
-    if (conn->_ReadCallBack) {
-      mjev_add_pending(conn->_ev, conn->_ReadCallBack, conn);
-    }
+    conn->_rtype = MJCONN_NONE;
+    // run callback in pending
+    if (conn->_RCB) mjev_add_pending(conn->_ev, conn->_RCB, conn);
     return true;
   }
   // add to event loop
-  return mjconn_add_read_event(conn);
+  return mjconn_add_revent(conn);
 }
 
 /*
@@ -203,38 +196,35 @@ mjconn_ReadUntil
   return false --- error, true -- readfinish or set event ok
 ===============================================================================
 */
-bool mjconn_readuntil(mjconn conn, char* delim, mjProc CallBack) {
+bool mjconn_readuntil(mjconn conn, char* delim, mjProc CB) {
   // sanity check
   if (!conn || !delim || conn->_error || conn->_closed || conn->_timeout 
-      || !CallBack) {
+      || !CB) {
     MJLOG_ERR("conn or delim or proc is null");
     return false;
   }
   // can't re enter
-  if (conn->_read_type != MJCONN_NONE) {
+  if (conn->_rtype != MJCONN_NONE) {
     MJLOG_ERR("readType must be MJCONN_NONE");
     return false;
   }
   // set read type
-  conn->_read_type    = MJCONN_READUNTIL;
-  conn->_delim     		= delim;
-  conn->_ReadCallBack	= CallBack;
-  // found data in rbuf, call proc and return 
+  conn->_rtype  = MJCONN_READUNTIL;
+  conn->_delim  = delim;
+  conn->_RCB	  = CB;
+  // check rbuf
   int pos = mjstr_search(conn->_rbuf, conn->_delim);
   if (pos != -1) {
     // copy data to rbuf, not include delim
     mjstr_copyb(conn->_data, conn->_rbuf->data, pos);
     mjstr_consume(conn->_rbuf, pos + strlen(conn->_delim));
-    // read finish set readType to NONE, run callback
-    conn->_read_type = MJCONN_NONE;
-    // run read callback
-    if (conn->_ReadCallBack) {
-      mjev_add_pending(conn->_ev, conn->_ReadCallBack, conn);
-    }
+    conn->_rtype = MJCONN_NONE;
+    // run callback in pending
+    if (conn->_RCB) mjev_add_pending(conn->_ev, conn->_RCB, conn);
     return true;
   }
   // add read event to event loop 
-  return mjconn_add_read_event(conn); 
+  return mjconn_add_revent(conn); 
 }
 
 /*
@@ -243,31 +233,30 @@ mjconn_Read
   read data
 ===============================================================================
 */
-bool mjconn_read(mjconn conn, mjProc CallBack) {
+bool mjconn_read(mjconn conn, mjProc CB) {
   // sanity check
-  if (!conn || !CallBack || conn->_error || conn->_closed || conn->_timeout) {
-    MJLOG_ERR("conn or CallBack is null");
+  if (!conn || !CB || conn->_error || conn->_closed || conn->_timeout) {
+    MJLOG_ERR("conn error");
     return false;
   }
   // can't re enter
-  if (conn->_read_type != MJCONN_NONE) {
+  if (conn->_rtype != MJCONN_NONE) {
     MJLOG_ERR("readType must be MJCONN_NONE");
     return false;
   }
   // set read type
-  conn->_read_type   	= MJCONN_READ;
-  conn->_ReadCallBack	= CallBack;
-  // found data in rbuf
+  conn->_rtype  = MJCONN_READ;
+  conn->_RCB	  = CB;
+  // check rbuf
   if (conn->_rbuf && conn->_rbuf->length > 0) {
     mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbuf->length);
     mjstr_consume(conn->_rbuf, conn->_rbuf->length);
-    conn->_read_type  = MJCONN_NONE;
-    if (conn->_ReadCallBack) {
-      mjev_add_pending(conn->_ev, conn->_ReadCallBack, conn);
-    }
-    return 0;
+    conn->_rtype = MJCONN_NONE;
+    // run callback in pending
+    if (conn->_RCB) mjev_add_pending(conn->_ev, conn->_RCB, conn);
+    return true;
   }
-  return mjconn_add_read_event(conn);
+  return mjconn_add_revent(conn);
 }
 
 /*
@@ -276,39 +265,37 @@ mjconn_DelWriteEvent
   del write event
 ===============================================================================
 */
-static void* mjconn_del_write_event(mjconn conn) {
+static void* mjconn_del_wevent(mjconn conn) {
+  // del write event, invalid timer event
   mjev_del_fevent(conn->_ev, conn->_fd, MJEV_WRITEABLE);
-  // del write timeout event
-  if (conn->_write_timeout) {
-    mjev_del_timer(conn->_ev, conn->_write_timeout_event);
-    conn->_write_timeout    		= 0;  
-    conn->_write_timeout_event	= NULL;
+  if (conn->_wto_e) {
+    mjev_del_timer(conn->_ev, conn->_wto_e);
+    conn->_wto_e = NULL;
   }
-  // set write type to NONE
-  conn->_write_type = MJCONN_NONE;
+  conn->_wtype = MJCONN_NONE;
   // call write callback
-  if (conn->_WriteCallBack) conn->_WriteCallBack(conn);
+  if (conn->_WCB) conn->_WCB(conn);
   return NULL;
 }
 
 /*
 ===============================================================================
-mjconn_write_event_callback
+mjconn_wevent_cb
   run when we can write data
 ===============================================================================
 */
-static void* mjconn_write_event_callback(void* arg) {
+static void* mjconn_wevent_cb(void* arg) {
   mjconn conn = (mjconn)arg;
   int ret = write(conn->_fd, conn->_wbuf->data, conn->_wbuf->length);
   if (ret < 0) {
     MJLOG_ERR("conn write error: %s", strerror(errno));
     conn->_error = true;
-    mjconn_del_write_event(conn);
+    mjconn_del_wevent(conn);
     return NULL;
   }
   mjstr_consume(conn->_wbuf, ret);
-  // no data to write call DelWriteEvent
-  if (conn->_wbuf->length == 0) mjconn_del_write_event(conn);
+  // no data to write call mjconn_del_wevent
+  if (conn->_wbuf->length == 0) mjconn_del_wevent(conn);
   return NULL;
 }
 
@@ -318,46 +305,46 @@ mjconn_TimeoutCallBack
   read/write timeout callback
 ===============================================================================
 */
-static void* mjconn_write_timeout_callback(void* data) {
-  mjconn conn = (mjconn) data;
+static void* mjconn_wto_cb(void* arg) {
+  mjconn conn = (mjconn) arg;
   conn->_timeout = true;
-  mjconn_del_write_event(conn);
+  mjconn_del_wevent(conn);
   return NULL;
 }
 
 /*
 ===============================================================================
-mjconn_AddWriteEvent
+mjconn_add_wevent
   add write event to eventloop
 ===============================================================================
 */
-static bool mjconn_add_write_event(mjconn conn) {
-  // sanity check
-  if (conn->_closed || conn->_error) {
-    MJLOG_ERR("conn is closed or error");
-    return false;
-  }
+static bool mjconn_add_wevent(mjconn conn) {
   // add write event
-  if (mjev_add_fevent(conn->_ev, conn->_fd, MJEV_WRITEABLE, 
-      mjconn_write_event_callback, conn) < 0) {
-    // add to mjev error
+  if (mjev_add_fevent(conn->_ev, conn->_fd, MJEV_WRITEABLE, mjconn_wevent_cb, 
+      conn) < 0) {
     MJLOG_ERR("mjev_add error");
-    conn->_error = true;
-    return false;
+    goto failout;
   }
   // AddWriteEvent can be call many times
   // When we call it twice, we can't change the callback
-  if (conn->_write_timeout && !conn->_write_timeout_event) { 
-    conn->_write_timeout_event = mjev_add_timer(conn->_ev, 
-        conn->_write_timeout, mjconn_write_timeout_callback, conn);
-    if (!conn->_write_timeout_event) {
-      MJLOG_ERR("mjev_addtimer error");
-      conn->_error = true;
+  if (conn->_wto) { 
+    if (conn->_wto_e) {
+      MJLOG_ERR("mjconn write time event not null");
       mjev_del_fevent(conn->_ev, conn->_fd, MJEV_WRITEABLE);
-      return false;
+      goto failout;
+    }
+    conn->_wto_e = mjev_add_timer(conn->_ev, conn->_wto, mjconn_wto_cb, conn);
+    if (!conn->_wto_e) {
+      MJLOG_ERR("mjev_addtimer error");
+      mjev_del_fevent(conn->_ev, conn->_fd, MJEV_WRITEABLE);
+      goto failout;
     }
   }
   return true;
+
+failout:
+  conn->_error = true;
+  return false;
 }
 
 /*
@@ -367,8 +354,8 @@ mjconn_buf_writeb
 ===============================================================================
 */
 bool mjconn_buf_writeb(mjconn conn, char* buf, int length) {
-  if (!conn || !buf || conn->_error || conn->_closed || conn->_timeout) {
-    MJLOG_ERR("conn is error");
+  if (!conn || !buf || conn->_error || conn->_closed) {
+    MJLOG_ERR("conn error");
     return false;
   }
   mjstr_catb(conn->_wbuf, buf, length);
@@ -377,52 +364,24 @@ bool mjconn_buf_writeb(mjconn conn, char* buf, int length) {
 
 /*
 ===============================================================================
-mjconn_buf_writes
-  copy string to wbuf
-===============================================================================
-*/
-bool mjconn_buf_writes(mjconn conn, char* buf) {
-  if (!conn || !buf) {
-    MJLOG_ERR("conn or buf is null");
-    return false;
-  }
-  return mjconn_buf_writeb(conn, buf, strlen(buf));
-}
-
-/*
-===============================================================================
-mjconn_buf_write
-  copy mjstr to wbuf
-===============================================================================
-*/
-bool mjconn_buf_write(mjconn conn, mjstr buf) {
-  if (!conn || !buf) {
-    MJLOG_ERR("conn or buf is null");
-    return false;
-  }
-  return mjconn_buf_writeb(conn, buf->data, buf->length);
-}
-
-/*
-===============================================================================
 mjconn_Flush
   flush wbuf
 ===============================================================================
 */
-bool mjconn_flush(mjconn conn, mjProc CallBack) {
+bool mjconn_flush(mjconn conn, mjProc CB) {
   // sanity check
-  if (!conn || conn->_error || conn->_closed || conn->_timeout) {
-    MJLOG_ERR("conn is null");
+  if (!conn || conn->_error || conn->_closed) {
+    MJLOG_ERR("conn error");
     return false;
   }
-  if (conn->_write_type != MJCONN_NONE) {
+  if (conn->_wtype != MJCONN_NONE) {
     MJLOG_ERR("conn write type should be null");
     return false;
   }
   // set write callback
-  conn->_WriteCallBack = CallBack;
-  conn->_write_type = MJCONN_WRITE;
-  return mjconn_add_write_event(conn);
+  conn->_WCB    = CB;
+  conn->_wtype  = MJCONN_WRITE;
+  return mjconn_add_wevent(conn);
 }
 
 /*
@@ -431,106 +390,17 @@ mjconn_writeb
   write data to conn
 ===============================================================================
 */
-bool mjconn_writeb(mjconn conn, char* buf, int length, mjProc CallBack) {
-  if (!conn || !buf || conn->_error || conn->_closed || conn->_timeout) {
-    MJLOG_ERR("conn is error");
+bool mjconn_writeb(mjconn conn, char* buf, int length, mjProc CB) {
+  if (!conn || !buf || conn->_error || conn->_closed) {
+    MJLOG_ERR("conn error");
     return false;
   }
-  if (conn->_write_type != MJCONN_NONE) {
+  if (conn->_wtype != MJCONN_NONE) {
     MJLOG_ERR("conn write type should be null");
     return false;
   }
   mjconn_buf_writeb(conn, buf, length);
-  return mjconn_flush(conn, CallBack);
-}
-
-/*
-===============================================================================
-mjconn_WriteS
-  write string
-===============================================================================
-*/
-bool mjconn_writes(mjconn conn, char* buf, mjProc CallBack) {
-  if (!conn || !buf) {
-    MJLOG_ERR("conn or buf is null");
-    return false;
-  }
-  return mjconn_writeb(conn, buf, strlen(buf), CallBack);
-}
-
-/*
-===============================================================================
-mjconn_Write
-  write mjstr
-===============================================================================
-*/
-bool mjconn_write(mjconn conn, mjstr buf, mjProc CallBack) {
-  if (!conn || !buf) {
-    MJLOG_ERR("conn or buf is null");
-    return false;
-  }
-  return mjconn_writeb(conn, buf->data, buf->length, CallBack);
-}
-
-/*
-===============================================================================
-mjconn_SetConnectTimeout
-  set conn connect timeout
-===============================================================================
-*/
-bool mjconn_set_connect_timeout(mjconn conn, unsigned int connect_timeout) {
-  if (!conn) {
-    MJLOG_ERR("conn is null");
-    return false;
-  }
-  conn->_connect_timeout = connect_timeout;
-  return true;
-}
-
-/*
-===============================================================================
-mjconn_SetTimeout
-  set conn, read and write timeout
-===============================================================================
-*/
-bool mjconn_set_timeout(mjconn conn, unsigned int read_timeout, 
-      unsigned int write_timeout) {
-  if (!conn) {
-    MJLOG_ERR("conn is null");
-    return false;
-  }
-  conn->_read_timeout   = read_timeout;
-  conn->_write_timeout  = write_timeout;
-  return true;
-}
-
-/*
-===============================================================================
-mjconn_get_obj
-	get object from mjconn
-===============================================================================
-*/
-void* mjconn_get_obj(mjconn conn, const char* key) {
-	if (!conn || !key) {
-		MJLOG_ERR("conn or key is null");
-		return NULL;
-	}
-	return mjmap_get_obj(conn->_arg_map, key);
-}
-
-/*
-===============================================================================
-mjconn_set_obj
-	set object to mjconn
-===============================================================================
-*/
-bool mjconn_set_obj(mjconn conn, const char* key, void* obj, mjProc obj_free) {
-	if (!conn || !key) {
-		MJLOG_ERR("conn or key is null");
-		return false;
-	}
-	if (mjmap_set_obj(conn->_arg_map, key, obj, obj_free) < 0) return false;
-	return true;
+  return mjconn_flush(conn, CB);
 }
 
 /*
@@ -539,15 +409,15 @@ mjconn_DelConnectEvent
   del connect event
 ===============================================================================
 */
-static void* mjconn_del_connect_event(mjconn conn) {
+static void* mjconn_del_cevent(mjconn conn) {
+  // delete conn event, invalid timer
   mjev_del_fevent(conn->_ev, conn->_fd, MJEV_READABLE | MJEV_WRITEABLE); 
-  if (conn->_connect_timeout) {
-    mjev_del_timer(conn->_ev, conn->_connect_timeout_event);
-    conn->_connect_timeout    		= 0;
-    conn->_connect_timeout_event	= NULL;
+  if (conn->_cto_e) {
+    mjev_del_timer(conn->_ev, conn->_cto_e);
+    conn->_cto_e = NULL;
   }
-  conn->_connect_type = MJCONN_NONE;  
-  if (conn->_ConnectCallback) conn->_ConnectCallback(conn);
+  conn->_ctype = MJCONN_NONE;  
+  if (conn->_CCB) conn->_CCB(conn);
   return NULL;
 }
 
@@ -557,7 +427,7 @@ mjconn_ConnectEventCallback
   connect callback, successful
 ===================================================================
 */
-static void* mjconn_connect_event_callback(void* arg) {
+static void* mjconn_cevent_cb(void* arg) {
   mjconn conn = (mjconn)arg;
   int err = 0;
   socklen_t errlen = sizeof(err);
@@ -565,17 +435,17 @@ static void* mjconn_connect_event_callback(void* arg) {
   if (getsockopt(conn->_fd, SOL_SOCKET, SO_ERROR, &err, &errlen) == -1) {
     MJLOG_ERR("getsockopt error, %s", strerror(errno));
     conn->_error = true;
-    mjconn_del_connect_event(conn); 
+    mjconn_del_cevent(conn); 
     return NULL;
   }
   if (err) {
     MJLOG_ERR("err is: %s", strerror(err));
     conn->_error = true;
-    mjconn_del_connect_event(conn); 
+    mjconn_del_cevent(conn); 
     return NULL;
   }
   // connect success
-  mjconn_del_connect_event(conn); 
+  mjconn_del_cevent(conn); 
   return NULL;
 }
 
@@ -585,37 +455,45 @@ mjconn_TimeoutCallBack
   read/write timeout callback
 ===============================================================================
 */
-static void* mjconn_connect_timeout_callback(void* data) {
-  mjconn conn = (mjconn) data;
+static void* mjconn_cto_cb(void* arg) {
+  mjconn conn = (mjconn) arg;
   conn->_timeout = true;
-  mjconn_del_connect_event(conn);
+  mjconn_del_cevent(conn);
   return NULL;
 }
 
 /*
 ===============================================================================
-mjconn_AddConnectEvent
+mjconn_add_cevent
   add connect event 
 ===============================================================================
 */
-static bool mjconn_add_connect_event(mjconn conn) {
+static bool mjconn_add_cevent(mjconn conn) {
   // add to eventloop
   if (mjev_add_fevent(conn->_ev, conn->_fd, MJEV_READABLE | MJEV_WRITEABLE, 
-        mjconn_connect_event_callback, conn) < 0)  {
+        mjconn_cevent_cb, conn) < 0)  {
     MJLOG_ERR("mjev_add_fevent error");
-    return false;
+    goto failout;
   }
   // set connect timeout
-  if (conn->_connect_timeout) {
-    conn->_connect_timeout_event = mjev_add_timer(conn->_ev, 
-        conn->_connect_timeout, mjconn_connect_timeout_callback, conn);
-    if (!conn->_connect_timeout_event) {
-      MJLOG_ERR("mjEV_AddTimer error");
+  if (conn->_cto) {
+    if (conn->_cto_e) {
+      MJLOG_ERR("mjconn connect event not null");
       mjev_del_fevent(conn->_ev, conn->_fd, MJEV_READABLE | MJEV_WRITEABLE);
-      return false;
+      goto failout;
+    }
+    conn->_cto_e = mjev_add_timer(conn->_ev, conn->_cto, mjconn_cto_cb, conn);
+    if (!conn->_cto_e) {
+      MJLOG_ERR("mjev_add_timer error");
+      mjev_del_fevent(conn->_ev, conn->_fd, MJEV_READABLE | MJEV_WRITEABLE);
+      goto failout;
     }
   }
   return true;
+
+failout:
+  conn->_error = true;
+  return false;
 }
 
 /*
@@ -624,21 +502,20 @@ mjconn_Connect
   connect to host async
 ===============================================================================
 */
-bool mjconn_connect(mjconn conn, const char* ipaddr, int port, 
-    mjProc CallBack) {
+bool mjconn_connect(mjconn conn, const char* ipaddr, int port, mjProc CB) {
   // sanity check
-  if (!conn || !CallBack) {
+  if (!conn || !CB) {
     MJLOG_ERR("conn or proc is null");
     return false;
   }
   // can't re enter
-  if (conn->_connect_type != MJCONN_NONE) {
+  if (conn->_ctype != MJCONN_NONE) {
     MJLOG_ERR("connectType must be MJCONN_NONE");
     return false;
   }
   // set conn type and callback
-  conn->_connect_type     = MJCONN_CONN;
-  conn->_ConnectCallback  = CallBack;
+  conn->_ctype  = MJCONN_CONN;
+  conn->_CCB    = CB;
   // init address
   struct sockaddr_in addr;
   bzero(&addr, sizeof(addr));
@@ -648,15 +525,13 @@ bool mjconn_connect(mjconn conn, const char* ipaddr, int port,
   // try to connect 
   int ret = connect(conn->_fd, (struct sockaddr*)&addr, sizeof(addr));
   if (ret == 0) {       
-    // connect success
-    conn->_connect_type = MJCONN_NONE;
-    if (conn->_ConnectCallback) {
-      mjev_add_pending(conn->_ev, conn->_ConnectCallback, conn);
-    }
+    // connect success, run callback in pending
+    conn->_ctype = MJCONN_NONE;
+    if (conn->_CCB) mjev_add_pending(conn->_ev, conn->_CCB, conn);
     return true;
   }
   // connect failed, set nonblock connect
-  if (errno == EINPROGRESS) return mjconn_add_connect_event(conn);
+  if (errno == EINPROGRESS) return mjconn_add_cevent(conn);
   MJLOG_ERR("connect failed");  
   conn->_error = true;
   return false;
@@ -672,14 +547,14 @@ mjconn_SetBuffer
   used by mjconn_New for init buffer
 ===============================================================================
 */
-static mjstr mjconn_set_buffer(mjstr defVal) {
+static inline mjstr mjconn_set_buffer(mjstr defVal) {
   if (defVal) return defVal;
-  return mjstr_new(1024);
+  return mjstr_new(1024); // alloc 1K buffer
 }
 
 /*
 ===============================================================================
-mjconn_New
+mjconn_new
   create mjconn
   return NULL -- fail, other -- success
 ===============================================================================
@@ -714,8 +589,8 @@ mjconn mjconn_new(mjev ev, int fd) {
     return NULL;
   }
   // create mjmap
-  conn->_arg_map = mjmap_new(31);
-  if (!conn->_arg_map) {
+  conn->_map = mjmap_new(31);
+  if (!conn->_map) {
     MJLOG_ERR("mjmap create error");
     return NULL;
   }
@@ -724,37 +599,34 @@ mjconn mjconn_new(mjev ev, int fd) {
 
 /*
 ===============================================================================
-mjconn_Delete
+mjconn_delete
   delete mjconn struct
 ===============================================================================
 */
 bool mjconn_delete(mjconn conn) {
-  if (!conn) {
-    MJLOG_ERR("conn is null");
-    return false;
-  }
+  if (!conn) return false;
   // invalid connect timeout event
-  if (conn->_connect_timeout_event) {
-    mjev_del_timer(conn->_ev, conn->_connect_timeout_event);
-    conn->_connect_timeout  = 0;
-    conn->_connect_timeout_event  = NULL;
+  if (conn->_cto_e) {
+    mjev_del_timer(conn->_ev, conn->_cto_e);
+    conn->_cto    = 0;
+    conn->_cto_e  = NULL;
   }
   // invalid read timeout event
-  if (conn->_read_timeout_event) {
-    mjev_del_timer(conn->_ev, conn->_read_timeout_event); 
-    conn->_read_timeout = 0;
-    conn->_read_timeout_event = NULL;
+  if (conn->_rto_e) {
+    mjev_del_timer(conn->_ev, conn->_rto_e); 
+    conn->_rto    = 0;
+    conn->_rto_e  = NULL;
   }
   // invalid write timeout event
-  if (conn->_write_timeout_event) {
-    mjev_del_timer(conn->_ev, conn->_write_timeout_event);
-    conn->_write_timeout = 0;
-    conn->_write_timeout_event = NULL;
+  if (conn->_wto_e) {
+    mjev_del_timer(conn->_ev, conn->_wto_e);
+    conn->_wto    = 0;
+    conn->_wto_e  = NULL;
   }
   // delete eventloop fd, pending proc
   mjev_del_fevent(conn->_ev, conn->_fd, MJEV_READABLE | MJEV_WRITEABLE);
   mjev_del_pending(conn->_ev, conn);
-  mjmap_delete(conn->_arg_map);
+  mjmap_delete(conn->_map);
   mjsock_close(conn->_fd);
   return true;
 }

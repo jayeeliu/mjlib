@@ -16,42 +16,42 @@
 
 struct mjfevent {
     int     _mask;
-    mjProc  _ReadProc;
-    mjProc  _WriteProc;
+    mjProc  _RRT;
+    mjProc  _WRT;
     void*   _arg;
 };
 typedef struct mjfevent* mjfevent;
 // timer event struct
 struct mjtevent {
-    bool        _valid;
-    long long   _time;
-    mjProc      _TimerProc;
-    void*       _arg;
+    bool      _valid;
+    long long _time;
+    mjProc    _TRT;
+    void*     _arg;
 };
 typedef struct mjtevent* mjtevent;
 // pending proc to be run
 struct mjpending {
-    mjProc              _PendingProc;
-    void*               _arg;
-    struct list_head    _pending_node;
+    mjProc            _PRT;   // pending routine
+    void*             _arg;   // pending arg
+    struct list_head  _pnode; // pending node
 };
 typedef struct mjpending* mjpending;
 // mjev struct
 struct mjev {
-    int                 _epfd;       // epoll fd
-    struct mjfevent    	_file_event_list[MJEV_MAXFD];
-    mjpq                _timer_event_queue;
-    struct list_head    _pending_head;
+    int               _epfd;       // epoll fd
+    struct mjfevent   _fevent_list[MJEV_MAXFD];
+    mjpq              _tevent_queue;
+    struct list_head  _phead;
 };
 typedef struct mjev* mjev;
 
 // 3 types: file event/timer/pending
-extern bool     mjev_add_fevent(mjev ev, int fd, int mask, mjProc Proc, void* arg);
+extern bool     mjev_add_fevent(mjev ev, int fd, int mask, mjProc RT, void* arg);
 extern bool     mjev_del_fevent(mjev ev, int fd, int mask);
-extern mjtevent	mjev_add_timer(mjev ev, long long ms, mjProc TimerProc, void* arg);
+extern mjtevent mjev_add_timer(mjev ev, long long ms, mjProc TRT, void* arg);
 extern bool     mjev_del_timer(mjev ev, mjtevent te);
-extern bool     mjev_add_pending(mjev ev, mjProc PendingProc, void* arg);
-extern bool   	mjev_del_pending(mjev ev, void* arg);
+extern bool     mjev_add_pending(mjev ev, mjProc PRT, void* arg);
+extern bool     mjev_del_pending(mjev ev, void* arg);
 extern void     mjev_run(mjev ev);
 
 extern mjev     mjev_new();

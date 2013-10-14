@@ -8,20 +8,19 @@
 #define MJTCPSRV_INNER      1
 
 struct mjtcpsrv {
-  int     _sfd;       // socket, accept for standalone, read for inner
-  int     _type;      // tcpsrv type, standalone or inner
-  bool    _stop;      // server stop
-  mjev    _ev;        // event loop
-  mjProc  _Routine;   // server routine
-  mjmap   _map;
+  int     _sfd;   // socket, accept for standalone, read for inner
+  int     _type;  // tcpsrv type, standalone or inner
+  bool    _stop;  // server stop
+  mjev    _ev;    // event loop
+  mjProc  _RT;    // server routine
+  mjmap   _map;   // server args map
 };
 typedef struct mjtcpsrv* mjtcpsrv;
 
 
-extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc Routine, int type);
+extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, int type);
 extern void*    mjtcpsrv_delete(void *arg);
 extern void*    mjtcpsrv_run(void *arg);
-extern bool     mjtcpsrv_set_stop(mjtcpsrv srv, bool value);
 
 
 static inline mjev mjtcpsrv_get_ev(mjtcpsrv srv) {
@@ -41,4 +40,9 @@ static inline bool mjtcpsrv_set_obj(mjtcpsrv srv, const char* key, void* obj,
   return true;
 }
 
+static inline bool mjtcpsrv_set_stop(mjtcpsrv srv, bool value) {
+	if (!srv) return false;
+	srv->_stop = value;
+	return true;
+}
 #endif
