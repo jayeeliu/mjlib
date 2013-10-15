@@ -177,7 +177,7 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc ISRT) {
   mjsock_set_blocking(sfd, 1);
   // stage1: update server number
   srv->_sfd     = sfd;
-  srv->_is_num  = get_cpu_count() - 1;
+  srv->_is_num  = get_cpu_count();
   if (srv->_is_num <= 0) {
     MJLOG_ERR("cpu count error");
     free(srv);

@@ -128,11 +128,11 @@ int mjsql_query(mjsql handle, const char* sql_str, int sql_len) {
       return 0; // success
     }
     // Here!!! some error happens
-     MJLOG_ERR("mysql query error:[%s][%s][%d][%d]:[%s]", sql_str, 
-        handle->db_host, handle->db_port, retval, 
-        mysql_error(handle->data->msp));
+    MJLOG_ERR("mysql query error:[%s][%s][%d][%d]:[%s]", sql_str, 
+      handle->db_host, handle->db_port, retval, 
+      mysql_error(handle->data->msp));
     // get error code
-     int err = mysql_errno(handle->data->msp);
+    int err = mysql_errno(handle->data->msp);
     if (err >= ER_ERROR_FIRST && err <= ER_ERROR_LAST) {
       // SQL syntax error
       if (err == ER_SYNTAX_ERROR) MJLOG_ERR("SQL syntax error.");
@@ -142,19 +142,18 @@ int mjsql_query(mjsql handle, const char* sql_str, int sql_len) {
       MJLOG_INFO("Try to reconnect to mysql ...");
       // connect database retry 1
       if (!mjsql_conn(handle, 1)) {
-         MJLOG_ERR("Fatal error: MySQL can not be reconnected!.");
+        MJLOG_ERR("Fatal error: MySQL can not be reconnected!.");
         break;
       }
-       MJLOG_INFO("MySQL reconnected ok!.");
+      MJLOG_INFO("MySQL reconnected ok!.");
       continue;  
     }
     //  unknow error
-     MJLOG_EMERG("Mysql Unknow error. mysql failed.");
-     break;
+    MJLOG_EMERG("Mysql Unknow error. mysql failed.");
+    break;
   }
-   return -1;
+  return -1;
 }
-
 
 /*
 ===============================================================================
@@ -310,10 +309,10 @@ mjsql mjsql_new(const char* db_host, const char* db_user, const char* db_pass,
     free(handle);
     return NULL;
   }
-   handle->data->msp         = NULL;    
-  handle->data->result       = NULL;
+  handle->data->msp         = NULL;    
+  handle->data->result      = NULL;
   handle->data->row         = NULL;
-  handle->data->num_fields   = -1;
+  handle->data->num_fields  = -1;
   // store parameter
   strncpy(handle->db_host, db_host, MAX_NAME_LEN);
   strncpy(handle->db_user, db_user, MAX_NAME_LEN);

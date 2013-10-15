@@ -8,13 +8,13 @@ static int count = 0;
 
 static void* on_close(void* arg) {
   mjconn conn = (mjconn) arg;
-  mjtcpsrv is = mjconn_get_obj(conn, "server");
-  mjmainsrv msrv = mjtcpsrv_get_obj(is, "mainsrv");
-  mjconn_delete(conn);
   count++;
   if (count > 100000) {
+    mjtcpsrv is = mjconn_get_obj(conn, "server");
+    mjmainsrv msrv = mjtcpsrv_get_obj(is, "mainsrv");
     mjmainsrv_set_stop(msrv, true);
   }
+  mjconn_delete(conn);
   return NULL;
 }
 
@@ -25,6 +25,7 @@ static void* on_fin(void* arg) {
   return NULL; 
 }
 
+/*
 static void* calRoutine(void* arg) {
   mjconn conn = (mjconn) arg;
   mjconn_buf_writes(conn, "cal begin\r\n");
@@ -49,6 +50,7 @@ static void* on_cal(void* arg) {
   mjmainsrv_asy(server, calRoutine, conn, on_fin, conn);
   return NULL;
 }
+*/
 
 static void* Routine(void* arg) {
   mjconn conn = (mjconn) arg;
