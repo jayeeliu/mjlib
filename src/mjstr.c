@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include "mjlog.h"
 #include "mjstr.h"
 
@@ -46,28 +45,6 @@ static inline bool mjstr_readyplus(mjstr str, unsigned int need_size_plus) {
 
 /*
 ===============================================================================
-mjstr_Copy
-  copy mjstr call mjstr_copyb
-===============================================================================
-*/
-bool mjstr_copy(mjstr str_to, mjstr str_from) {
-  if (!str_to || !str_from) return false;
-  return mjstr_copyb(str_to, str_from->data, str_from->length);
-}
-
-/*
-===============================================================================
-mjstr_CopyS
-  copy string to mjstr call mjstr_copyb
-===============================================================================
-*/
-bool mjstr_copys(mjstr str, const char* src) {
-  if (!str || !src) return false;
-  return mjstr_copyb(str, src, strlen(src));
-}
-
-/*
-===============================================================================
 mjstr_CopyB
   copy binary string to mjstr
 ===============================================================================
@@ -88,28 +65,6 @@ bool mjstr_copyb(mjstr str, const char* src, unsigned int len) {
 
 /*
 ===============================================================================
-mjstr_Cat
-  cat mjstr call mjstr_catb
-===============================================================================
-*/
-bool mjstr_cat(mjstr str_to, mjstr str_from) {
-  if (!str_to || !str_from) return false;
-  return mjstr_catb(str_to, str_from->data, str_from->length);
-}
-
-/*
-===============================================================================
-mjstr_CatS
-  cat string to mjstr call mjstr_catb
-===============================================================================
-*/
-bool mjstr_cats(mjstr str, const char* src) {
-  if (!str || !src) return false;
-  return mjstr_catb(str, src, strlen(src));
-}
-
-/*
-===============================================================================
 mjstr_CatB
   cat binary string to mjstr
 ===============================================================================
@@ -122,20 +77,6 @@ bool mjstr_catb(mjstr str, const char* src, unsigned int len) {
   memcpy(str->data + str->length, src, len);            
   str->length += len;
   str->data[str->length] = 0;                
-  return true;
-}
-
-/*
-===============================================================================
-mjstr_clean
-  clean mjstr to null string
-===============================================================================
-*/
-bool mjstr_clean(mjstr str) {
-  if (!str) return false;
-  str->data = str->_data_start;
-  str->length = 0;
-  str->data[str->length] = 0;
   return true;
 }
 
@@ -235,17 +176,6 @@ void mjstr_rstrim(mjstr str) {
   }
   str->length = pos + 1;
   str->data[str->length] = 0;
-}
-
-/*
-===============================================================================
-mjstr_Strim
-  strim left and right
-===============================================================================
-*/
-void mjstr_strim(mjstr x) {
-  mjstr_lstrim(x);
-  mjstr_rstrim(x);
 }
 
 /*
