@@ -42,7 +42,7 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     return NULL;
   }
   mjconn_set_obj(conn, "server", srv, NULL);
-  mjconn_set_to(conn, 1000, 1000);
+  mjconn_set_to(conn, 10000, 10000);
   srv->_RT(conn);
   return NULL;
 }
@@ -57,6 +57,8 @@ void* mjtcpsrv_run(void* arg) {
   // sanity check
   mjtcpsrv srv = (mjtcpsrv) arg;
   if (!srv) return NULL;
+  // run init
+  if (srv->_INIT) srv->_INIT(srv);
   // enter loop
   while (!srv->_stop) {
     mjev_run(srv->_ev);
@@ -71,7 +73,7 @@ mjtcpsrv_new
   alloc mjtcpsrv struct
 ===============================================================================
 */
-mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, int type) {
+mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, mjProc INIT, void* iarg, int type) {
   // alloc mjtcpsrv struct
   mjtcpsrv srv = (mjtcpsrv) calloc(1, sizeof(struct mjtcpsrv));  
   if (!srv) {
@@ -89,6 +91,8 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, int type) {
   srv->_sfd   = sfd;
   srv->_type  = type;
   srv->_RT    = RT;
+  srv->_INIT  = INIT;
+  srv->iarg   = iarg;
   // set _map
   srv->_map = mjmap_new(31);
   if (!srv->_map) {

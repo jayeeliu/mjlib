@@ -3,15 +3,17 @@
 
 #include "mjmap.h"
 
-struct mjHttpRsp {
-    mjmap rspHeader;
+struct mjhttprsp {
+  unsigned int  _status;    // http status code
+  const char*   _response;  // http response string
+  mjmap         _header;    // response header
 };
-typedef struct mjHttpRsp* mjHttpRsp;
+typedef struct mjhttprsp* mjhttprsp;
 
-extern bool         mjHttpRsp_AddHeader(mjHttpRsp rsp, char* name, char* value);
-extern mjstr        mjHttpRsp_HeaderToStr(mjHttpRsp rsp);
-
-extern mjHttpRsp    mjHttpRsp_New();
-extern bool         mjHttpRsp_Delete(mjHttpRsp rsp);
+extern bool       mjhttprsp_set_status(mjhttprsp rsp, unsigned int status);
+extern bool       mjhttprsp_add_header(mjhttprsp rsp, char* name, char* value);
+extern mjstr      mjhttprsp_header_to_str(mjhttprsp rsp);
+extern mjhttprsp  mjhttprsp_new();
+extern bool       mjhttprsp_delete(mjhttprsp rsp);
 
 #endif

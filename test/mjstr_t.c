@@ -17,7 +17,7 @@ void t2() {
   mjstr_copys(str, " this is a test");
   mjstr_strim(str);
   printf("%s\n", str->data);
-  printf("%d\n", str->length);
+  printf("%d\n", str->len);
   mjstr_delete(str);
 }
 
@@ -25,23 +25,35 @@ void t3() {
   mjstr str = mjstr_new(80);
   mjstr_copys(str, "this is a test string 10 20 30");
   mjstr_consume(str, 3);
-  mjstrlist str_list = mjstrlist_new();
-  mjstr_split(str, " ", str_list);
+  mjslist slist = mjslist_new();
+  mjstr_split(str, " ", slist);
   mjstr inner;
   int i = 0;
   while (1) {
-    inner = mjstrlist_get(str_list, i);
+    inner = mjslist_get(slist, i);
     if (!inner) break;
     printf("%s\n", inner->data);
     i++;
   }
-  mjstrlist_delete(str_list);
+  mjslist_delete(slist);
   mjstr_delete(str);
+}
+
+void t4() {
+  mjstr str = mjstr_new(20);
+  printf("t4: %s\n", str->data);
+  mjslist slist = mjslist_new();
+  mjstr_split(str, " ", slist);
+  printf("t4 slist: %d\n", slist->len);
+  printf("t4 data: %d\n", slist->data[0]->len);
+  mjstr_delete(str);
+  mjslist_delete(slist);
 }
 
 int main() {
   t1();
   t2();
   t3();
+  t4();
   return 0;
 }

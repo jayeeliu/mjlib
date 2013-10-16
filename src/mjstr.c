@@ -13,23 +13,23 @@ static bool mjstr_ready(mjstr str, unsigned int need_size) {
   if (need_size <= str->_total - (str->data - str->_data_start)) return true;
   // 2. no need to realloc
   if (need_size <= str->_total) {
-    memmove(str->_data_start, str->data, str->length);
+    memmove(str->_data_start, str->data, str->len);
     str->data = str->_data_start;
-    str->data[str->length] = 0;
+    str->data[str->len] = 0;
     return true;
   }
   // 3. need to realloc, get new size to alloc
   unsigned int new_total = 30 + need_size + (need_size >> 3);
   char* new_data = (char*) malloc(new_total);
   if (!new_data) return false;
-  memcpy(new_data, str->data, str->length); 
+  memcpy(new_data, str->data, str->len); 
   // free old buffer
   if (str->_data_start != str->_data_buf) free(str->_data_start);
   // set str
   str->_total = new_total; 
   str->_data_start = new_data;
   str->data = str->_data_start;
-  str->data[str->length] = 0;
+  str->data[str->len] = 0;
   return true;
 }
 
@@ -40,7 +40,7 @@ mjstr_readyplus
 ===============================================================================
 */
 static inline bool mjstr_readyplus(mjstr str, unsigned int need_size_plus) {
-  return mjstr_ready(str, str->length + need_size_plus);
+  return mjstr_ready(str, str->len + need_size_plus);
 }
 
 /*
@@ -54,9 +54,9 @@ bool mjstr_catb(mjstr str, const char* src, unsigned int len) {
   // extend if needed
   if (!mjstr_readyplus(str, len + 1)) return false;
   // copy string
-  memcpy(str->data + str->length, src, len);            
-  str->length += len;
-  str->data[str->length] = 0;                
+  memcpy(str->data + str->len, src, len);            
+  str->len += len;
+  str->data[str->len] = 0;                
   return true;
 }
 
@@ -74,9 +74,9 @@ bool mjstr_copyb(mjstr str, const char* src, unsigned int len) {
   // copy string
   memcpy(str->_data_start, src, len);
   // set length and data
-  str->length = len;          
+  str->len = len;          
   str->data   = str->_data_start;
-  str->data[str->length] = 0;
+  str->data[str->len] = 0;
   return true;
 }
 
@@ -90,15 +90,15 @@ int mjstr_consume(mjstr str, unsigned int len) {
   // sanity check
   if (!str || len <= 0) return 0;
   // len is too large
-  if (len >= str->length) {
-    int ret = str->length;
+  if (len >= str->len) {
+    int ret = str->len;
     mjstr_clean(str);
     return ret; 
   }
   // move data and consume
   str->data   += len;
-  str->length -= len;
-  str->data[str->length] = 0;
+  str->len -= len;
+  str->data[str->len] = 0;
   return len;
 }
 
@@ -112,13 +112,13 @@ int mjstr_rconsume(mjstr str, unsigned int len) {
   // sanity check
   if (!str || len <= 0) return 0;
   // adjust length
-  if (str->length < len) {
+  if (str->len < len) {
     str->data = str->_data_start;
-    str->length = 0;
+    str->len = 0;
   } else {
-    str->length -= len;
+    str->len -= len;
   }
-  str->data[str->length] = 0;
+  str->data[str->len] = 0;
   return len;
 }
 
@@ -132,7 +132,7 @@ mjstr_Search
 */
 int mjstr_search(mjstr str, const char* split) {
   // sanity check
-  if (!str || !str->length || !split) return -1;
+  if (!str || !str->len || !split) return -1;
   // get split point
   char* point = strstr(str->data, split);
   if (!point) return -1;
@@ -150,7 +150,7 @@ void mjstr_lstrim(mjstr str) {
   if (!str) return;
   // get pos 
   int pos;
-  for (pos = 0; pos < str->length; pos++) {
+  for (pos = 0; pos < str->len; pos++) {
     if (str->data[pos] == '\t' || str->data[pos] == ' ' ||
         str->data[pos] == '\r' || str->data[pos] == '\n') continue;
     break;
@@ -169,13 +169,13 @@ void mjstr_rstrim(mjstr str) {
   if (!str) return;
   // get pos from right
   int pos;
-  for (pos = str->length - 1; pos >= 0; pos--) {
+  for (pos = str->len - 1; pos >= 0; pos--) {
     if (str->data[pos] == '\t' || str->data[pos] == ' ' ||
         str->data[pos] == '\r' || str->data[pos] == '\n') continue;
     break;
   }
-  str->length = pos + 1;
-  str->data[str->length] = 0;
+  str->len = pos + 1;
+  str->data[str->len] = 0;
 }
 
 /*
@@ -190,7 +190,7 @@ bool mjstr_split(mjstr str, const char* split, mjslist slist) {
   if (!str || !split || !slist) return false;
   // split from left to right
   int start = 0;
-  while (start < str->length) {
+  while (start < str->len) {
     // split one by one
     char* point = strstr(str->data + start, split);
     if (!point) break;
@@ -200,7 +200,7 @@ bool mjstr_split(mjstr str, const char* split, mjslist slist) {
     }
     start = point - str->data + strlen(split);
   }
-  mjslist_addb(slist, str->data + start, str->length - start);  
+  mjslist_addb(slist, str->data + start, str->len - start);  
   return true;
 }
 
@@ -215,12 +215,12 @@ int mjstr_cmp(mjstr str1, mjstr str2) {
   if (!str1 && str2) return -1;
   if (str1 && !str2) return 1;
   // get minlen
-  int minlen = (str1->length > str2->length) ? str2->length : str1->length;
+  int minlen = (str1->len > str2->len) ? str2->len : str1->len;
   int ret = memcmp(str1->data, str2->data, minlen);
   if (ret) return ret;
   // length is equal  
-  if (str1->length == str2->length) return 0;
-  if (str1->length > str2->length) return 1;
+  if (str1->len == str2->len) return 0;
+  if (str1->len > str2->len) return 1;
   return -1;
 }
 
@@ -234,7 +234,7 @@ bool mjstr_tolower(mjstr str) {
   // sanity check
   if (!str) return false;
   // change string
-  for (int i = 0; i < str->length; i++) {
+  for (int i = 0; i < str->len; i++) {
     if (str->data[i] >= 'A' && str->data[i] <= 'Z') str->data[i] += 32;
   }
   return true;
@@ -250,7 +250,7 @@ bool mjstr_toupper(mjstr str) {
   // sanity check
   if (!str) return false;
   // change string
-  for (int i = 0; i < str->length; i++) {
+  for (int i = 0; i < str->len; i++) {
     if (str->data[i] >= 'a' && str->data[i] <= 'z') str->data[i] -= 32;
   }
   return true;
@@ -262,13 +262,12 @@ mjstr_New
     create new mjstr
 ===============================================================================
 */
-mjstr mjstr_new(unsigned int default_len) {
-  mjstr str = (mjstr) calloc(1, sizeof(struct mjstr) + 
-      default_len * sizeof(char));
+mjstr mjstr_new(unsigned int size) {
+  mjstr str = (mjstr) calloc(1, sizeof(struct mjstr) + size * sizeof(char));
   if (!str) return NULL;
   str->_data_start = str->_data_buf;
   str->data = str->_data_start;
-  str->_total = default_len;
+  str->_total = size;
   return str;
 }
 
@@ -304,7 +303,7 @@ static bool mjslist_ready(mjslist slist, unsigned int need_size) {
   }
   slist->data = new_data;
   // clean other
-  for (int i = slist->length; i < slist->_total; i++) slist->data[i] = NULL;
+  for (int i = slist->len; i < slist->_total; i++) slist->data[i] = NULL;
   return true;
 }
 
@@ -315,7 +314,7 @@ mjslist_ReadyPlus
 ===============================================================================
 */
 static inline bool mjslist_readyplus(mjslist slist, unsigned int n) {
-  return mjslist_ready(slist, slist->length + n);
+  return mjslist_ready(slist, slist->len + n);
 }
  
 /*
@@ -330,12 +329,12 @@ bool mjslist_addb(mjslist slist, char* str, int len) {
   // alloc enough space
   if (!mjslist_readyplus(slist, 1)) return false;
   // copy string
-  if (!slist->data[slist->length]) {
-    slist->data[slist->length] = mjstr_new(80);
-    if (!slist->data[slist->length]) return false;
+  if (!slist->data[slist->len]) {
+    slist->data[slist->len] = mjstr_new(80);
+    if (!slist->data[slist->len]) return false;
   }
-  mjstr_copyb(slist->data[slist->length], str, len);
-  slist->length++;
+  mjstr_copyb(slist->data[slist->len], str, len);
+  slist->len++;
   return true;
 }
 

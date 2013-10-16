@@ -75,7 +75,7 @@ static void* mjconn_revent_cb(void* arg) {
   }
   if (conn->_rtype == MJCONN_READBYTES) {
     // readtype is readbytes
-    if (conn->_rbytes <= conn->_rbuf->length) { 
+    if (conn->_rbytes <= conn->_rbuf->len) { 
       mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbytes);
       mjstr_consume(conn->_rbuf, conn->_rbytes);
       mjconn_del_revent(conn);
@@ -92,9 +92,9 @@ static void* mjconn_revent_cb(void* arg) {
     }
   } else if (conn->_rtype == MJCONN_READ) { 
     // read type is normal read
-    if (conn->_rbuf && conn->_rbuf->length > 0) {
-      mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbuf->length);
-      mjstr_consume(conn->_rbuf, conn->_rbuf->length);
+    if (conn->_rbuf && conn->_rbuf->len > 0) {
+      mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbuf->len);
+      mjstr_consume(conn->_rbuf, conn->_rbuf->len);
       mjconn_del_revent(conn);
       return NULL;
     }
@@ -176,7 +176,7 @@ bool mjconn_readbytes(mjconn conn, int len, mjProc CB) {
   conn->_rbytes = len;
   conn->_RCB    = CB;
   // check rbuf
-  if (conn->_rbytes <= conn->_rbuf->length) { 
+  if (conn->_rbytes <= conn->_rbuf->len) { 
     // read finish, copy rbytes to data
     mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbytes);
     mjstr_consume(conn->_rbuf, conn->_rbytes);
@@ -248,9 +248,9 @@ bool mjconn_read(mjconn conn, mjProc CB) {
   conn->_rtype  = MJCONN_READ;
   conn->_RCB	  = CB;
   // check rbuf
-  if (conn->_rbuf && conn->_rbuf->length > 0) {
-    mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbuf->length);
-    mjstr_consume(conn->_rbuf, conn->_rbuf->length);
+  if (conn->_rbuf && conn->_rbuf->len > 0) {
+    mjstr_copyb(conn->_data, conn->_rbuf->data, conn->_rbuf->len);
+    mjstr_consume(conn->_rbuf, conn->_rbuf->len);
     conn->_rtype = MJCONN_NONE;
     // run callback in pending
     if (conn->_RCB) mjev_add_pending(conn->_ev, conn->_RCB, conn);
@@ -286,7 +286,7 @@ mjconn_wevent_cb
 */
 static void* mjconn_wevent_cb(void* arg) {
   mjconn conn = (mjconn)arg;
-  int ret = write(conn->_fd, conn->_wbuf->data, conn->_wbuf->length);
+  int ret = write(conn->_fd, conn->_wbuf->data, conn->_wbuf->len);
   if (ret < 0) {
     MJLOG_ERR("conn write error: %s", strerror(errno));
     conn->_error = true;
@@ -295,7 +295,7 @@ static void* mjconn_wevent_cb(void* arg) {
   }
   mjstr_consume(conn->_wbuf, ret);
   // no data to write call mjconn_del_wevent
-  if (conn->_wbuf->length == 0) mjconn_del_wevent(conn);
+  if (conn->_wbuf->len == 0) mjconn_del_wevent(conn);
   return NULL;
 }
 

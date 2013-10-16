@@ -25,10 +25,10 @@ mjhttpreq mjhttpreq_new() {
   req->_path = mjstr_new(80);
 	req->_query = mjstr_new(80);
   req->_header = mjmap_new(131);
-	req->_header_tmp = mjslist_new();
-	req->_field_tmp	= mjslist_new();
-  if (!req->_path || !req->_query || !req->_header || !req->_header_tmp || 
-			!req->_field_tmp) {
+	req->_htmp = mjslist_new();
+	req->_ftmp	= mjslist_new();
+  if (!req->_path || !req->_query || !req->_header || 
+      !req->_htmp || !req->_ftmp) {
     MJLOG_ERR("mjhttpreq init error");
 		mjhttpreq_delete(req);
     return NULL;
@@ -45,30 +45,48 @@ mjhttpreq_init
 bool mjhttpreq_parse(mjhttpreq req, mjstr data) {
   // sanity check
   if (!req || !data) return false;  
-	mjslist header = req->_header_tmp;
-	mjslist field = req->_field_tmp;
+	mjslist header = req->_htmp;
+	mjslist field = req->_ftmp;
+  // clean header and field first
+  mjslist_clean(header);
+  mjslist_clean(field);
   mjstr_split(data, "\r\n", header);
   mjstr_split(header->data[0], " ", field);
   // check cmd length
-  if (field->length < 2) {
+  if (field->len != 3) {
     MJLOG_ERR("parse header error");
     return false;
   }
   // stage1: get method type
   const char* method = field->data[0]->data;
-  if (!strcasecmp(method, "GET")) { 
+  if (!strcmp(method, "GET")) {
     req->method = GET_METHOD;
-  } else if (!strcasecmp(method, "POST")) {
+  } else if (!strcmp(method, "POST")) {
     req->method = POST_METHOD;
+  } else if (!strcmp(method, "HEAD")) {
+    req->method = HEAD_METHOD;
+  } else {
+    MJLOG_ERR("method is not support");
+    return false;
   }
-  // get access location
+  // stage2: get access path
   mjstr_copy(req->_path, field->data[1]);
-  // stage2: parse other header
-  for (int i = 1; i < header->length; i++) {
+  // stage3: get http version
+  const char* version = field->data[2]->data;
+  if (!strcmp(version, "HTTP/1.0")) {
+    req->_version = "HTTP/1.0";
+  } else if (!strcmp(version, "HTTP/1.1")) {
+    req->_version = "HTTP/1.1";
+  } else {
+    MJLOG_ERR("http version error");
+    return false;
+  }
+  // stage4: parse other header
+  for (int i = 1; i < header->len; i++) {
     if (header->data[i]) break;
     mjslist_clean(field);
     mjstr_split(header->data[i], ":", field);
-    if (field->length < 2) continue;
+    if (field->len < 2) continue;
     mjmap_set_str(req->_header, field->data[0]->data, field->data[1]);
   }
   return true;
@@ -85,8 +103,8 @@ bool mjhttpreq_delete(mjhttpreq req) {
   mjstr_delete(req->_path);
 	mjstr_delete(req->_query);
   mjmap_delete(req->_header);
-	mjslist_delete(req->_header_tmp);
-	mjslist_delete(req->_field_tmp);
+	mjslist_delete(req->_htmp);
+	mjslist_delete(req->_ftmp);
   free(req);
   return true;
 }

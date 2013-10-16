@@ -53,7 +53,7 @@ extern bool     mjconn_delete(mjconn conn);
 
 static inline bool mjconn_buf_write(mjconn conn, mjstr buf) {
   if (!conn || !buf) return false;
-  return mjconn_buf_writeb(conn, buf->data, buf->length);
+  return mjconn_buf_writeb(conn, buf->data, buf->len);
 }
 
 static inline bool mjconn_buf_writes(mjconn conn, char* buf) {
@@ -63,7 +63,7 @@ static inline bool mjconn_buf_writes(mjconn conn, char* buf) {
 
 static inline bool mjconn_write(mjconn conn, mjstr buf, mjProc CallBack) {
   if (!conn || !buf) return false;
-  return mjconn_writeb(conn, buf->data, buf->length, CallBack);
+  return mjconn_writeb(conn, buf->data, buf->len, CallBack);
 }
 
 static inline bool mjconn_writes(mjconn conn, char* buf, mjProc CallBack) {

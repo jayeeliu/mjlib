@@ -9,21 +9,23 @@
 
 // per conn http data
 struct mjhttpdata {
-  mjhttpreq   req;
+  mjhttpreq req;
+  mjhttprsp rsp;
   mjslist   params;
-  mjHttpRsp   rsp;
 };
 typedef struct mjhttpdata* mjhttpdata;
 
 // url redirect struct
 struct mjhttpurl {
-  char    *url;
+  char*   url;
   mjProc  fun;
   mjreg   reg;
 };
 
 extern void*  http_mjlf_init(void* arg);
-extern void*  http_mjlf_exit(void* arg);
 extern void*  http_mjlf_routine(void* arg);
+
+extern void*  http_mjtcpsrv_init(void* arg);
+extern void*  http_mjtcpsrv_routine(void* arg);
 
 #endif

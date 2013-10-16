@@ -53,7 +53,7 @@ static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
     goto failout1;
   }
   mjstr_split(data, " ", s_list);
-  if (s_list->length < 1) {
+  if (s_list->len < 1) {
     mjconnb_writes(conn, "+ command error\r\n");
     goto failout2;
   }

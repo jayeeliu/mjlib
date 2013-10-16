@@ -14,12 +14,13 @@ struct mjtcpsrv {
   mjev    _ev;    // event loop
   mjProc  _RT;    // server routine
 	mjProc	_INIT;	// called before mjtcpsrv_run
+  void*   iarg;
   mjmap   _map;   // server args map
 };
 typedef struct mjtcpsrv* mjtcpsrv;
 
 
-extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, int type);
+extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, mjProc INIT, void* iarg, int type);
 extern void*    mjtcpsrv_delete(void *arg);
 extern void*    mjtcpsrv_run(void *arg);
 

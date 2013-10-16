@@ -13,12 +13,13 @@
 #define OPTIONS_METHOD  6
 
 struct mjhttpreq {
-    int       method;         // method type
-    mjstr     _path;          // request path
-    mjstr     _query;         // request query without ?
-    mjmap     _header;        // request header
-    mjslist _header_tmp;    // used for header parse
-    mjslist _field_tmp;     // user for header field parse
+    int     method;   // method type
+    mjstr   _path;    // request path
+    mjstr   _query;   // request query without ?
+    char*   _version; // http version
+    mjmap   _header;  // request header
+    mjslist _htmp;    // used for header parse
+    mjslist _ftmp;    // user for header field parse
 };
 typedef struct mjhttpreq* mjhttpreq;
 

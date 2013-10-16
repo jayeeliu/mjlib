@@ -10,59 +10,6 @@
 #include "mjproto_http.h"
 
 /*
-===============================================================================
-on_header
-  called in http_Workder
-===============================================================================
-*/
-/*
-static void *on_header(void *arg) {
-  mjConn conn = (mjConn) arg;
-  mjHttpData httpData = (mjHttpData) conn->private;
-  mjTcpSrv srv = (mjTcpSrv) conn->server;
-  struct mjHttpUrl *urls = (struct mjHttpUrl*) srv->private;
-  // alloc request and response struct 
-  httpData->request = mjHttpReq_New(conn->data);
-  if (!httpData->request) {
-    MJLOG_ERR("mjHttpReq_New error");
-    mjConn_Delete(conn);
-    return NULL;
-  }
-  httpData->response = mjHttpRsp_New();
-  if (!httpData->response) {
-    MJLOG_ERR("mjHttpRsp_new error");
-    mjConn_Delete(conn);
-    return NULL;
-  }
-  httpData->param = mjslist_New();
-  if (!httpData->param) {
-    MJLOG_ERR("mjslist_New error");
-    mjConn_Delete(conn);
-    return NULL;
-  }
-  // set default response header
-  mjHttpRsp_AddHeader(httpData->response, "Content-Type", 
-          "text/html; charset=UTF-8");
-  mjHttpRsp_AddHeader(httpData->response, "Server", "SFQ-0.01");
-  // call function
-  mjstr location = httpData->request->location;
-  if (location->data[location->length - 1] != '/') {
-    mjstr_CatS(location, "/");
-  }
-  // check string match
-  int i;
-  for (i = 0; urls[i].url != NULL; i++) {
-    if (mjReg_Search(urls[i].reg, location->data, httpData->param)) {
-      urls[i].fun(conn);
-      return NULL;
-    }
-  }
-  // run default function
-  urls[i].fun(conn);
-  return NULL;
-}
-*/
-/*
 ===========================================
 FileToStr
   read file and store data into mjstr
@@ -94,16 +41,42 @@ mjstr FileToStr(const char* fileName)
   return out;
 }
 
+static void* http_free_urls(void* arg);
 /*
 ===============================================================================
-http_mjlf_exit
-  free http mapping
+http_init_urls
+  init urls according to old urls
 ===============================================================================
 */
-static void* http_mjlf_free_urls(void* arg) {
-  struct mjhttpurl* newurls = arg;
-  for(int i = 0; newurls[i].url != NULL; i++) mjreg_delete(newurls[i].reg);
-  free(newurls);
+static struct mjhttpurl* http_init_urls(struct mjhttpurl* oldurls) {
+  // get old urls count
+  int count;
+  for (count = 0; oldurls[count].url != NULL; count++);
+  // alloc new memory, and copy
+  struct mjhttpurl* urls = (struct mjhttpurl*) malloc(
+      sizeof(struct mjhttpurl) * (count + 1));
+  memcpy(urls, oldurls, sizeof(struct mjhttpurl) * (count + 1));
+  // init mjreg
+  for(int i = 0; urls[i].url != NULL; i++) {
+    if (!(urls[i].reg = mjreg_new(urls[i].url))) {
+      MJLOG_ERR("mjreg_new Error");
+      http_free_urls(urls);
+      return NULL;
+    }
+  }
+  return urls;
+}
+
+/*
+===============================================================================
+http_free_urls
+  free http urls
+===============================================================================
+*/
+static void* http_free_urls(void* arg) {
+  struct mjhttpurl* urls = arg;
+  for(int i = 0; urls[i].url != NULL; i++) mjreg_delete(urls[i].reg);
+  free(urls);
   return NULL;
 }
 
@@ -115,61 +88,54 @@ http_mjlf_init
 */
 void* http_mjlf_init(void* arg) {
   mjlf srv = (mjlf) arg;
-  struct mjhttpurl* urls = srv->srv_init_arg;
-  // get urls counts
-  int count;
-  for (count = 0; urls[count].url != NULL; count++);
-  // alloc new memory
-  struct mjhttpurl* newurls = (struct mjhttpurl*) malloc(
-      sizeof(struct mjhttpurl) * (count + 1));
-  memcpy(newurls, urls, sizeof(struct mjhttpurl) * (count + 1));
-  // init mjreg
-  for(int i = 0;  newurls[i].url != NULL; i++) {
-    if (!(newurls[i].reg = mjreg_new(newurls[i].url))) {
-      MJLOG_ERR("mjreg_new Error");
-      return NULL;
-    }
-  }
-  mjlf_set_obj(srv, "urls", newurls, http_mjlf_free_urls);
+  struct mjhttpurl* urls = http_init_urls(srv->srv_init_arg);
+  mjlf_set_obj(srv, "urls", urls, http_free_urls);
   return NULL;
 }
 
+/*
+===============================================================================
+http_mjtcpsrv_init
+  init mjtcpsrv according to urls
+===============================================================================
+*/
+void* http_mjtcpsrv_init(void* arg) {
+  mjtcpsrv srv = (mjtcpsrv) arg;
+  struct mjhttpurl* urls = http_init_urls(srv->iarg);
+  mjtcpsrv_set_obj(srv, "urls", urls, http_free_urls);
+  return NULL;
+}
+
+static void* mjhttpdata_delete(void* arg);
 /*
 ===============================================================================
 create_httpdata
   create new httpdata
 ===============================================================================
 */
-static mjhttpdata create_httpdata(mjstr data) {
+static mjhttpdata mjhttpdata_new(mjstr data) {
   // alloc httpdata
-  mjhttpdata httpdata = (mjhttpdata) calloc(1, sizeof(struct mjhttpdata));
-  if (!httpdata) {
+  mjhttpdata hdata = (mjhttpdata) calloc(1, sizeof(struct mjhttpdata));
+  if (!hdata) {
     MJLOG_ERR("httpdata alloc error");
     return NULL;
   }
-  // alloc httpreq object
-  httpdata->req = mjhttpreq_new();
-  if (!httpdata->req) {
-    MJLOG_ERR("mjhttpreq_New error");
-    free(httpdata);
+  // alloc httpdata object
+  hdata->req = mjhttpreq_new();
+  hdata->rsp = mjhttprsp_new();
+  hdata->params = mjslist_new();
+  if (!hdata->req || !hdata->rsp || !hdata->params) {
+    MJLOG_ERR("httpdata alloc error");
+    mjhttpdata_delete(hdata);
     return NULL;
   }
-
-  if (!mjhttpreq_parse(httpdata->req, data)) {
+  // parse request header
+  if (!mjhttpreq_parse(hdata->req, data)) {
     MJLOG_ERR("mjhttpreq_parse error");
-    mjhttpreq_delete(httpdata->req);
-    free(httpdata);
+    mjhttpdata_delete(hdata);
     return NULL;
   }
-  // alloc http params
-  httpdata->params = mjslist_new();
-  if (!httpdata->params) {
-    MJLOG_ERR("params alloc error");
-    mjhttpreq_delete(httpdata->req);
-    free(httpdata);
-    return NULL;
-  }
-  return httpdata;
+  return hdata;
 }
  
 /*
@@ -178,12 +144,25 @@ free_httpdata
   free httpdata
 ===============================================================================
 */
-static void* free_httpdata(void* arg) {
-  mjhttpdata httpdata = (mjhttpdata) arg;
-  mjhttpreq_delete(httpdata->req);
-  mjslist_delete(httpdata->params);
-  free(httpdata);
+static void* mjhttpdata_delete(void* arg) {
+  mjhttpdata hdata = (mjhttpdata) arg;
+  mjhttpreq_delete(hdata->req);
+  mjhttprsp_delete(hdata->rsp);
+  mjslist_delete(hdata->params);
+  free(hdata);
   return NULL;
+}
+
+static mjProc find_url_func(mjhttpdata hdata, struct mjhttpurl* urls) {
+  // expand path
+  mjstr path = hdata->req->_path;
+  if (path->data[path->len-1] != '/') mjstr_cats(path, "/");
+  // find func
+  int i;
+  for (i = 0; urls[i].url != NULL; i++) {
+    if (mjreg_search(urls[i].reg, path->data, hdata->params)) break;
+  }
+  return urls[i].fun;
 }
 
 /*
@@ -207,25 +186,56 @@ void* http_mjlf_routine(void* arg) {
     return NULL;
   }
   // alloc httpdata
-  mjhttpdata httpdata = create_httpdata(data);
-  if (!httpdata) {
+  mjhttpdata hdata = mjhttpdata_new(data);
+  if (!hdata) {
     MJLOG_ERR("create httpdata error");
     mjstr_delete(data);
     return NULL;
   }
-  // expand location
-  mjstr location = httpdata->req->_path;
-  if (location->data[location->length - 1] != '/') mjstr_cats(location, "/");
   // match proc and run
   mjlf srv = (mjlf) mjconnb_get_obj(conn, "server");
   struct mjhttpurl* urls = (struct mjhttpurl*) mjlf_get_obj(srv, "urls");
-  int i;
-  for (i = 0; urls[i].url != NULL; i++) {
-    if (mjreg_search(urls[i].reg, location->data, httpdata->params)) break;
-  }
+  mjProc fun = find_url_func(hdata, urls);
+  mjconnb_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
+  fun(conn);
   // set private data
-  mjconnb_set_obj(conn, "httpdata", httpdata, free_httpdata);
-  urls[i].fun(conn);
   mjstr_delete(data);
+  return NULL;
+}
+
+/*
+===============================================================================
+on_header
+  called in http_mjtcpsrv_routine
+===============================================================================
+*/
+static void *on_header(void *arg) {
+  mjconn conn = (mjconn) arg;
+  // conn error
+  if (conn->_error || conn->_closed || conn->_timeout) {
+    mjconn_delete(conn);
+    return NULL;
+  }
+
+  mjhttpdata hdata = mjhttpdata_new(conn->_data);
+  if (!hdata) {
+    MJLOG_ERR("create hdata error");
+    mjconn_delete(conn);
+    return NULL;
+  }
+  mjhttprsp_add_header(hdata->rsp, "Content-Type", "text/html; charset=UTF-8");
+  mjhttprsp_add_header(hdata->rsp, "Server", "SFQ-0.01");
+  // match proc and run
+  mjtcpsrv srv = (mjtcpsrv) mjconn_get_obj(conn, "server");
+  struct mjhttpurl* urls = (struct mjhttpurl*) mjtcpsrv_get_obj(srv, "urls");
+  mjProc fun = find_url_func(hdata, urls);
+  mjconn_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
+  fun(conn);
+  return NULL;
+}
+
+void* http_mjtcpsrv_routine(void* arg) {
+  mjconn conn = (mjconn) arg;
+  mjconn_readuntil(conn, "\r\n\r\n", on_header);
   return NULL;
 }

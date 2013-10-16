@@ -103,14 +103,14 @@ bool mjopt_parse_conf(const char* fileName) {
     if (mjio_readline(io, line) <= 0) break;
     mjstr_strim(line);
     // ignore empty and comment line
-    if (line->length == 0 || line->data[0] == '#') continue;
+    if (line->len == 0 || line->data[0] == '#') continue;
     // section line, get section
-    if (line->data[0] == '[' && line->data[line->length-1] == ']') {
+    if (line->data[0] == '[' && line->data[line->len-1] == ']') {
       mjstr_consume(line, 1);
       mjstr_rconsume(line, 1);
       mjstr_strim(line);
       // section can't be null
-      if (line->length == 0) {
+      if (line->len == 0) {
         MJLOG_ERR("section is null");
         mjio_delete(io);
         mjstr_delete(line);
@@ -122,7 +122,7 @@ bool mjopt_parse_conf(const char* fileName) {
     // split key and value
     mjslist strList = mjslist_new();
     mjstr_split(line, "=", strList);
-    if (strList->length != 2) {
+    if (strList->len != 2) {
       MJLOG_ERR("conf error");
       mjslist_delete(strList);
       mjstr_delete(line);
