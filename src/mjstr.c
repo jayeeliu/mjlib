@@ -4,8 +4,8 @@
 
 /*
 ===============================================================================
-mjstr_Ready
-  alloc enough size for mjstring
+mjstr_ready
+  alloc enough size for mjstr
 ===============================================================================
 */
 static bool mjstr_ready(mjstr str, unsigned int need_size) {
@@ -35,12 +35,29 @@ static bool mjstr_ready(mjstr str, unsigned int need_size) {
 
 /*
 ===============================================================================
-mjstr_ReadyPlus
+mjstr_readyplus
   call mjstr_Ready
 ===============================================================================
 */
 static inline bool mjstr_readyplus(mjstr str, unsigned int need_size_plus) {
   return mjstr_ready(str, str->length + need_size_plus);
+}
+
+/*
+===============================================================================
+mjstr_CatB
+  cat binary string to mjstr
+===============================================================================
+*/
+bool mjstr_catb(mjstr str, const char* src, unsigned int len) {
+  if (!str || !src) return false;
+  // extend if needed
+  if (!mjstr_readyplus(str, len + 1)) return false;
+  // copy string
+  memcpy(str->data + str->length, src, len);            
+  str->length += len;
+  str->data[str->length] = 0;                
+  return true;
 }
 
 /*
@@ -60,23 +77,6 @@ bool mjstr_copyb(mjstr str, const char* src, unsigned int len) {
   str->length = len;          
   str->data   = str->_data_start;
   str->data[str->length] = 0;
-  return true;
-}
-
-/*
-===============================================================================
-mjstr_CatB
-  cat binary string to mjstr
-===============================================================================
-*/
-bool mjstr_catb(mjstr str, const char* src, unsigned int len) {
-  if (!str || !src) return false;
-  // extend if needed
-  if (!mjstr_readyplus(str, len + 1)) return false;
-  // copy string
-  memcpy(str->data + str->length, src, len);            
-  str->length += len;
-  str->data[str->length] = 0;                
   return true;
 }
 
@@ -181,13 +181,13 @@ void mjstr_rstrim(mjstr str) {
 /*
 ===============================================================================
 mjstr_Split
-    split mjstr into mjstrlist
+    split mjstr into mjslist
     return: true --- success; false --- failed;
 ===============================================================================
 */
-bool mjstr_split(mjstr str, const char* split, mjstrlist str_list) {
+bool mjstr_split(mjstr str, const char* split, mjslist slist) {
   // sanity check
-  if (!str || !split || !str_list) return false;
+  if (!str || !split || !slist) return false;
   // split from left to right
   int start = 0;
   while (start < str->length) {
@@ -196,11 +196,11 @@ bool mjstr_split(mjstr str, const char* split, mjstrlist str_list) {
     if (!point) break;
     // add to string
     if (point != str->data + start) {
-      mjstrlist_addb(str_list, str->data + start, point - str->data - start);
+      mjslist_addb(slist, str->data + start, point - str->data - start);
     }
     start = point - str->data + strlen(split);
   }
-  mjstrlist_addb(str_list, str->data + start, str->length - start);  
+  mjslist_addb(slist, str->data + start, str->length - start);  
   return true;
 }
 
@@ -287,131 +287,83 @@ bool mjstr_delete(mjstr str) {
 
 /*
 ===============================================================================
-mjstrlist_Ready
-  mjstrlist ready
+mjslist_Ready
+  mjslist ready
 ===============================================================================
 */
-static bool mjstrlist_ready(mjstrlist str_list, unsigned int need_size) {
+static bool mjslist_ready(mjslist slist, unsigned int need_size) {
   // have enough space
-  unsigned int total = str_list->_total;
+  unsigned int total = slist->_total;
   if (need_size <= total) return true;
   // realloc space
-  str_list->_total = 30 + need_size + (need_size >> 3);
-  mjstr* new_data = (mjstr*) realloc(str_list->data, 
-      str_list->_total * sizeof(mjstr));
+  slist->_total = 30 + need_size + (need_size >> 3);
+  mjstr* new_data = (mjstr*) realloc(slist->data, slist->_total*sizeof(mjstr));
   if (!new_data) {
-    str_list->_total = total;
+    slist->_total = total;
     return false;
   }
-  str_list->data = new_data;
+  slist->data = new_data;
   // clean other
-  for (int i = str_list->length; i < str_list->_total; i++) {
-    str_list->data[i] = NULL;
-  }
+  for (int i = slist->length; i < slist->_total; i++) slist->data[i] = NULL;
   return true;
 }
 
 /*
 ===============================================================================
-mjstrlist_ReadyPlus
-  call mjstrlist
+mjslist_ReadyPlus
+  call mjslist
 ===============================================================================
 */
-static inline bool mjstrlist_readyplus(mjstrlist str_list, unsigned int n) {
-  return mjstrlist_ready(str_list, str_list->length + n);
+static inline bool mjslist_readyplus(mjslist slist, unsigned int n) {
+  return mjslist_ready(slist, slist->length + n);
 }
  
 /*
 ===============================================================================
-mjstrlist_Add
-  add mjstr to strList
-===============================================================================
-*/
-bool mjstrlist_add(mjstrlist str_list, mjstr str) {
-  if (!str_list || !str) return false;
-  return mjstrlist_addb(str_list, str->data, str->length);
-}
-
-/*
-===============================================================================
-mjstrlist_AddS
-  add str to strList
-===============================================================================
-*/
-bool mjstrlist_adds(mjstrlist str_list, char* str) {
-  if (!str_list || !str) return false;
-  return mjstrlist_addb(str_list, str, strlen(str));
-}
-
-/*
-===============================================================================
-mjstrlist_AddB
+mjslist_AddB
   add new string in strList
 ===============================================================================
 */
-bool mjstrlist_addb(mjstrlist str_list, char* str, int len) {
+bool mjslist_addb(mjslist slist, char* str, int len) {
   // sanity check
-  if (!str_list || !str) return false;
+  if (!slist || !str) return false;
   // alloc enough space
-  if (!mjstrlist_readyplus(str_list, 1)) return false;
+  if (!mjslist_readyplus(slist, 1)) return false;
   // copy string
-  if (!str_list->data[str_list->length]) {
-    str_list->data[str_list->length] = mjstr_new(80);
-    if (!str_list->data[str_list->length]) return false;
+  if (!slist->data[slist->length]) {
+    slist->data[slist->length] = mjstr_new(80);
+    if (!slist->data[slist->length]) return false;
   }
-  mjstr_copyb(str_list->data[str_list->length], str, len);
-  str_list->length++;
+  mjstr_copyb(slist->data[slist->length], str, len);
+  slist->length++;
   return true;
 }
 
 /*
 ===============================================================================
-mjstrlist_Get
-    get idx in strList, idx range from 0 to length -1
+mjslist_New
+    alloc new mjslist struct
 ===============================================================================
 */
-mjstr mjstrlist_get(mjstrlist str_list, unsigned int idx) {
-  if (!str_list || idx >= str_list->length) return NULL;
-  return str_list->data[idx];
+mjslist mjslist_new() {
+  mjslist slist = (mjslist) calloc(1, sizeof(struct mjslist));
+  if (!slist) return NULL;
+  return slist;
 }
 
 /*
 ===============================================================================
-mjstrlist_Clean
-    clean mjstrlist, length set to zero
+mjslist_Delete
+    delete mjslist
 ===============================================================================
 */
-bool mjstrlist_clean(mjstrlist str_list) {
-  if (!str_list) return false;
-  str_list->length = 0;    
-  return true;
-}
-
-/*
-===============================================================================
-mjstrlist_New
-    alloc new mjstrlist struct
-===============================================================================
-*/
-mjstrlist mjstrlist_new() {
-  mjstrlist str_list = (mjstrlist) calloc(1, sizeof(struct mjstrlist));
-  if (!str_list) return NULL;
-  return str_list;
-}
-
-/*
-===============================================================================
-mjstrlist_Delete
-    delete mjstrlist
-===============================================================================
-*/
-bool mjstrlist_delete(mjstrlist str_list) {
-  if (!str_list) return false;
+bool mjslist_delete(mjslist slist) {
+  if (!slist) return false;
   // clean strlist
-  for (int i = 0; i < str_list->_total; i++) {
-    if (str_list->data[i]) mjstr_delete(str_list->data[i]);
+  for (int i = 0; i < slist->_total; i++) {
+    if (slist->data[i]) mjstr_delete(slist->data[i]);
   }
-  free(str_list->data);
-  free(str_list);
+  free(slist->data);
+  free(slist);
   return true;
 }

@@ -14,13 +14,13 @@ struct mjstr {
 };
 typedef struct mjstr* mjstr;
 
-// mjstrlist struct
-struct mjstrlist {
+// mjslist struct
+struct mjslist {
   mjstr*        data;           // mjstr list
   unsigned int  length;         // used length
   unsigned int  _total;         // count of mjstr
 };
-typedef struct mjstrlist* mjstrlist;
+typedef struct mjslist* mjslist;
 
 
 // function for mjstr
@@ -30,7 +30,7 @@ extern int    mjstr_cmp(mjstr str1, mjstr str2);
 extern int    mjstr_consume(mjstr str, unsigned int len);
 extern int    mjstr_rconsume(mjstr str, unsigned int len);
 extern int    mjstr_search(mjstr str, const char* split);
-extern bool   mjstr_split(mjstr str, const char* split, mjstrlist str_list);
+extern bool   mjstr_split(mjstr str, const char* split, mjslist slist);
 extern void   mjstr_lstrim(mjstr str);
 extern void   mjstr_rstrim(mjstr str);
 extern bool   mjstr_tolower(mjstr str);
@@ -71,14 +71,30 @@ static inline void mjstr_strim(mjstr x) {
 }
 
 
-// function for mjstrlist
-extern bool       mjstrlist_add(mjstrlist str_list, mjstr str);
-extern bool       mjstrlist_adds(mjstrlist str_list, char* str);
-extern bool       mjstrlist_addb(mjstrlist str_list, char* str , int len);
-extern mjstr      mjstrlist_get(mjstrlist str_list, unsigned int idx);
-extern bool       mjstrlist_clean(mjstrlist str_list);
+// function for mjslist
+extern bool     mjslist_addb(mjslist slist, char* str , int len);
+extern mjslist  mjslist_new();
+extern bool     mjslist_delete(mjslist slist);
 
-extern mjstrlist  mjstrlist_new();
-extern bool       mjstrlist_delete(mjstrlist str_list);
+
+static inline bool mjslist_add(mjslist slist, mjstr str) {
+  if (!slist || !str) return false;
+  return mjslist_addb(slist, str->data, str->length);
+}
+
+static inline bool mjslist_adds(mjslist slist, char* str) {
+  if (!slist || !str) return false;
+  return mjslist_addb(slist, str, strlen(str));
+}
+
+static inline mjstr mjslist_get(mjslist slist, unsigned int idx) {
+  if (!slist || idx >= slist->length) return NULL;
+  return slist->data[idx];
+}
+
+static inline void  mjslist_clean(mjslist slist) {
+  if (!slist) return;
+  slist->length = 0;
+}
 
 #endif

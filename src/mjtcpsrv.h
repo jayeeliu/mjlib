@@ -13,6 +13,7 @@ struct mjtcpsrv {
   bool    _stop;  // server stop
   mjev    _ev;    // event loop
   mjProc  _RT;    // server routine
+	mjProc	_INIT;	// called before mjtcpsrv_run
   mjmap   _map;   // server args map
 };
 typedef struct mjtcpsrv* mjtcpsrv;

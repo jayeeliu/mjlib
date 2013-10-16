@@ -34,9 +34,9 @@ static void *on_header(void *arg) {
     mjConn_Delete(conn);
     return NULL;
   }
-  httpData->param = mjstrlist_New();
+  httpData->param = mjslist_New();
   if (!httpData->param) {
-    MJLOG_ERR("mjstrlist_New error");
+    MJLOG_ERR("mjslist_New error");
     mjConn_Delete(conn);
     return NULL;
   }
@@ -155,14 +155,14 @@ static mjhttpdata create_httpdata(mjstr data) {
     return NULL;
   }
 
-  if (!mjhttpreq_init(httpdata->req, data)) {
-    MJLOG_ERR("mjhttpreq_init error");
+  if (!mjhttpreq_parse(httpdata->req, data)) {
+    MJLOG_ERR("mjhttpreq_parse error");
     mjhttpreq_delete(httpdata->req);
     free(httpdata);
     return NULL;
   }
   // alloc http params
-  httpdata->params = mjstrlist_new();
+  httpdata->params = mjslist_new();
   if (!httpdata->params) {
     MJLOG_ERR("params alloc error");
     mjhttpreq_delete(httpdata->req);
@@ -181,7 +181,7 @@ free_httpdata
 static void* free_httpdata(void* arg) {
   mjhttpdata httpdata = (mjhttpdata) arg;
   mjhttpreq_delete(httpdata->req);
-  mjstrlist_delete(httpdata->params);
+  mjslist_delete(httpdata->params);
   free(httpdata);
   return NULL;
 }
@@ -214,7 +214,7 @@ void* http_mjlf_routine(void* arg) {
     return NULL;
   }
   // expand location
-  mjstr location = httpdata->req->location;
+  mjstr location = httpdata->req->_path;
   if (location->data[location->length - 1] != '/') mjstr_cats(location, "/");
   // match proc and run
   mjlf srv = (mjlf) mjconnb_get_obj(conn, "server");

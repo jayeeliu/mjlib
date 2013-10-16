@@ -46,10 +46,10 @@ static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
     goto failout1;
   }
   // split string
-  mjstrlist s_list = mjstrlist_new();
+  mjslist s_list = mjslist_new();
   if (!s_list) {
 		mjconnb_writes(conn, "+ inner error\r\n");
-    MJLOG_ERR("mjstrlist create error");
+    MJLOG_ERR("mjslist create error");
     goto failout1;
   }
   mjstr_split(data, " ", s_list);
@@ -58,7 +58,7 @@ static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
     goto failout2;
   }
   // get command
-  cmd_data->cmd = mjstrlist_get(s_list, 0);
+  cmd_data->cmd = mjslist_get(s_list, 0);
   mjstr_strim(cmd_data->cmd);
   cmd_data->args = s_list;
   cmd_data->conn = conn;
@@ -69,13 +69,13 @@ static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
     // run routine
     if (routine_list[i].Routine) (*routine_list[i].Routine)(cmd_data);
     // clean and return
-    mjstrlist_delete(s_list);
+    mjslist_delete(s_list);
     mjstr_delete(data);
     return true;
   }  
   mjconnb_writes(conn, "+ wrong command\r\n");
 failout2:
-  mjstrlist_delete(s_list);
+  mjslist_delete(s_list);
 failout1:
   mjstr_delete(data);	
   return false;

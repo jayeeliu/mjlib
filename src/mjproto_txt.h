@@ -7,7 +7,7 @@
 
 struct mjproto_txt_data {
   mjstr     cmd;
-  mjstrlist args;
+  mjslist args;
   mjconnb   conn;
 	bool			finished;
 };

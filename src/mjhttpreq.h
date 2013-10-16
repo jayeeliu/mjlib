@@ -4,20 +4,26 @@
 #include "mjstr.h"
 #include "mjmap.h"
 
-#define NONE_METHOD     0
+#define INVALID_METHOD  0
 #define GET_METHOD      1
-#define POST_METHOD     2
-#define UNKNOWN_METHOD  5
+#define HEAD_METHOD     2
+#define PUT_METHOD      3
+#define DELETE_METHOD   4
+#define POST_METHOD     5
+#define OPTIONS_METHOD  6
 
 struct mjhttpreq {
-    int     method;         // method type
-    mjstr   location;       // request location
-    mjmap   req_header;
+    int       method;         // method type
+    mjstr     _path;          // request path
+    mjstr     _query;         // request query without ?
+    mjmap     _header;        // request header
+    mjslist _header_tmp;    // used for header parse
+    mjslist _field_tmp;     // user for header field parse
 };
 typedef struct mjhttpreq* mjhttpreq;
 
 extern mjhttpreq  mjhttpreq_new();
-extern bool       mjhttpreq_init(mjhttpreq req, mjstr data);
+extern bool       mjhttpreq_parse(mjhttpreq req, mjstr data);
 extern bool       mjhttpreq_delete(mjhttpreq req);
 
 #endif

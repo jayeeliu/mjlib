@@ -120,22 +120,22 @@ bool mjopt_parse_conf(const char* fileName) {
       continue;
     }
     // split key and value
-    mjstrlist strList = mjstrlist_new();
+    mjslist strList = mjslist_new();
     mjstr_split(line, "=", strList);
     if (strList->length != 2) {
       MJLOG_ERR("conf error");
-      mjstrlist_delete(strList);
+      mjslist_delete(strList);
       mjstr_delete(line);
       mjio_delete(io);
       return false;
     }
-    mjstr keyStr = mjstrlist_get(strList, 0);
-    mjstr valueStr = mjstrlist_get(strList, 1);
+    mjstr keyStr = mjslist_get(strList, 0);
+    mjstr valueStr = mjslist_get(strList, 1);
     mjstr_strim(keyStr);
     mjstr_strim(valueStr);
     strncpy(key, keyStr->data, MAX_KEY_LEN);
     strncpy(value, valueStr->data, MAX_VALUE_LEN);
-    mjstrlist_delete(strList);
+    mjslist_delete(strList);
     // set option value
     mjopt_set_value(section, key, value);
   }

@@ -22,18 +22,15 @@ mjhttpreq mjhttpreq_new() {
     return NULL;
   }
   // alloc location string
-  req->location = mjstr_new(80);
-  if (!req->location) {
-    MJLOG_ERR("mjstr_new error");
-    free(req);
-    return NULL;
-  }
-  // alloc req_header 
-  req->req_header = mjmap_new(131);
-  if (!req->req_header) {
-    MJLOG_ERR("mjmap_new error");
-    mjstr_delete(req->location);
-    free(req);
+  req->_path = mjstr_new(80);
+	req->_query = mjstr_new(80);
+  req->_header = mjmap_new(131);
+	req->_header_tmp = mjslist_new();
+	req->_field_tmp	= mjslist_new();
+  if (!req->_path || !req->_query || !req->_header || !req->_header_tmp || 
+			!req->_field_tmp) {
+    MJLOG_ERR("mjhttpreq init error");
+		mjhttpreq_delete(req);
     return NULL;
   }
   return req;
@@ -45,61 +42,36 @@ mjhttpreq_init
   create new mjhttpreq struct
 ===============================================================================
 */
-bool mjhttpreq_init(mjhttpreq req, mjstr data) {
+bool mjhttpreq_parse(mjhttpreq req, mjstr data) {
   // sanity check
-  if (!data) {
-    MJLOG_ERR("data is null");
-    return false;  
-  }
-  // get all header from data  
-  mjstrlist header = mjstrlist_new();
-  if (!header) {
-    MJLOG_ERR("mjstrlist_New error");
-    return false;
-  }
+  if (!req || !data) return false;  
+	mjslist header = req->_header_tmp;
+	mjslist field = req->_field_tmp;
   mjstr_split(data, "\r\n", header);
-  // get filed from the first len 
-  mjstrlist field = mjstrlist_new();
-  if (!field) {
-    MJLOG_ERR("mjstrlist_New error");
-    goto failout1;
-  }
   mjstr_split(header->data[0], " ", field);
   // check cmd length
   if (field->length < 2) {
     MJLOG_ERR("parse header error");
-    goto failout2;
+    return false;
   }
-  // get method type
+  // stage1: get method type
   const char* method = field->data[0]->data;
   if (!strcasecmp(method, "GET")) { 
     req->method = GET_METHOD;
   } else if (!strcasecmp(method, "POST")) {
     req->method = POST_METHOD;
-  } else {
-    req->method = UNKNOWN_METHOD;
   }
   // get access location
-  mjstr_copy(req->location, field->data[1]);
-  mjstrlist_clean(field);
-  // parse other header
+  mjstr_copy(req->_path, field->data[1]);
+  // stage2: parse other header
   for (int i = 1; i < header->length; i++) {
-    if (!header->data[i]) break;
+    if (header->data[i]) break;
+    mjslist_clean(field);
     mjstr_split(header->data[i], ":", field);
-    if (!field || field->length < 2) continue;
-    mjmap_set_str(req->req_header, field->data[0]->data, field->data[1]);
-    mjstrlist_clean(field);
+    if (field->length < 2) continue;
+    mjmap_set_str(req->_header, field->data[0]->data, field->data[1]);
   }
-  // clean strlist
-  mjstrlist_delete(field);
-  mjstrlist_delete(header);
   return true;
-
-failout2:
-  mjstrlist_delete(field);
-failout1:
-  mjstrlist_delete(header);
-  return false;
 }
 
 /*
@@ -109,11 +81,12 @@ mjhttpreq_Delete
 ===============================================================================
 */
 bool mjhttpreq_delete(mjhttpreq req) {
-  // sanity check
   if (!req) return false;
-  // free struct
-  mjstr_delete(req->location);
-  mjmap_delete(req->req_header);
+  mjstr_delete(req->_path);
+	mjstr_delete(req->_query);
+  mjmap_delete(req->_header);
+	mjslist_delete(req->_header_tmp);
+	mjslist_delete(req->_field_tmp);
   free(req);
   return true;
 }

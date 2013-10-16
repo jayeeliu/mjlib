@@ -10,7 +10,7 @@
 // per conn http data
 struct mjhttpdata {
   mjhttpreq   req;
-  mjstrlist   params;
+  mjslist   params;
   mjHttpRsp   rsp;
 };
 typedef struct mjhttpdata* mjhttpdata;
