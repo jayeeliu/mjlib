@@ -45,7 +45,6 @@ int main() {
     printf("Error create server socket\n");
     return 1;
   }
-
   mjtcpsrv srv = mjtcpsrv_new(sfd, http_mjtcpsrv_routine, 
       http_mjtcpsrv_init, urls, MJTCPSRV_STANDALONE);
   if (!srv) {

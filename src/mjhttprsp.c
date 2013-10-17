@@ -71,16 +71,19 @@ mjhttprsp_HeaderToStr
     change http header to string, alloc and return mjstr
 ===============================================================================
 */
-mjstr mjhttprsp_header_to_str(mjhttprsp rsp) {
+mjstr mjhttprsp_to_str(mjhttprsp rsp) {
   // alloc new mjstr
   mjstr str = mjstr_new(80);
   if (!str) {
     MJLOG_ERR("mjstr_New error");
     return NULL;
   }
-  char buf[80];
-  sprintf(buf, "HTTP/1.1 %d %s\r\n", rsp->_status, rsp->_response);
-  mjstr_cats(str, buf);
+  char buf[512]={0};
+  int len = 0;
+  len = sprintf(buf, "HTTP/1.1 %d %s\r\n", rsp->_status, rsp->_response);
+  len += sprintf(buf + len, "Server: SFQ-0.02\r\n");
+  len += sprintf(buf + len, "Content-Length: %d\r\n", rsp->_content->len);
+  mjstr_catb(str, buf, len);
   // iter the mjmap
   mjitem item = mjmap_get_next(rsp->_header, NULL);
   while (item) {
@@ -90,6 +93,8 @@ mjstr mjhttprsp_header_to_str(mjhttprsp rsp) {
     mjstr_cats(str, "\r\n");
     item = mjmap_get_next(rsp->_header, item);
   }
+  mjstr_cats(str, "\r\n");
+  if(rsp->_content->len) mjstr_cat(str, rsp->_content);
   return str;
 }
 
@@ -116,8 +121,9 @@ mjhttprsp mjhttprsp_new() {
   }
   // alloc new mjMap
   rsp->_header = mjmap_new(131);
-  if (!rsp->_header) {
-    MJLOG_ERR("mjmap new error");
+  rsp->_content = mjstr_new(80);
+  if (!rsp->_header || !rsp->_content) {
+    MJLOG_ERR("mjmap or mjstr error");
     free(rsp);
     return NULL;
   }
@@ -131,10 +137,9 @@ mjhttprsp_Delete
 ===============================================================================
 */
 bool mjhttprsp_delete(mjhttprsp rsp) {
-    // sanity check
-    if (!rsp) return false;
-    // relase rspHeader
-    if (rsp->_header) mjmap_delete(rsp->_header);
-    free(rsp);
-    return true;
+  if (!rsp) return false;
+  mjmap_delete(rsp->_header);
+  mjstr_delete(rsp->_content);
+  free(rsp);
+  return true;
 }

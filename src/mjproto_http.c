@@ -10,26 +10,25 @@
 #include "mjproto_http.h"
 
 /*
-===========================================
+===============================================================================
 FileToStr
   read file and store data into mjstr
-===========================================
+===============================================================================
 */
-mjstr FileToStr(const char* fileName)
-{
+mjstr file_to_str(const char* filename) {
+  // open file
+  int fd = open(filename, O_RDONLY);
+  if (fd < 0) {
+    MJLOG_ERR("open file error");
+    return NULL;
+  }
+  // creat out string
   mjstr out = mjstr_new(80);
   if (!out) {
     MJLOG_ERR("mjstr alloc error");
     return NULL;
   }
-
-  int fd = open(fileName, O_RDONLY);
-  if (fd < 0) {
-    MJLOG_ERR("open file error");
-    mjstr_delete(out);
-    return NULL;
-  }
-
+  // read file 
   char buf[1024];
   while (1) {
     int ret = read(fd, buf, sizeof(buf));
@@ -37,7 +36,6 @@ mjstr FileToStr(const char* fileName)
     mjstr_catb(out, buf, ret);
   }
   close(fd);
-
   return out;
 }
 
@@ -182,15 +180,13 @@ void* http_mjlf_routine(void* arg) {
   int ret = mjconnb_readuntil(conn, "\r\n\r\n", data);
   if (ret <= 0) {
     MJLOG_ERR("read http header failed");
-    mjstr_delete(data);
-    return NULL;
+    goto out;
   }
   // alloc httpdata
   mjhttpdata hdata = mjhttpdata_new(data);
   if (!hdata) {
     MJLOG_ERR("create httpdata error");
-    mjstr_delete(data);
-    return NULL;
+    goto out;
   }
   // match proc and run
   mjlf srv = (mjlf) mjconnb_get_obj(conn, "server");
@@ -198,7 +194,7 @@ void* http_mjlf_routine(void* arg) {
   mjProc fun = find_url_func(hdata, urls);
   mjconnb_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
   fun(conn);
-  // set private data
+out:
   mjstr_delete(data);
   return NULL;
 }
@@ -216,7 +212,7 @@ static void *on_header(void *arg) {
     mjconn_delete(conn);
     return NULL;
   }
-
+  // create httpdata
   mjhttpdata hdata = mjhttpdata_new(conn->_data);
   if (!hdata) {
     MJLOG_ERR("create hdata error");
@@ -224,7 +220,6 @@ static void *on_header(void *arg) {
     return NULL;
   }
   mjhttprsp_add_header(hdata->rsp, "Content-Type", "text/html; charset=UTF-8");
-  mjhttprsp_add_header(hdata->rsp, "Server", "SFQ-0.01");
   // match proc and run
   mjtcpsrv srv = (mjtcpsrv) mjconn_get_obj(conn, "server");
   struct mjhttpurl* urls = (struct mjhttpurl*) mjtcpsrv_get_obj(srv, "urls");

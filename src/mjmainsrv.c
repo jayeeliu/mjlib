@@ -168,7 +168,7 @@ mjmainsrv_New
   create new mjsrv struct
 ===============================================================================
 */
-mjmainsrv mjmainsrv_new(int sfd, mjProc ISRT) {
+mjmainsrv mjmainsrv_new(int sfd, mjProc ISRT, mjProc ISINIT, void* iiarg) {
   mjmainsrv srv = (mjmainsrv)calloc(1, sizeof(struct mjmainsrv));
   if (!srv) {
     MJLOG_ERR("mjsrv create error");
@@ -194,7 +194,7 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc ISRT) {
     }
     srv->_is_n[i] = fd[0];
     // create new srv struct and set main srv
-    srv->_is[i] = mjtcpsrv_new(fd[1], ISRT, NULL, NULL, MJTCPSRV_INNER);
+    srv->_is[i] = mjtcpsrv_new(fd[1], ISRT, ISINIT, iiarg, MJTCPSRV_INNER);
     if (!srv->_is[i]) {
       MJLOG_ERR("mjtcpsrv create error");
       mjmainsrv_delete(srv);
@@ -212,9 +212,8 @@ mjmainsrv_Delete
 ===============================================================================
 */
 bool mjmainsrv_delete(mjmainsrv msrv) {
-  // sanity check
   if (!msrv) return false;
-  // free fd and mjTcpSrv
+  // free inner server
   for (int i = 0; i < msrv->_is_num; i++) {
     // free srv and srv thread
     if (msrv->_is_t[i]) {

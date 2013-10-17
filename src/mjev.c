@@ -311,7 +311,22 @@ mjev mjev_new() {
 
 /*
 ===============================================================================
-mjev_ReleasePending
+mjev_release_tevent
+  mjev release timer event
+===============================================================================
+*/
+static void mjev_release_tevent(mjev ev) {
+  mjtevent te = get_first_timerevent(ev);
+  while (te) {
+    free(te);
+    te = get_first_timerevent(ev);
+  }
+  mjpq_delete(ev->_tevent_queue);
+}
+
+/*
+===============================================================================
+mjev_release_pending
     release Pending struct
 ===============================================================================
 */
@@ -336,8 +351,8 @@ bool mjev_delete(mjev ev) {
   // sanity check
   if (!ev) return false;
   close(ev->_epfd);
-  mjpq_delete(ev->_tevent_queue);
-  // release pending struct
+  // release tevent and pending struct
+  mjev_release_tevent(ev);
   mjev_release_pending(ev);
   free(ev);
   return true;

@@ -19,7 +19,10 @@ static void* mjtcpsrv_accept_routine(void* arg) {
   if (srv->_type == MJTCPSRV_STANDALONE) { // STANDALONE
     // standalone mode, accept new socket
     cfd = mjsock_accept(srv->_sfd);
-    if (cfd < 0) return NULL; 
+    if (cfd < 0) {
+      MJLOG_ERR("accept error");
+      return NULL; 
+    }
   } else { // INNER
     // innner mode, read new socket
     int ret = read(srv->_sfd, &cfd, sizeof(int));

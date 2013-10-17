@@ -15,33 +15,33 @@
 #define MJEV_MAXFD          60000
 
 struct mjfevent {
-    int     _mask;
-    mjProc  _RRT;
-    mjProc  _WRT;
-    void*   _arg;
+  int     _mask;  // event mask
+  mjProc  _RRT;   // read routine
+  mjProc  _WRT;   // write routine
+  void*   _arg;   // routine arg
 };
 typedef struct mjfevent* mjfevent;
 // timer event struct
 struct mjtevent {
-    bool      _valid;
-    long long _time;
-    mjProc    _TRT;
-    void*     _arg;
+  bool      _valid; // tevent valid ?
+  long long _time;
+  mjProc    _TRT;   // timer routine
+  void*     _arg;   // timer routine arg
 };
 typedef struct mjtevent* mjtevent;
 // pending proc to be run
 struct mjpending {
-    mjProc            _PRT;   // pending routine
-    void*             _arg;   // pending arg
-    struct list_head  _pnode; // pending node
+  mjProc            _PRT;   // pending routine
+  void*             _arg;   // pending arg
+  struct list_head  _pnode; // pending node
 };
 typedef struct mjpending* mjpending;
 // mjev struct
 struct mjev {
-    int               _epfd;       // epoll fd
-    struct mjfevent   _fevent_list[MJEV_MAXFD];
-    mjpq              _tevent_queue;
-    struct list_head  _phead;
+  int               _epfd;                    // epoll fd
+  struct mjfevent   _fevent_list[MJEV_MAXFD]; // fevent list
+  mjpq              _tevent_queue;            // timer event queue
+  struct list_head  _phead;                   // pending head
 };
 typedef struct mjev* mjev;
 

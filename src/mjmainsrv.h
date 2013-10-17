@@ -25,7 +25,7 @@ typedef struct mjmainsrv* mjmainsrv;
 
 extern bool       mjmainsrv_asy(mjtcpsrv msrv, mjProc RT, void* rarg, mjProc CB, void* carg);
 extern bool       mjmainsrv_run(mjmainsrv msrv);
-extern mjmainsrv  mjmainsrv_new(int sfd, mjProc ISRT);
+extern mjmainsrv  mjmainsrv_new(int sfd, mjProc ISRT, mjProc ISINIT, void* iiarg);
 extern bool       mjmainsrv_delete(mjmainsrv msrv);
 
 static inline mjtcpsrv mjmainsrv_get_is(mjmainsrv msrv, unsigned int index) {
