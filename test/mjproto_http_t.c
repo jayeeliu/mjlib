@@ -24,12 +24,15 @@ static void* on_finish(void *arg) {
 static void* main0(void *arg) {
   mjconn conn = (mjconn)arg;
   mjhttpdata hdata = mjconn_get_obj(conn, "httpdata");
+  long long x = 1;
+  for(int i=0; i<50000; i++) {
+    x = x + i;
+  }
   mjhttprsp_set_status(hdata->rsp, 200);
-  mjstr header = mjhttprsp_header_to_str(hdata->rsp);
-  mjconn_buf_write(conn, header);
-  mjconn_buf_writes(conn, "\r\n");
-  mjconn_writes(conn, "main0 is here", on_finish);
-  mjstr_delete(header);
+  mjhttprsp_set_strs(hdata->rsp, "OK This is the test string");
+  mjstr content = mjhttprsp_to_str(hdata->rsp);
+  mjconn_write(conn, content, on_finish);
+  mjstr_delete(content);
   return NULL;
 }
 

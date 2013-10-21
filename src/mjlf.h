@@ -11,11 +11,11 @@ struct mjlf {
   mjthreadpool  _tpool;           // thread pool 
   mjProc        _Routine;         // run when new conn come
 
-  void*         srv_init_arg;
+  void*         iarg;
   mjmap         _arg_map;
 
-  int           _read_timeout;    // read write timeout
-  int           _write_timeout;
+  int           _rto;    // read write timeout
+  int           _wto;
 };
 typedef struct mjlf* mjlf;
 

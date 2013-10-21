@@ -24,6 +24,10 @@ static void* on_finish(void *arg) {
 static void* main0(void *arg) {
   mjconn conn = (mjconn)arg;
   mjhttpdata hdata = mjconn_get_obj(conn, "httpdata");
+  long long x = 1;
+  for(int i=0; i<50000; i++) {
+    x = x + i;
+  }
   mjhttprsp_set_status(hdata->rsp, 200);
   mjhttprsp_set_strs(hdata->rsp, "OK This is the test string");
   mjstr content = mjhttprsp_to_str(hdata->rsp);

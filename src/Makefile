@@ -11,12 +11,12 @@ REDISDIR=../deps/hiredis
 REDISOBJS=$(REDISDIR)/libhiredis.a
 
 .c.o:
-#	gcc -pg -g -fPIC -std=gnu99 $(IFLAGS) -pthread -Wall -c $< -o $@
-	gcc -O3 -fPIC -std=gnu99 $(IFLAGS) -pthread -Wall -c $< -o $@
+	gcc -pg -g -fPIC -std=gnu99 $(IFLAGS) -pthread -Wall -c $< -o $@
+#	gcc -O3 -fPIC -std=gnu99 $(IFLAGS) -pthread -Wall -c $< -o $@
 
 all:$(OBJS)
-#	gcc -g -fPIC -shared -pthread $(OBJS) $(JPWOBJS) $(REDISOBJS) -o $(BUILD)/libmj.so
-	gcc -O3 -fPIC -shared -pthread $(OBJS) $(JPWOBJS) $(REDISOBJS) -o $(BUILD)/libmj.so
+	gcc -g -fPIC -shared -pthread $(OBJS) $(JPWOBJS) $(REDISOBJS) -o $(BUILD)/libmj.so
+#	gcc -O3 -fPIC -shared -pthread $(OBJS) $(JPWOBJS) $(REDISOBJS) -o $(BUILD)/libmj.so
 	ar -r $(BUILD)/libmj.a $(OBJS) $(JPWOBJS) $(REDISOBJS)
 
 clean:

@@ -11,7 +11,7 @@ mjproto_txt_init
 */
 void* mjproto_txt_init(void* arg) {
 	mjlf server = (mjlf) arg;
-	mjproto_txt_routine_list routine_list = server->srv_init_arg;
+	mjproto_txt_routine_list routine_list = server->iarg;
 	if (routine_list) {
 		mjlf_set_obj(server, "routine_list", routine_list, NULL);
 	}

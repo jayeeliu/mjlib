@@ -40,7 +40,7 @@ static void* mjlf_routine(void* arg) {
   }
   mjconnb_set_obj(conn, "server", srv, NULL);
   mjconnb_set_obj(conn, "thread", thread, NULL);
-  mjconnb_set_timeout(conn, srv->_read_timeout, srv->_write_timeout);
+  mjconnb_set_timeout(conn, srv->_rto, srv->_wto);
   // run server routine(conn routine)
   srv->_Routine(conn);
   mjconnb_delete(conn);
@@ -101,8 +101,8 @@ bool mjlf_set_timeout(mjlf srv, int read_timeout, int write_timeout) {
     MJLOG_ERR("srv is null");
     return false;
   }
-  srv->_read_timeout  = read_timeout;
-  srv->_write_timeout = write_timeout;
+  srv->_rto  = read_timeout;
+  srv->_wto = write_timeout;
   return true;
 }
 
@@ -137,7 +137,7 @@ mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Srv,
   // set server socket and routine
   srv->_sfd      = sfd;
   srv->_Routine  = Routine;
-  srv->srv_init_arg = s_arg;
+  srv->iarg = s_arg;
   srv->_arg_map = mjmap_new(31);
   if (!srv->_arg_map) {
     MJLOG_ERR("mjmap new error");

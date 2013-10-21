@@ -42,10 +42,10 @@ typedef struct mjconn* mjconn;
 
 extern bool     mjconn_readbytes(mjconn conn, int len, mjProc CB);
 extern bool     mjconn_readuntil(mjconn conn, char* delim, mjProc CB);
-extern bool     mjconn_read(mjconn conn, mjProc CallBack);
+extern bool     mjconn_read(mjconn conn, mjProc CB);
 extern bool     mjconn_writeb(mjconn conn, char* buf, int length, mjProc CB);
 extern bool     mjconn_buf_writeb(mjconn conn, char* buf, int length);
-extern bool     mjconn_flush(mjconn conn, mjProc CallBack);
+extern bool     mjconn_flush(mjconn conn, mjProc CB);
 extern bool     mjconn_connect(mjconn conn, const char* ipaddr, int port, mjProc CB);
 extern mjconn   mjconn_new(mjev ev, int fd);
 extern bool     mjconn_delete(mjconn conn);

@@ -86,7 +86,7 @@ http_mjlf_init
 */
 void* http_mjlf_init(void* arg) {
   mjlf srv = (mjlf) arg;
-  struct mjhttpurl* urls = http_init_urls(srv->srv_init_arg);
+  struct mjhttpurl* urls = http_init_urls(srv->iarg);
   mjlf_set_obj(srv, "urls", urls, http_free_urls);
   return NULL;
 }
