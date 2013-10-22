@@ -10,12 +10,10 @@ mjproto_txt_init
 ===============================================================================
 */
 void* mjproto_txt_init(void* arg) {
-	mjlf server = (mjlf) arg;
-	mjproto_txt_routine_list routine_list = server->iarg;
-	if (routine_list) {
-		mjlf_set_obj(server, "routine_list", routine_list, NULL);
-	}
-	return NULL;
+  mjlf srv = (mjlf) arg;
+  mjproto_txt_routine_list rlist = srv->iarg;
+  if (rlist) mjlf_set_obj(srv, "routine_list", rlist, NULL);
+  return NULL;
 }
 
 /*
@@ -128,10 +126,7 @@ mjproto_txt_finished
 ===============================================================================
 */
 bool mjproto_txt_finished(mjproto_txt_data cmd_data) {
-	if (!cmd_data) {
-		MJLOG_ERR("cmd_data is null");
-		return false;
-	}
+	if (!cmd_data) return false;
 	cmd_data->finished = true;
 	return true;
 }
