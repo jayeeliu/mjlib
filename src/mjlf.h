@@ -6,27 +6,60 @@
 #include "mjmap.h"
 
 struct mjlf {
-  int           _sfd;             // server socket
+  int           _sfd;     // server socket
   bool          _stop;
-  mjthreadpool  _tpool;           // thread pool 
-  mjProc        _Routine;         // run when new conn come
-
-  void*         iarg;
-  mjmap         _arg_map;
-
-  int           _rto;    // read write timeout
-  int           _wto;
+  mjthreadpool  _tpool;   // thread pool 
+  int           _nthread; // max thread number
+  mjProc        _TINIT;   // thread init routine
+  void*         _targ;    // thread init arg
+  mjProc        _INIT;    // mjlf server init routine
+  void*         iarg;     // mjlf server init arg
+  mjProc        _RT;      // run when new conn come
+  mjmap         _map;
 };
 typedef struct mjlf* mjlf;
 
-extern void   mjlf_run(mjlf srv);
-extern void*  mjlf_get_obj(mjlf srv, const char* key);
-extern bool   mjlf_set_obj(mjlf srv, const char* key, void* obj, mjProc obj_free);
-extern bool   mjlf_set_stop(mjlf srv, bool value);
-extern bool   mjlf_set_timeout(mjlf srv, int read_timeout, int write_timeout);
 
-extern mjlf mjlf_new(int sfd, mjProc Routine, int max_thread, mjProc Init_Srv,
-    void* s_arg, mjProc Init_Thrd, void* t_arg);
-extern bool mjlf_delete(mjlf srv);
+extern void*  mjlf_run(mjlf srv);
+extern mjlf   mjlf_new(int sfd, int max_thread);
+extern bool   mjlf_delete(mjlf srv);
+
+
+static inline void* mjlf_get_obj(mjlf srv, const char* key) {
+  if (!srv || !key) return NULL;
+  return mjmap_get_obj(srv->_map, key);
+}
+
+static inline bool mjlf_set_obj(mjlf srv, const char* key, void* obj, mjProc obj_free) {
+  if (!srv || !key) return false;
+  if (mjmap_set_obj(srv->_map, key, obj, obj_free) < 0) return false;
+  return true;
+}
+
+static inline bool mjlf_set_stop(mjlf srv, bool value) {
+  if (!srv) return false;
+  srv->_stop = value;
+  return true;
+}
+
+static inline bool mjlf_set_init(mjlf srv, mjProc INIT, void* iarg) {
+  if (!srv) return false;
+  srv->_INIT = INIT;
+  srv->iarg = iarg;
+  return true;
+}
+
+static inline bool mjlf_set_routine(mjlf srv, mjProc RT) {
+  if (!srv) return false;
+  srv->_RT = RT;
+  return true;
+}
+
+static inline bool mjlf_set_thread(mjlf srv, mjProc TINIT, void* targ) {
+  if (!srv) return false;
+  srv->_TINIT = TINIT;
+  srv->_targ  = targ;
+  return true;
+}
 
 #endif

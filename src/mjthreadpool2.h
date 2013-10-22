@@ -6,18 +6,18 @@
 
 // threadpool struct
 struct mjthreadpool {
-  bool        _shutdown;         // shutdown this thread pool?
-  int         _max_thread;
-  mjProc      _Init;
-  void*       init_arg;
+  bool        _stop;         // stop the thread pool
+  int         _nthread;
+  mjProc      _INIT;
+  void*       iarg;
   mjlockless  _free_list;
   mjthread    _threads[0];
 };
 typedef struct mjthreadpool* mjthreadpool;
 
-extern bool         mjthreadpool_add_routine(mjthreadpool tpool, mjProc Routine, void* arg);
-extern bool         mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc Routine, void* arg);
-extern mjthreadpool mjthreadpool_new(int max_thread, mjProc Init_Routine, void* init_arg);
+extern bool         mjthreadpool_add_routine(mjthreadpool tpool, mjProc RT, void* arg);
+extern bool         mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg);
+extern mjthreadpool mjthreadpool_new(int nthread, mjProc INIT, void* iarg);
 extern bool         mjthreadpool_delete(mjthreadpool tpool);
 
 #endif

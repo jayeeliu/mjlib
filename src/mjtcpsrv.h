@@ -60,4 +60,5 @@ static inline bool mjtcpsrv_set_stop(mjtcpsrv srv, bool value) {
 	srv->_stop = value;
 	return true;
 }
+
 #endif

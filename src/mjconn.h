@@ -1,10 +1,10 @@
 #ifndef _MJCONN_H
 #define _MJCONN_H
 
-#include <string.h>
 #include "mjstr.h"
 #include "mjev.h"
-#include "mjthread.h"
+#include "mjmap.h"
+#include <string.h>
 
 struct mjconn {
   int           _fd;      // fd 
