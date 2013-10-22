@@ -20,10 +20,23 @@ struct mjtcpsrv {
 typedef struct mjtcpsrv* mjtcpsrv;
 
 
-extern mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, mjProc INIT, void* iarg, int type);
+extern mjtcpsrv mjtcpsrv_new(int sfd, int type);
 extern void*    mjtcpsrv_delete(void *arg);
 extern void*    mjtcpsrv_run(void *arg);
 
+
+static inline bool mjtcpsrv_set_routine(mjtcpsrv srv, mjProc RT) {
+	if (!srv) return false;
+	srv->_RT = RT;
+	return true;
+}
+
+static inline bool mjtcpsrv_set_init(mjtcpsrv srv, mjProc INIT, void* iarg) {
+	if (!srv) return false;
+	srv->_INIT = INIT;
+	srv->iarg = iarg;
+	return true;
+}
 
 static inline mjev mjtcpsrv_get_ev(mjtcpsrv srv) {
   if (!srv) return NULL;

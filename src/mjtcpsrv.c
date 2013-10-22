@@ -45,7 +45,6 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     return NULL;
   }
   mjconn_set_obj(conn, "server", srv, NULL);
-  mjconn_set_to(conn, 10000, 10000);
   srv->_RT(conn);
   return NULL;
 }
@@ -76,7 +75,7 @@ mjtcpsrv_new
   alloc mjtcpsrv struct
 ===============================================================================
 */
-mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, mjProc INIT, void* iarg, int type) {
+mjtcpsrv mjtcpsrv_new(int sfd, int type) {
   // alloc mjtcpsrv struct
   mjtcpsrv srv = (mjtcpsrv) calloc(1, sizeof(struct mjtcpsrv));  
   if (!srv) {
@@ -93,9 +92,6 @@ mjtcpsrv mjtcpsrv_new(int sfd, mjProc RT, mjProc INIT, void* iarg, int type) {
   // set fields
   srv->_sfd   = sfd;
   srv->_type  = type;
-  srv->_RT    = RT;
-  srv->_INIT  = INIT;
-  srv->iarg   = iarg;
   // set _map
   srv->_map = mjmap_new(31);
   if (!srv->_map) {

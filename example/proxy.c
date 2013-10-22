@@ -108,11 +108,12 @@ int main() {
     return 1;
   }
 
-  mjtcpsrv srv = mjtcpsrv_new(sfd, on_masterconnect, NULL, NULL, MJTCPSRV_STANDALONE);
+  mjtcpsrv srv = mjtcpsrv_new(sfd, MJTCPSRV_STANDALONE);
   if (!srv) {
     printf("mjtcpsrv create error");
     return 1;
   }
+	mjtcpsrv_set_routine(srv, on_masterconnect);
   mjtcpsrv_run(srv);
   mjtcpsrv_delete(srv);
   return 0;

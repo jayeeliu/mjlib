@@ -24,10 +24,6 @@ static void* on_finish(void *arg) {
 static void* main0(void *arg) {
   mjconn conn = (mjconn)arg;
   mjhttpdata hdata = mjconn_get_obj(conn, "httpdata");
-  long long x = 1;
-  for(int i=0; i<50000; i++) {
-    x = x + i;
-  }
   mjhttprsp_set_status(hdata->rsp, 200);
   mjhttprsp_set_strs(hdata->rsp, "OK This is the test string");
   mjstr content = mjhttprsp_to_str(hdata->rsp);
@@ -49,12 +45,13 @@ int main() {
     return 1;
   }
 
-  mjmainsrv msrv = mjmainsrv_new(sfd, http_mjtcpsrv_routine, 
-      http_mjtcpsrv_init, urls);
+  mjmainsrv msrv = mjmainsrv_new(sfd);
   if (!msrv) {
     printf("Error create tcpserver\n");
     return 1;
   }
+	mjmainsrv_set_is_init(msrv, http_mjtcpsrv_init, urls);
+	mjmainsrv_set_is_routine(msrv, http_mjtcpsrv_routine);
   mjmainsrv_run(msrv);
   mjmainsrv_delete(msrv);
   return 0;

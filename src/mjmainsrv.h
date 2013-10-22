@@ -25,7 +25,7 @@ typedef struct mjmainsrv* mjmainsrv;
 
 extern bool       mjmainsrv_asy(mjtcpsrv msrv, mjProc RT, void* rarg, mjProc CB, void* carg);
 extern bool       mjmainsrv_run(mjmainsrv msrv);
-extern mjmainsrv  mjmainsrv_new(int sfd, mjProc ISRT, mjProc ISINIT, void* iiarg);
+extern mjmainsrv  mjmainsrv_new(int sfd);
 extern bool       mjmainsrv_delete(mjmainsrv msrv);
 
 static inline mjtcpsrv mjmainsrv_get_is(mjmainsrv msrv, unsigned int index) {
@@ -37,6 +37,22 @@ static inline bool mjmainsrv_set_stop(mjmainsrv msrv, bool value) {
   if (!msrv) return false;
   msrv->_stop = value;
   return true;
+}
+
+static inline bool mjmainsrv_set_is_init(mjmainsrv msrv, mjProc ISINIT, void* iiarg) {
+	if (!msrv) return false;
+	for (int i = 0; i < msrv->_is_num; i++) {
+		mjtcpsrv_set_init(msrv->_is[i], ISINIT, iiarg);
+	}
+	return true;
+}
+
+static inline bool mjmainsrv_set_is_routine(mjmainsrv msrv, mjProc ISRT) {
+	if (!msrv) return false;
+	for (int i = 0; i < msrv->_is_num; i++) {
+		mjtcpsrv_set_routine(msrv->_is[i], ISRT);
+	}
+	return true;
 }
 
 #endif

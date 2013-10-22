@@ -168,7 +168,7 @@ mjmainsrv_New
   create new mjsrv struct
 ===============================================================================
 */
-mjmainsrv mjmainsrv_new(int sfd, mjProc ISRT, mjProc ISINIT, void* iiarg) {
+mjmainsrv mjmainsrv_new(int sfd) {
   mjmainsrv srv = (mjmainsrv)calloc(1, sizeof(struct mjmainsrv));
   if (!srv) {
     MJLOG_ERR("mjsrv create error");
@@ -194,7 +194,7 @@ mjmainsrv mjmainsrv_new(int sfd, mjProc ISRT, mjProc ISINIT, void* iiarg) {
     }
     srv->_is_n[i] = fd[0];
     // create new srv struct and set main srv
-    srv->_is[i] = mjtcpsrv_new(fd[1], ISRT, ISINIT, iiarg, MJTCPSRV_INNER);
+    srv->_is[i] = mjtcpsrv_new(fd[1], MJTCPSRV_INNER);
     if (!srv->_is[i]) {
       MJLOG_ERR("mjtcpsrv create error");
       mjmainsrv_delete(srv);
