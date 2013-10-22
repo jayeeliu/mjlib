@@ -73,7 +73,7 @@ static void* mjthread_normal_routine(void* arg) {
     pthread_mutex_unlock(&thread->_thread_lock);
     // call routine
     if (thread->_RT) thread->_RT(thread);
-    // should shutdown, break
+    // should stop, break
     if (thread->_stop) break;
     // clean for next task
     thread->_RT = NULL;
