@@ -13,14 +13,14 @@ struct mjproto_txt_data {
 };
 typedef struct mjproto_txt_data* mjproto_txt_data;
 
-struct mjproto_txt_routine_list {
+struct mjproto_txt_rtlist {
   const char* cmd;
   mjProc      Routine;
 };
-typedef struct mjproto_txt_routine_list* mjproto_txt_routine_list;
+typedef struct mjproto_txt_rtlist* mjproto_txt_rtlist;
 
 extern void*  mjproto_txt_init(void* arg);
 extern void*  mjproto_txt_routine(void* arg);
-extern bool   mjproto_txt_finished(mjproto_txt_data cmd_data);
+extern bool   mjproto_txt_finished(mjproto_txt_data cdata);
 
 #endif

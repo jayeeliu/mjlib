@@ -5,13 +5,13 @@
 
 /*
 ===============================================================================
-mjproto_txt_init
+mjproto_txt_init(server routine)
   init proto txt.
 ===============================================================================
 */
 void* mjproto_txt_init(void* arg) {
   mjlf srv = (mjlf) arg;
-  mjproto_txt_routine_list rlist = srv->iarg;
+  mjproto_txt_rtlist rlist = srv->iarg;
   if (rlist) mjlf_set_obj(srv, "routine_list", rlist, NULL);
   return NULL;
 }
@@ -22,8 +22,8 @@ mjproto_txt_run_cmd
   run txt protocol command(run txt routine)
 ===============================================================================
 */
-static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
-		mjproto_txt_routine_list routine_list) {
+static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cdata,
+		mjproto_txt_rtlist rtlist) {
   // read data
   mjstr data = mjstr_new(80);
   if (!data) {
@@ -44,36 +44,36 @@ static bool mjproto_txt_run_cmd(mjconnb conn, mjproto_txt_data cmd_data,
     goto failout1;
   }
   // split string
-  mjslist s_list = mjslist_new();
-  if (!s_list) {
+  mjslist slist = mjslist_new();
+  if (!slist) {
 		mjconnb_writes(conn, "+ inner error\r\n");
     MJLOG_ERR("mjslist create error");
     goto failout1;
   }
-  mjstr_split(data, " ", s_list);
-  if (s_list->len < 1) {
+  mjstr_split(data, " ", slist);
+  if (slist->len < 1) {
     mjconnb_writes(conn, "+ command error\r\n");
     goto failout2;
   }
   // get command
-  cmd_data->cmd = mjslist_get(s_list, 0);
-  mjstr_strim(cmd_data->cmd);
-  cmd_data->args = s_list;
-  cmd_data->conn = conn;
+  cdata->cmd = mjslist_get(slist, 0);
+  mjstr_strim(cdata->cmd);
+  cdata->args = slist;
+  cdata->conn = conn;
   // run routine
-  for (int i = 0; routine_list[i].cmd != NULL; i++) {
+  for (int i = 0; rtlist[i].cmd != NULL; i++) {
     // not equal continue
-    if (strcasecmp(routine_list[i].cmd, cmd_data->cmd->data)) continue;
+    if (strcasecmp(rtlist[i].cmd, cdata->cmd->data)) continue;
     // run routine
-    if (routine_list[i].Routine) (*routine_list[i].Routine)(cmd_data);
+    if (rtlist[i].Routine) (*rtlist[i].Routine)(cdata);
     // clean and return
-    mjslist_delete(s_list);
+    mjslist_delete(slist);
     mjstr_delete(data);
     return true;
   }  
   mjconnb_writes(conn, "+ wrong command\r\n");
 failout2:
-  mjslist_delete(s_list);
+  mjslist_delete(slist);
 failout1:
   mjstr_delete(data);	
   return false;
@@ -94,28 +94,27 @@ void* mjproto_txt_routine(void* arg) {
     return NULL;
   }
 	// get server
-	mjlf server = mjconnb_get_obj(conn, "server");
-	if (!server) {
+	mjlf srv = mjconnb_get_obj(conn, "server");
+	if (!srv) {
 		mjconnb_writes(conn, "+ inner error\r\n");
 		MJLOG_ERR("no server found");
 		return NULL;
 	}
   // get routine_list
-	mjproto_txt_routine_list routine_list = mjlf_get_obj(server, "routine_list");
-  if (!routine_list) {
+	mjproto_txt_rtlist rtlist = mjlf_get_obj(srv, "routine_list");
+  if (!rtlist) {
     mjconnb_writes(conn, "+ no command list\r\n");
 		MJLOG_ERR("no command list set");
     return NULL;
   } 
 	// alloc mjproto_txt_data
-  struct mjproto_txt_data cmd_data;
-	cmd_data.cmd 	= NULL;
-	cmd_data.args = NULL;
-	cmd_data.conn	= NULL;
-	cmd_data.finished = false;
+  struct mjproto_txt_data cdata;
+	cdata.cmd = NULL;
+	cdata.args = NULL;
+	cdata.conn = NULL;
+	cdata.finished = false;
 	// run routine and loop till finished
-	while (mjproto_txt_run_cmd(conn, &cmd_data, routine_list) && 
-      !cmd_data.finished);
+	while (mjproto_txt_run_cmd(conn, &cdata, rtlist) && !cdata.finished);
 	return NULL;
 }
 
@@ -125,8 +124,8 @@ mjproto_txt_finished
   set conn finished
 ===============================================================================
 */
-bool mjproto_txt_finished(mjproto_txt_data cmd_data) {
-	if (!cmd_data) return false;
-	cmd_data->finished = true;
+bool mjproto_txt_finished(mjproto_txt_data cdata) {
+	if (!cdata) return false;
+	cdata->finished = true;
 	return true;
 }
