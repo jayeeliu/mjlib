@@ -22,7 +22,7 @@ void* mjlockless_pop(mjlockless lockless) {
   if (lockless->_head % lockless->_size == lockless->_tail % lockless->_size) {
     return NULL;
   }
-  // get value, _tail mybe add, but _tail value not set
+  // get value, _tail maybe add, but _tail value not set
   void* value = lockless->_queue[_head % lockless->_size];
   if (!value) return NULL;
   // compare and swap
@@ -61,10 +61,8 @@ mjlockless_delete
 ===============================================================================
 */
 bool mjlockless_delete(mjlockless lockless) {
-  if (!lockless) {
-    MJLOG_ERR("lockless is null");
+  if (!lockless) return false;
     return false;
-  }
   free(lockless);
   return true;
 }

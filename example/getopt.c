@@ -9,7 +9,7 @@ void Usage(char *cmd) {
 int main(int argc, char* argv[]) {
   int ch;
   opterr = 0;
-  while ((ch = getopt(argc, argv, "a:bcd")) != -1) {
+  while ((ch = getopt(argc, argv, "a:bcde:")) != -1) {
     switch (ch) {
     case 'a':
       printf("a value: %s\n", optarg);
@@ -23,6 +23,8 @@ int main(int argc, char* argv[]) {
     case 'd':
       printf("d set\n");
       break;
+    case 'e':
+      printf("e value: %s\n", optarg);
     default:
       Usage(argv[0]);
       return 1;
