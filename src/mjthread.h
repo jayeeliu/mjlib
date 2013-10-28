@@ -5,21 +5,24 @@
 #include "mjmap.h"
 #include <pthread.h>
 
+struct mjthreadpool;
+
 struct mjthread {
-  pthread_t       _id;        
-  pthread_mutex_t _lock;
-  pthread_cond_t  _ready;
+  pthread_t             _id;        
+  pthread_mutex_t       _lock;
+  pthread_cond_t        _ready;
+  struct mjthreadpool*  _tpool;   // threadpool this thread is in
 
-  mjProc          _INIT;              // run once when thread init
-  void*           iarg;               // Init Routine use this
-  mjProc          _RT;                // routine to be run
-  void*           arg;                // Routine use this
+  mjProc                _INIT;    // run once when thread init
+  void*                 iarg;     // Init Routine use this
+  mjProc                _RT;      // routine to be run
+  void*                 arg;      // Routine use this
 
-  mjmap           _map;               // arg map for this thread
+  mjmap                 _map;     // arg map for this thread
 
-  bool            _running;           // true if pthread_create has been called
-  bool            _working;           // true if _RT is not null
-  bool            _stop;              // 1 when shutdown command has invoked, otherwise 0
+  bool                  _running; // true if pthread_create has been called
+  bool                  _working; // true if _RT is not null
+  bool                  _stop;    // 1 when shutdown command has invoked, otherwise 0
 };
 typedef struct mjthread* mjthread;
 
@@ -47,6 +50,12 @@ static inline bool mjthread_set_init(mjthread thread, mjProc INIT, void* iarg) {
   thread->_INIT = INIT;
   thread->iarg = iarg;
   return true;
+}
+
+static inline bool mjthread_set_tpool(mjthread thread, struct mjthreadpool* tpool) {
+  if (!thread) return false;
+  thread->_tpool = tpool;
+  return true;   
 }
 
 #endif

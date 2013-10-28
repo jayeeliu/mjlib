@@ -16,7 +16,7 @@ bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc RT, void* arg) {
     return false;
   }
   // get free thread
-  mjthread thread = mjlockless_pop(tpool->_free_list); 
+  mjthread thread = mjlockless_pop(tpool->_freelist); 
   if (!thread) return false;
   if (thread->_working) MJLOG_ERR("Oops get working thread");
   // dispatch work to thread
@@ -52,8 +52,6 @@ mjthreadpool_run
 bool mjthreadpool_run(mjthreadpool tpool) {
   if (!tpool) return false;
   for (int i = 0; i < tpool->_nthread; i++) {
-    mjthread_set_obj(tpool->_threads[i], "tpool", tpool, NULL); 
-    mjlockless_push(tpool->_free_list, tpool->_threads[i]);
     mjthread_run(tpool->_threads[i]);
   }
   tpool->_running = true;
@@ -77,8 +75,8 @@ mjthreadpool mjthreadpool_new(int nthread) {
   }
   // init field
   tpool->_nthread = nthread;
-  tpool->_free_list = mjlockless_new(nthread + 1);
-  if (!tpool->_free_list) {
+  tpool->_freelist = mjlockless_new(nthread + 1);
+  if (!tpool->_freelist) {
     MJLOG_ERR("mjlockless_new error");
     free(tpool);
     return NULL;
@@ -90,6 +88,8 @@ mjthreadpool mjthreadpool_new(int nthread) {
       mjthreadpool_delete(tpool);
       return NULL;
     }
+    mjthread_set_tpool(tpool->_threads[i], tpool); 
+    mjlockless_push(tpool->_freelist, tpool->_threads[i]);
   }
   return tpool; 
 } 
@@ -109,7 +109,7 @@ bool mjthreadpool_delete(mjthreadpool tpool) {
       mjthread_delete(tpool->_threads[i]);
     }
   }
-  mjlockless_delete(tpool->_free_list);
+  mjlockless_delete(tpool->_freelist);
   free(tpool);
   return true; 
 } 

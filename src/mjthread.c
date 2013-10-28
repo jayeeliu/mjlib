@@ -80,15 +80,14 @@ static void* mjthread_normal_routine(void* arg) {
     thread->arg = NULL;
     thread->_working = false;
     // if in threadpool, add to freelist
-    mjthreadpool tpool = mjmap_get_obj(thread->_map, "tpool");
-    if (tpool) mjlockless_push(tpool->_free_list, thread);
+    if (thread->_tpool) mjlockless_push(thread->_tpool->_freelist, thread);
   }
   pthread_exit(NULL);
 }
 
 /*
 ===============================================================================
-mjthread_AddWork
+mjthread_add_routine_cb
   add Routine to thread
 ===============================================================================
 */
@@ -98,8 +97,6 @@ bool mjthread_add_routine(mjthread thread, mjProc RT, void* arg) {
   // add worker to thread
   pthread_mutex_lock(&thread->_lock);
   if (thread->_working) {
-    mjthreadpool tpool = mjmap_get_obj(thread->_map, "tpool");
-    if (tpool) MJLOG_ERR("Oops: thread is busy, can't happen in threadpool");
     pthread_mutex_unlock(&thread->_lock);
     return false;
   }

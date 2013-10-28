@@ -4,14 +4,13 @@
 #include "mjthread.h"
 #include "mjlockless.h"
 
-// threadpool struct
 struct mjthreadpool {
   int         _nthread;
   mjProc      _INIT;      // thread init routine
   void*       iarg;       // thread init arg
   bool        _stop;      // stop the thread pool
   bool        _running;   // if this threadpool is running 
-  mjlockless  _free_list;
+  mjlockless  _freelist;
   mjthread    _threads[0];
 };
 typedef struct mjthreadpool* mjthreadpool;
