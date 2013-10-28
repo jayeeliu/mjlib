@@ -32,7 +32,7 @@ mjconnb_ReadToBuf
 static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
   int ret = -3;
   char buf[BUF_SIZE];
-	// read data first in a loop
+  // read data first in a loop
   for (;;) {
     // buffer has enough data, copy and return
     if (conn->_rtype == MJCONNB_READBYTES) {
@@ -286,8 +286,8 @@ mjconnb mjconnb_new(int fd) {
     return NULL;
   }
   // get mjconnb struct
-  mjconnb conn	= &_conn[fd];
-  conn->_fd    	= fd;      
+  mjconnb conn  = &_conn[fd];
+  conn->_fd     = fd;      
   // create read_buf
   if (!conn->_rbuf) {
     // create read buffer
@@ -297,12 +297,11 @@ mjconnb mjconnb_new(int fd) {
       return NULL;
     }
   }
-//  conn->_rbuf->_length = 0;
   mjstr_clean(conn->_rbuf);
   // init read
   conn->_rtype  = MJCONNB_NONE;
-  conn->_delim     = NULL;
-  conn->_rbytes    = -1;
+  conn->_delim  = NULL;
+  conn->_rbytes = -1;
   // init mjmap
   conn->_map = mjmap_new(31);
   if (!conn->_map) {

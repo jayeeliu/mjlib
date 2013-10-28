@@ -62,7 +62,6 @@ mjlockless_delete
 */
 bool mjlockless_delete(mjlockless lockless) {
   if (!lockless) return false;
-    return false;
   free(lockless);
   return true;
 }
