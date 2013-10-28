@@ -233,28 +233,27 @@ mjconnb_SetTimeout
         0  -- success
 ===============================================================================
 */
-bool mjconnb_set_timeout(mjconnb conn, unsigned int readTimeout, 
-      unsigned int writeTimeout) {
+bool mjconnb_set_timeout(mjconnb conn, unsigned int rto, unsigned int wto) {
   // sanity check
   if (!conn) {
     MJLOG_ERR("conn is null");
     return false;
   }
   //set read timeout  
-  if (readTimeout) {
+  if (rto) {
     struct timeval tv;
-    tv.tv_sec   = readTimeout / 1000;
-    tv.tv_usec  = (readTimeout % 1000) * 1000;
+    tv.tv_sec   = rto / 1000;
+    tv.tv_usec  = (rto % 1000) * 1000;
     // set recv timeout
     if (setsockopt(conn->_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
       MJLOG_ERR("setsockopt error");
       return false;
     }
   }
-  if (writeTimeout) {
+  if (wto) {
     struct timeval tv;
-    tv.tv_sec   = writeTimeout / 1000;
-    tv.tv_usec  = (writeTimeout % 1000) * 1000;
+    tv.tv_sec   = wto / 1000;
+    tv.tv_usec  = (wto % 1000) * 1000;
     // set send timeout
     if (setsockopt(conn->_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
       MJLOG_ERR("setsockopt error");

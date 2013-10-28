@@ -32,8 +32,7 @@ extern int    mjconnb_writes(mjconnb conn, char* buf);
 extern void*  mjconnb_get_obj(mjconnb conn, const char* key);
 extern bool   mjconnb_set_obj(mjconnb conn, const char* key, void* obj, mjProc obj_free);
 
-extern bool   mjconnb_set_timeout(mjconnb conn, unsigned int read_timeout, 
-                unsigned int write_timeout);
+extern bool   mjconnb_set_timeout(mjconnb conn, unsigned int rto, unsigned int wto);
 
 extern mjconnb  mjconnb_connect(const char* addr, int port, unsigned int timeout);
 extern mjconnb  mjconnb_new(int fd);
