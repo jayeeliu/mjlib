@@ -48,7 +48,7 @@ bool mjthread_new_once(mjProc INIT, void* iarg, mjProc RT, void* arg) {
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&thread->_thread_id, &attr, mjthread_once_routine, thread);
+  pthread_create(&thread->_id, &attr, mjthread_once_routine, thread);
   pthread_attr_destroy(&attr);
   return true;
 }
@@ -66,11 +66,11 @@ static void* mjthread_normal_routine(void* arg) {
   // threadloop 
   while (1) {
     // wait for routine and not shutdown
-    pthread_mutex_lock(&thread->_thread_lock);
-    while (!thread->_running && !thread->_stop) {
-      pthread_cond_wait(&thread->_thread_ready, &thread->_thread_lock);
+    pthread_mutex_lock(&thread->_lock);
+    while (!thread->_working && !thread->_stop) {
+      pthread_cond_wait(&thread->_ready, &thread->_lock);
     }
-    pthread_mutex_unlock(&thread->_thread_lock);
+    pthread_mutex_unlock(&thread->_lock);
     // call routine
     if (thread->_RT) thread->_RT(thread);
     // should stop, break
@@ -78,12 +78,11 @@ static void* mjthread_normal_routine(void* arg) {
     // clean for next task
     thread->_RT = NULL;
     thread->arg = NULL;
-    thread->_running = false;
+    thread->_working = false;
     // if in threadpool, add to freelist
     mjthreadpool tpool = mjmap_get_obj(thread->_map, "tpool");
     if (tpool) mjlockless_push(tpool->_free_list, thread);
   }
-  thread->_closed = true;
   pthread_exit(NULL);
 }
 
@@ -95,48 +94,58 @@ mjthread_AddWork
 */
 bool mjthread_add_routine(mjthread thread, mjProc RT, void* arg) {
   // sanity check
-  if (!thread || !RT) return false;
+  if (!thread || !thread->_running || !RT) return false;
   // add worker to thread
-  pthread_mutex_lock(&thread->_thread_lock);
-  if (thread->_running) {
+  pthread_mutex_lock(&thread->_lock);
+  if (thread->_working) {
     mjthreadpool tpool = mjmap_get_obj(thread->_map, "tpool");
     if (tpool) MJLOG_ERR("Oops: thread is busy, can't happen in threadpool");
-    pthread_mutex_unlock(&thread->_thread_lock);
+    pthread_mutex_unlock(&thread->_lock);
     return false;
   }
   thread->_RT = RT;
   thread->arg = arg;
+  thread->_working = true;
+  pthread_cond_signal(&thread->_ready);
+  pthread_mutex_unlock(&thread->_lock);
+  return true;
+}
+
+/*
+===============================================================================
+mjthread_run
+  run mjthread
+===============================================================================
+*/
+bool mjthread_run(mjthread thread) {
+  if (!thread || thread->_running) return false;
+  // init fields
+  pthread_mutex_init(&thread->_lock, NULL);
+  pthread_cond_init(&thread->_ready, NULL);
+  pthread_create(&thread->_id, NULL, mjthread_normal_routine, thread);
   thread->_running = true;
-  pthread_cond_signal(&thread->_thread_ready);
-  pthread_mutex_unlock(&thread->_thread_lock);
   return true;
 }
 
 /*
 ===============================================================================
 mjthread_new
-  create new thread, run mjthread_normal_routine
+  create mjthread struct
 ===============================================================================
 */
-mjthread mjthread_new(mjProc INIT, void* iarg) {
+mjthread mjthread_new() {
   // alloc mjthread struct
   mjthread thread = (mjthread) calloc(1, sizeof(struct mjthread));
   if (!thread) {
     MJLOG_ERR("mjthread create error");
     return NULL;
   }
-  thread->_INIT = INIT;
-  thread->iarg = iarg;
   thread->_map = mjmap_new(31);
   if (!thread->_map) {
     MJLOG_ERR("mjmap_new error");
     free(thread);
     return NULL;
   }
-  // init fields
-  pthread_mutex_init(&thread->_thread_lock, NULL);
-  pthread_cond_init(&thread->_thread_ready, NULL);
-  pthread_create(&thread->_thread_id, NULL, mjthread_normal_routine, thread);
   return thread;
 }
 
@@ -149,13 +158,13 @@ mjthread_delete
 bool mjthread_delete(mjthread thread) {
   if (!thread) return false;
   thread->_stop = true;
-  pthread_cond_broadcast(&thread->_thread_ready);
-  // wait thread exit
-  pthread_join(thread->_thread_id, NULL);
-  // only normal thread need destory
+  if (thread->_running) {
+    pthread_cond_broadcast(&thread->_ready);
+    pthread_join(thread->_id, NULL);
+    pthread_mutex_destroy(&thread->_lock);
+    pthread_cond_destroy(&thread->_ready);
+  }
   mjmap_delete(thread->_map);
-  pthread_mutex_destroy(&thread->_thread_lock);
-  pthread_cond_destroy(&thread->_thread_ready);
   free(thread);
   return true;
 }
