@@ -42,9 +42,11 @@ static void* mjlf_routine(void* arg) {
     mjsock_close(cfd);
     return NULL;
   }
+  mjconnb_delete(conn);
+  return NULL;
   mjconnb_set_obj(conn, "server", srv, NULL);
   mjconnb_set_obj(conn, "thread", thread, NULL);
-  // run server routine(conn routine)
+  //run server routine(conn routine)
   srv->_RT(conn);
   mjconnb_delete(conn);
   return NULL; 

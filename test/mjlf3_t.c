@@ -10,7 +10,7 @@
 
 void* Run(void* arg) {
     mjconnb conn = (mjconnb) arg;
-    mjstr data = mjstr_new(512);
+    mjstr data = mjstr_new(80);
     mjconnb_readuntil(conn, "\r\n\r\n", data);
     mjconnb_writes(conn, "OK\r\n");
     mjstr_delete(data);
@@ -23,10 +23,12 @@ int main() {
       printf("server socket create error");
       return 1;
     }
-    mjlf server = mjlf_new(sock, Run, 20, NULL, NULL, NULL, NULL);
+    mjlf server = mjlf_new(sock, 4);
     if (!server) {
       printf("mjlf_new error\n");
+      return 1;
     }
+    mjlf_set_routine(server, Run);
     mjlf_run(server);
     mjlf_delete(server);
     return 0;
