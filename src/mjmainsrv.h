@@ -13,7 +13,7 @@ struct mjmainsrv {
   int           _sfd;
   bool          _stop;
   
-  mjthreadpool  _wpool;           // worker thread pool
+  mjthreadpool  _tpool;           // worker thread pool
   
   unsigned int  _is_num;          // inner server number
   int           _is_n[MAX_ISNUM]; // inner server notify fd
