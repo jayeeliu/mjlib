@@ -188,7 +188,7 @@ mjmainsrv mjmainsrv_new(int sfd) {
   // stage2: create inner server
   int fd[2];
   for (int i = 0; i < srv->_is_num; i++) {
-    // set srvNotify
+    // set inner server notify
     if (socketpair(AF_LOCAL, SOCK_STREAM, 0, fd)) {
       MJLOG_ERR("socketpair error");
       mjmainsrv_delete(srv);
