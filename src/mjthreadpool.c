@@ -1,4 +1,4 @@
-#include "mjthreadpool2.h"
+#include "mjthreadpool.h"
 #include "mjlog.h"
 #include <stdlib.h>
 
@@ -11,14 +11,14 @@ mjthreadpool_AddWork
 */ 
 bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc RT, void* arg) { 
   // sanity check
-  if (!tpool || tpool->_stop) {
-    MJLOG_ERR("mjthread pool is null or stopped");
+  if (!tpool || !tpool->_running || tpool->_stop) {
+    MJLOG_ERR("mjthread pool error ");
     return false;
   }
   // get free thread
   mjthread thread = mjlockless_pop(tpool->_free_list); 
   if (!thread) return false;
-  if (thread->_running) MJLOG_ERR("Oops get running thread");
+  if (thread->_working) MJLOG_ERR("Oops get working thread");
   // dispatch work to thread
   int ret = mjthread_add_routine(thread, RT, arg);
   if (!ret) MJLOG_ERR("Oops AddWork Error, Thread Lost");
@@ -32,8 +32,8 @@ mjthreadpool_AddWorkPlus
 ================================================================================
 */
 bool mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg) {
-  if (!tpool || tpool->_stop) {
-    MJLOG_ERR("mjthread pool is null or stopped");
+  if (!tpool || !tpool->_running || tpool->_stop) {
+    MJLOG_ERR("mjthread pool error ");
     return false;
   }
   // call mjthreadpool_AddWork
@@ -45,12 +45,29 @@ bool mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg) {
 
 /*
 ===============================================================================
+mjthreadpool_run
+  run mjthreadpool
+===============================================================================
+*/
+bool mjthreadpool_run(mjthreadpool tpool) {
+  if (!tpool) return false;
+  for (int i = 0; i < tpool->_nthread; i++) {
+    mjthread_set_obj(tpool->_threads[i], "tpool", tpool, NULL); 
+    mjlockless_push(tpool->_free_list, tpool->_threads[i]);
+    mjthread_run(tpool->_threads[i]);
+  }
+  tpool->_running = true;
+  return true;
+}
+
+/*
+===============================================================================
 mjthreadpool_New
   init new thread pool
   return: NOT NULL--- mjthreadpool struct, NULL --- fail
 ===============================================================================
 */
-mjthreadpool mjthreadpool_new(int nthread, mjProc INIT, void* iarg) {
+mjthreadpool mjthreadpool_new(int nthread) {
   // alloc threadpool struct
   mjthreadpool tpool = (mjthreadpool) calloc(1, sizeof(struct mjthreadpool) + 
       nthread * sizeof(struct mjthread));
@@ -60,19 +77,19 @@ mjthreadpool mjthreadpool_new(int nthread, mjProc INIT, void* iarg) {
   }
   // init field
   tpool->_nthread = nthread;
-  tpool->_INIT = INIT;
-  tpool->iarg = iarg;
   tpool->_free_list = mjlockless_new(nthread + 1);
   if (!tpool->_free_list) {
     MJLOG_ERR("mjlockless_new error");
     free(tpool);
     return NULL;
   }
-  // init thread
+  // create mjthread struct
   for (int i = 0; i < tpool->_nthread; i++) {
-    tpool->_threads[i] = mjthread_new(INIT, iarg);
-    mjthread_set_obj(tpool->_threads[i], "tpool", tpool, NULL); 
-    mjlockless_push(tpool->_free_list, tpool->_threads[i]);
+    tpool->_threads[i] = mjthread_new();
+    if (!tpool->_threads[i]) {
+      mjthreadpool_delete(tpool);
+      return NULL;
+    }
   }
   return tpool; 
 } 
@@ -87,8 +104,11 @@ bool mjthreadpool_delete(mjthreadpool tpool) {
   // sanity check 
   if (!tpool) return false;
   tpool->_stop = true; 
-  // free all thread
-  for (int i = 0; i < tpool->_nthread; i++) mjthread_delete(tpool->_threads[i]);
+  if (tpool->_running) {
+    for (int i = 0; i < tpool->_nthread; i++) {
+      mjthread_delete(tpool->_threads[i]);
+    }
+  }
   mjlockless_delete(tpool->_free_list);
   free(tpool);
   return true; 

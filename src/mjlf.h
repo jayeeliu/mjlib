@@ -2,16 +2,13 @@
 #define _MJLF_H
 
 #include <stdbool.h>
-#include "mjthreadpool2.h"
+#include "mjthreadpool.h"
 #include "mjmap.h"
 
 struct mjlf {
   int           _sfd;     // server socket
   bool          _stop;
   mjthreadpool  _tpool;   // thread pool 
-  int           _nthread; // max thread number
-  mjProc        _TINIT;   // thread init routine
-  void*         _targ;    // thread init arg
   mjProc        _INIT;    // mjlf server init routine
   void*         iarg;     // mjlf server init arg
   mjProc        _RT;      // run when new conn come
@@ -55,10 +52,9 @@ static inline bool mjlf_set_routine(mjlf srv, mjProc RT) {
   return true;
 }
 
-static inline bool mjlf_set_thread(mjlf srv, mjProc TINIT, void* targ) {
-  if (!srv) return false;
-  srv->_TINIT = TINIT;
-  srv->_targ  = targ;
+static inline bool mjlf_set_thread_init(mjlf srv, mjProc TINIT, void* targ) {
+  if (!srv || !srv->_tpool) return false;
+  mjthreadpool_set_init(srv->_tpool, TINIT, targ);
   return true;
 }
 

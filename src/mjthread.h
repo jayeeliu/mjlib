@@ -18,7 +18,7 @@ struct mjthread {
   mjmap           _map;               // arg map for this thread
 
   bool            _running;           // true if pthread_create has been called
-  bool            _working;           // true if _RT is working 
+  bool            _working;           // true if _RT is not null
   bool            _stop;              // 1 when shutdown command has invoked, otherwise 0
 };
 typedef struct mjthread* mjthread;

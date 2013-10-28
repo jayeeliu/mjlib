@@ -60,14 +60,10 @@ void* mjlf_run(mjlf srv) {
   if (!srv) return NULL;
   if (srv->_INIT) srv->_INIT(srv);
   // init new pool
-  srv->_tpool = mjthreadpool_new(srv->_nthread, srv->_TINIT, srv->_targ);
-  if (!srv->_tpool) {
-    MJLOG_ERR("mjthreadpool create error");
-    return NULL;
-  }
+  mjthreadpool_run(srv->_tpool);
   // add new worker 
   if (!mjthreadpool_add_routine(srv->_tpool, mjlf_routine, srv)) {
-    MJLOG_ERR("mjthreadpool addwork");
+    MJLOG_ERR("mjthreadpool add routine error");
     mjthreadpool_delete(srv->_tpool);
     return NULL;
   }
@@ -92,10 +88,16 @@ mjlf mjlf_new(int sfd, int nthread) {
   }
   // set server socket and routine
   srv->_sfd = sfd;
-  srv->_nthread = nthread;
+  srv->_tpool = mjthreadpool_new(nthread);
+  if (!srv->_tpool) {
+    MJLOG_ERR("mjthreadpool errror");
+    free(srv);
+    return NULL;
+  }
   srv->_map = mjmap_new(31);
   if (!srv->_map) {
     MJLOG_ERR("mjmap new error");
+    mjthreadpool_delete(srv->_tpool);
     free(srv);
     return NULL;
   }

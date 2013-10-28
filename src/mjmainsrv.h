@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include "mjev.h"
-#include "mjthreadpool2.h"
+#include "mjthreadpool.h"
 #include "mjtcpsrv.h"
 
 // max inner server number

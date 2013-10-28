@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <pthread.h>
-#include "mjthread2.h"
+#include "mjthread.h"
 #include "mjlog.h"
-#include "mjthreadpool2.h"
+#include "mjthreadpool.h"
 
 /*
 ===============================================================================

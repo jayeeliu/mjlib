@@ -131,20 +131,22 @@ bool mjmainsrv_run(mjmainsrv srv) {
   if (!srv) return false;
   // create inner server thread
   for (int i = 0; i < srv->_is_num; i++) {
-    srv->_is_t[i] = mjthread_new(NULL, NULL);
+    srv->_is_t[i] = mjthread_new();
     if (!srv->_is_t[i]) {
       MJLOG_ERR("mjthread create error");
       return false;
     }
+    mjthread_run(srv->_is_t[i]);
     mjthread_set_obj(srv->_is_t[i], "tcpserver", srv->_is[i], mjtcpsrv_delete);
     mjthread_add_routine(srv->_is_t[i], mjmainsrv_is_run, NULL);
   }
   // create threadpool
-  srv->_wpool = mjthreadpool_new(srv->_is_num * 2, NULL, NULL); 
+  srv->_wpool = mjthreadpool_new(srv->_is_num * 2); 
   if (!srv->_wpool) {
     MJLOG_ERR("threadpool create error");
     return false;
   }
+  mjthreadpool_run(srv->_wpool);
   // accept and dispatch
   static int dispatch = 0;
   while (!srv->_stop) {
