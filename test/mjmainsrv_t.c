@@ -9,7 +9,7 @@ static int count = 0;
 static void* on_close(void* arg) {
   mjconn conn = (mjconn) arg;
   count++;
-  if (count > 100000) {
+  if (count > 10000) {
     mjtcpsrv is = mjconn_get_obj(conn, "server");
     mjmainsrv msrv = mjtcpsrv_get_obj(is, "mainsrv");
     mjmainsrv_set_stop(msrv, true);
@@ -66,11 +66,12 @@ int main()
     return -1;
   }
 
-  mjmainsrv server = mjmainsrv_new(sfd, Routine);
+  mjmainsrv server = mjmainsrv_new(sfd);
   if (!server) {
     printf("mjmainsrv create error\n");
     return -1;
   }
+  mjmainsrv_set_is_routine(server, Routine);
   mjmainsrv_run(server);
   mjmainsrv_delete(server);
   return 0;
