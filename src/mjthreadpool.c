@@ -42,6 +42,9 @@ bool mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg) {
     if (!thread) return false;
     mjthread_set_init(thread, tpool->_INIT, tpool->iarg);
     mjthread_set_tpool(thread, tpool);
+    pthread_mutex_lock(&tpool->_pluslock);
+    tpool->_plus++;
+    pthread_mutex_unlock(&tpool->_pluslock);
     return mjthread_run_once(thread, RT, arg);
   }
   return true;
@@ -95,6 +98,10 @@ mjthreadpool mjthreadpool_new(int nthread) {
     mjthread_set_tpool(tpool->_threads[i], tpool); 
     mjlockless_push(tpool->_freelist, tpool->_threads[i]);
   }
+  // init plus field
+  tpool->_plus = 0;
+  pthread_mutex_init(&tpool->_pluslock, NULL);
+  pthread_cond_init(&tpool->_plusready, NULL);
   return tpool; 
 } 
 
@@ -113,6 +120,11 @@ bool mjthreadpool_delete(mjthreadpool tpool) {
       mjthread_delete(tpool->_threads[i]);
     }
   }
+  pthread_mutex_lock(&tpool->_pluslock);
+  while (tpool->_plus) {
+    pthread_cond_wait(&tpool->_plusready, &tpool->_pluslock);
+  }
+  pthread_mutex_unlock(&tpool->_pluslock);
   mjlockless_delete(tpool->_freelist);
   free(tpool);
   return true; 

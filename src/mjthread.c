@@ -15,8 +15,15 @@ static void* mjthread_once_routine(void* arg) {
   mjthread thread = (mjthread) arg;
   if (thread->_INIT) thread->_INIT(thread);
   if (thread->_RT) thread->_RT(thread);
-  // TODO: add tpool code here
-  if (thread->_tpool) {}
+  // in threadpool ? release
+  if (thread->_tpool) {
+    pthread_mutex_lock(&thread->_tpool->_pluslock);
+    thread->_tpool->_plus--;
+    if (thread->_tpool->_plus == 0) {
+      pthread_cond_signal(&thread->_tpool->_plusready);
+    }
+    pthread_mutex_unlock(&thread->_tpool->_pluslock);
+  }
   mjmap_delete(thread->_map);
   free(thread);
   return NULL;

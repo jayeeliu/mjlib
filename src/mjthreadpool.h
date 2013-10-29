@@ -20,11 +20,13 @@ struct mjthreadpool {
 };
 typedef struct mjthreadpool* mjthreadpool;
 
+
 extern bool         mjthreadpool_add_routine(mjthreadpool tpool, mjProc RT, void* arg);
 extern bool         mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg);
 extern bool         mjthreadpool_run(mjthreadpool tpool);
 extern mjthreadpool mjthreadpool_new(int nthread);
 extern bool         mjthreadpool_delete(mjthreadpool tpool);
+
 
 static inline bool mjthreadpool_set_init(mjthreadpool tpool, mjProc INIT, void* iarg) {
   if (!tpool) return false;

@@ -68,6 +68,7 @@ void* mjlf_run(mjlf srv) {
     return NULL;
   }
   while (!srv->_stop) {
+    MJLOG_ERR("plus number: %d", srv->_tpool->_plus);
     sleep(3);
     mjsig_process_queue();
   }
