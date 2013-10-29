@@ -20,7 +20,7 @@ bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc RT, void* arg) {
   if (!thread) return false;
   if (thread->_working) MJLOG_ERR("Oops get working thread");
   // dispatch work to thread
-  int ret = mjthread_add_routine(thread, RT, arg);
+  int ret = mjthread_add_task(thread, RT, arg);
   if (!ret) MJLOG_ERR("Oops AddWork Error, Thread Lost");
   return ret;
 }
@@ -38,7 +38,11 @@ bool mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg) {
   }
   // call mjthreadpool_AddWork
   if (!mjthreadpool_add_routine(tpool, RT, arg)) {
-    return mjthread_new_once(tpool->_INIT, tpool->iarg, RT, arg);
+    mjthread thread = mjthread_new();
+    if (!thread) return false;
+    mjthread_set_init(thread, tpool->_INIT, tpool->iarg);
+    mjthread_set_tpool(thread, tpool);
+    return mjthread_run_once(thread, RT, arg);
   }
   return true;
 }

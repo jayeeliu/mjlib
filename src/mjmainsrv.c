@@ -138,7 +138,7 @@ bool mjmainsrv_run(mjmainsrv srv) {
     }
     mjthread_run(srv->_is_t[i]);
     mjthread_set_obj(srv->_is_t[i], "tcpserver", srv->_is[i], mjtcpsrv_delete);
-    mjthread_add_routine(srv->_is_t[i], mjmainsrv_is_run, NULL);
+    mjthread_add_task(srv->_is_t[i], mjmainsrv_is_run, NULL);
   }
   // create threadpool
   srv->_tpool = mjthreadpool_new(srv->_is_num * 2); 

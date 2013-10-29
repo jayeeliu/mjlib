@@ -27,9 +27,9 @@ struct mjthread {
 typedef struct mjthread* mjthread;
 
 
-extern bool     mjthread_new_once(mjProc INIT, void* iarg, mjProc RT, void* arg);
-extern bool     mjthread_add_routine(mjthread thread, mjProc RT, void* arg);
+extern bool     mjthread_add_task(mjthread thread, mjProc RT, void* arg);
 extern bool     mjthread_run(mjthread thread);
+extern bool     mjthread_run_once(mjthread thread, mjProc RT, void* arg);
 extern mjthread mjthread_new();
 extern bool     mjthread_delete(mjthread thread);
 

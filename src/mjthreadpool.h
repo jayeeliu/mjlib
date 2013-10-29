@@ -5,13 +5,18 @@
 #include "mjlockless.h"
 
 struct mjthreadpool {
-  int         _nthread;
-  mjProc      _INIT;      // thread init routine
-  void*       iarg;       // thread init arg
-  bool        _stop;      // stop the thread pool
-  bool        _running;   // if this threadpool is running 
-  mjlockless  _freelist;
-  mjthread    _threads[0];
+  int             _nthread;
+  mjProc          _INIT;      // thread init routine
+  void*           iarg;       // thread init arg
+  bool            _stop;      // stop the thread pool
+  bool            _running;   // if this threadpool is running 
+
+  int             _plus;      // plus routine count
+  pthread_mutex_t _pluslock;  // plus lock for _plus
+  pthread_cond_t  _plusready; // plus ready condition 
+
+  mjlockless      _freelist;
+  mjthread        _threads[0];
 };
 typedef struct mjthreadpool* mjthreadpool;
 
