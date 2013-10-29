@@ -1,9 +1,10 @@
-#include <stdlib.h>
 #include "mjconnb.h"
 #include "mjlog.h"
 #include "mjlf.h"
 #include "mjsock.h"
 #include "mjsig.h"
+#include <stdlib.h>
+#include <poll.h>
 
 /*
 ===============================================================================
@@ -18,8 +19,12 @@ static void* mjlf_routine(void* arg) {
   // leader run this
   int cfd;
   while (1) {
-    cfd = mjsock_accept(srv->_sfd);
-    if (cfd < 0) continue;
+    cfd = mjsock_accept_timeout(srv->_sfd, 3000);
+    if (cfd <= 0) {
+      if (srv->_stop) return NULL;
+      continue;
+    }
+    // check stop
     if (srv->_stop) {
       mjsock_close(cfd);
       return NULL;
@@ -68,7 +73,6 @@ void* mjlf_run(mjlf srv) {
     return NULL;
   }
   while (!srv->_stop) {
-    MJLOG_ERR("plus number: %d", srv->_tpool->_plus);
     sleep(3);
     mjsig_process_queue();
   }
@@ -87,6 +91,7 @@ mjlf mjlf_new(int sfd, int nthread) {
     MJLOG_ERR("server create errror");
     return NULL;
   }
+  mjsock_set_blocking(sfd, 0);
   // set server socket and routine
   srv->_sfd = sfd;
   srv->_tpool = mjthreadpool_new(nthread);
