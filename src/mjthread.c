@@ -1,12 +1,11 @@
-#include <stdlib.h>
-#include <pthread.h>
 #include "mjthread.h"
 #include "mjlog.h"
 #include "mjthreadpool.h"
+#include <stdlib.h>
 
 /*
 ===============================================================================
-mjthread_RunOnce
+mjthread_once_routine(thread routine)
   create thread and run Routine
 ===============================================================================
 */
@@ -15,7 +14,7 @@ static void* mjthread_once_routine(void* arg) {
   mjthread thread = (mjthread) arg;
   if (thread->_INIT) thread->_INIT(thread);
   if (thread->_RT) thread->_RT(thread);
-  // in threadpool ? release
+  // if in threadpool release
   if (thread->_tpool) {
     pthread_mutex_lock(&thread->_tpool->_pluslock);
     thread->_tpool->_plus--;
@@ -29,8 +28,14 @@ static void* mjthread_once_routine(void* arg) {
   return NULL;
 }
 
+/*
+===============================================================================
+mjthread_run_once
+  mjthread run once
+===============================================================================
+*/
 bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
-  if (!thread || thread->_running) return false;
+  if (!thread) return false;
   thread->_RT = RT;
   thread->arg = arg;
   // thread run
@@ -44,15 +49,13 @@ bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
 
 /*
 ===============================================================================
-ThreadRoutine:
-  used for short caculate task
+mjthread_routine(thread routine)
+  normal thread routine
 ===============================================================================
 */
 static void* mjthread_routine(void* arg) {
   mjthread thread = (mjthread) arg;
-  // call init Routine
   if (thread->_INIT) thread->_INIT(thread);
-  // threadloop 
   while (1) {
     // wait for routine and not shutdown
     pthread_mutex_lock(&thread->_lock);
@@ -60,7 +63,6 @@ static void* mjthread_routine(void* arg) {
       pthread_cond_wait(&thread->_ready, &thread->_lock);
     }
     pthread_mutex_unlock(&thread->_lock);
-    // call routine
     if (thread->_RT) thread->_RT(thread);
     // should stop, break
     if (thread->_stop) break;
@@ -120,7 +122,6 @@ mjthread_new
 ===============================================================================
 */
 mjthread mjthread_new() {
-  // alloc mjthread struct
   mjthread thread = (mjthread) calloc(1, sizeof(struct mjthread));
   if (!thread) {
     MJLOG_ERR("mjthread create error");

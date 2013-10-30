@@ -30,7 +30,7 @@ static void* mjlf_routine(void* arg) {
       return NULL;
     }
     // choose new leader
-    if (mjthreadpool_add_routine_plus(srv->_tpool, mjlf_routine, srv)) break;
+    if (mjthreadpool_add_task_plus(srv->_tpool, mjlf_routine, srv)) break;
     MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
     mjsock_close(cfd);
   }
@@ -67,7 +67,7 @@ void* mjlf_run(mjlf srv) {
   // init new pool
   mjthreadpool_run(srv->_tpool);
   // add new worker 
-  if (!mjthreadpool_add_routine(srv->_tpool, mjlf_routine, srv)) {
+  if (!mjthreadpool_add_task(srv->_tpool, mjlf_routine, srv)) {
     MJLOG_ERR("mjthreadpool add routine error");
     mjthreadpool_delete(srv->_tpool);
     return NULL;

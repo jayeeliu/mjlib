@@ -9,7 +9,7 @@ mjthreadpool_AddWork
   return: 0 --- success, -1 --- fail
 ===============================================================================
 */ 
-bool mjthreadpool_add_routine(mjthreadpool tpool, mjProc RT, void* arg) { 
+bool mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg) { 
   // sanity check
   if (!tpool || !tpool->_running || tpool->_stop) {
     MJLOG_ERR("mjthread pool error ");
@@ -31,13 +31,13 @@ mjthreadpool_AddWorkPlus
   call mjthreadpool_AddWork, if failed, call mjThread_RunOnce
 ================================================================================
 */
-bool mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg) {
+bool mjthreadpool_add_task_plus(mjthreadpool tpool, mjProc RT, void* arg) {
   if (!tpool || !tpool->_running || tpool->_stop) {
     MJLOG_ERR("mjthread pool error ");
     return false;
   }
   // call mjthreadpool_AddWork
-  if (!mjthreadpool_add_routine(tpool, RT, arg)) {
+  if (!mjthreadpool_add_task(tpool, RT, arg)) {
     mjthread thread = mjthread_new();
     if (!thread) return false;
     mjthread_set_init(thread, tpool->_INIT, tpool->iarg);

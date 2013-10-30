@@ -21,8 +21,8 @@ struct mjthreadpool {
 typedef struct mjthreadpool* mjthreadpool;
 
 
-extern bool         mjthreadpool_add_routine(mjthreadpool tpool, mjProc RT, void* arg);
-extern bool         mjthreadpool_add_routine_plus(mjthreadpool tpool, mjProc RT, void* arg);
+extern bool         mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg);
+extern bool         mjthreadpool_add_task_plus(mjthreadpool tpool, mjProc RT, void* arg);
 extern bool         mjthreadpool_run(mjthreadpool tpool);
 extern mjthreadpool mjthreadpool_new(int nthread);
 extern bool         mjthreadpool_delete(mjthreadpool tpool);

@@ -22,7 +22,7 @@ struct mjthread {
 
   bool                  _running; // true if pthread_create has been called
   bool                  _working; // true if _RT is not null
-  bool                  _stop;    // 1 when shutdown command has invoked, otherwise 0
+  bool                  _stop;    // true if mjthread_delete has been called
 };
 typedef struct mjthread* mjthread;
 
