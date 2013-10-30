@@ -67,7 +67,6 @@ mjmainsrv_Async
 ===============================================================================
 */
 bool mjmainsrv_asy(mjtcpsrv srv, mjProc RT, void* rarg, mjProc CB, void* carg) {
-  // sanity check
   if (!srv) return false;
   // alloc mjmainsrv_AsyncData
   asy_data asy_d = (asy_data) calloc(1, sizeof(struct asy_data));
@@ -127,7 +126,6 @@ mjmainsrv_Run
 ===============================================================================
 */
 bool mjmainsrv_run(mjmainsrv srv) {
-  // sanity check
   if (!srv) return false;
   // create inner server thread
   for (int i = 0; i < srv->_is_num; i++) {

@@ -22,9 +22,10 @@ void* PostRoutine(void* arg)
 }
 
 int main() {
-  mjthread thread = mjthread_new(PreRoutine, PostRoutine);
+  mjthread thread = mjthread_new();
+  mjthread_run(thread);
   for (int i = 0; i < 1000; i++) {
-    mjthread_add_routine(thread, Routine, NULL);
+    mjthread_add_task(thread, Routine, NULL);
   } 
   sleep(3);
   mjthread_delete(thread);

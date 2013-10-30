@@ -28,10 +28,8 @@ extern int    mjconnb_readuntil(mjconnb conn, const char* delim, mjstr data);
 extern int    mjconnb_write(mjconnb conn, mjstr data);
 extern int    mjconnb_writeb(mjconnb conn, char* buf, int length);
 extern int    mjconnb_writes(mjconnb conn, char* buf);
-
 extern void*  mjconnb_get_obj(mjconnb conn, const char* key);
 extern bool   mjconnb_set_obj(mjconnb conn, const char* key, void* obj, mjProc obj_free);
-
 extern bool   mjconnb_set_timeout(mjconnb conn, unsigned int rto, unsigned int wto);
 
 extern mjconnb  mjconnb_connect(const char* addr, int port, unsigned int timeout);

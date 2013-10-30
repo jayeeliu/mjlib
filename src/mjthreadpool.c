@@ -27,7 +27,7 @@ bool mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg) {
 
 /*
 ================================================================================
-mjthreadpool_AddWorkPlus
+mjthreadpool_add_task_plus
   call mjthreadpool_AddWork, if failed, call mjThread_RunOnce
 ================================================================================
 */
@@ -60,6 +60,8 @@ bool mjthreadpool_run(mjthreadpool tpool) {
   if (!tpool) return false;
   for (int i = 0; i < tpool->_nthread; i++) {
     mjthread_run(tpool->_threads[i]);
+    mjthread_set_tpool(tpool->_threads[i], tpool); 
+    mjlockless_push(tpool->_freelist, tpool->_threads[i]);
   }
   tpool->_running = true;
   return true;
@@ -80,7 +82,6 @@ mjthreadpool mjthreadpool_new(int nthread) {
     MJLOG_ERR("mjthreadpool alloc error");
     return NULL;
   }
-  // init field
   tpool->_nthread = nthread;
   tpool->_freelist = mjlockless_new(nthread + 1);
   if (!tpool->_freelist) {
@@ -95,11 +96,8 @@ mjthreadpool mjthreadpool_new(int nthread) {
       mjthreadpool_delete(tpool);
       return NULL;
     }
-    mjthread_set_tpool(tpool->_threads[i], tpool); 
-    mjlockless_push(tpool->_freelist, tpool->_threads[i]);
   }
-  // init plus field
-  tpool->_plus = 0;
+  // init plus
   pthread_mutex_init(&tpool->_pluslock, NULL);
   pthread_cond_init(&tpool->_plusready, NULL);
   return tpool; 
