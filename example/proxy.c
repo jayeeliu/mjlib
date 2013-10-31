@@ -93,6 +93,7 @@ void* on_masterconnect(void *arg) {
     goto failout;
   }
   mjconn_set_obj(proxy->target, "proxy", proxy, NULL);
+  mjconn_set_cto(proxy->target, 3000);
   mjconn_connect(proxy->target, "127.0.0.1", 80, on_targetconnect);
   return NULL;
 
