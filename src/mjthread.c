@@ -3,6 +3,10 @@
 #include "mjthreadpool.h"
 #include <stdlib.h>
 
+#define MJTHREAD_FREE   0
+#define MJTHREAD_NORMAL 1
+#define MJTHREAD_ONCE   2
+
 /*
 ===============================================================================
 mjthread_once_routine(thread routine)
@@ -35,9 +39,10 @@ mjthread_run_once
 ===============================================================================
 */
 bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
-  if (!thread) return false;
+  if (!thread || thread->_type != MJTHREAD_FREE) return false;
   thread->_RT = RT;
   thread->arg = arg;
+  thread->_type = MJTHREAD_ONCE;
   // thread run
   pthread_attr_t attr;
   pthread_attr_init(&attr);
@@ -84,7 +89,7 @@ mjthread_add_task_cb
 */
 bool mjthread_add_task(mjthread thread, mjProc RT, void* arg) {
   // sanity check
-  if (!thread || !thread->_running || !RT) return false;
+  if (!thread || thread->_type != MJTHREAD_NORMAL || !RT) return false;
   // add worker to thread
   pthread_mutex_lock(&thread->_lock);
   if (thread->_working) {
@@ -106,12 +111,12 @@ mjthread_run
 ===============================================================================
 */
 bool mjthread_run(mjthread thread) {
-  if (!thread || thread->_running) return false;
+  if (!thread || thread->_type != MJTHREAD_FREE) return false;
   // init fields
   pthread_mutex_init(&thread->_lock, NULL);
   pthread_cond_init(&thread->_ready, NULL);
   pthread_create(&thread->_id, NULL, mjthread_routine, thread);
-  thread->_running = true;
+  thread->_type = MJTHREAD_NORMAL;
   return true;
 }
 
@@ -145,7 +150,7 @@ mjthread_delete
 bool mjthread_delete(mjthread thread) {
   if (!thread) return false;
   thread->_stop = true;
-  if (thread->_running) {
+  if (thread->_type == MJTHREAD_NORMAL) {
     pthread_cond_broadcast(&thread->_ready);
     pthread_join(thread->_id, NULL);
     pthread_mutex_destroy(&thread->_lock);

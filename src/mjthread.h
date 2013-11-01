@@ -20,7 +20,7 @@ struct mjthread {
 
   mjmap                 _map;     // arg map for this thread
 
-  bool                  _running; // true if pthread_create has been called
+  int                   _type;    // running type
   bool                  _working; // true if _RT is not null
   bool                  _stop;    // true if mjthread_delete has been called
 };
