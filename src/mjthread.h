@@ -11,7 +11,6 @@ struct mjthread {
   pthread_t             _id;        
   pthread_mutex_t       _lock;
   pthread_cond_t        _ready;
-  struct mjthreadpool*  _tpool;   // threadpool this thread is in
 
   mjProc                _INIT;    // run once when thread init
   void*                 iarg;     // Init Routine arg
@@ -61,12 +60,6 @@ static inline bool mjthread_set_cb(mjthread thread, mjProc CB, void* cbarg) {
   thread->_CB = CB;
   thread->cbarg = cbarg;
   return true;
-}
-
-static inline bool mjthread_set_tpool(mjthread thread, struct mjthreadpool* tpool) {
-  if (!thread) return false;
-  thread->_tpool = tpool;
-  return true;   
 }
 
 #endif

@@ -4,6 +4,39 @@
 
 /*
 ===============================================================================
+mjthreadpool_normal_cb
+  mjthreadpool normal callback, put thread into freelist
+===============================================================================
+*/
+static void* mjthreadpool_normal_cb(void* arg) {
+  mjthread thread = (mjthread)arg;
+  mjthreadpool tpool = (mjthreadpool)thread->cbarg;
+  mjlockless_push(tpool->_freelist, thread);
+  return NULL;
+}
+
+/*
+===============================================================================
+mjthreadpool_once_cb
+  mjthreadpool once callback, decrease plus count
+===============================================================================
+*/
+static void* mjthreadpool_once_cb(void* arg) {
+  mjthread thread = (mjthread)arg;
+  mjthreadpool tpool = (mjthreadpool)thread->cbarg;
+  pthread_mutex_lock(&tpool->_pluslock);
+  tpool->_plus--;
+  if (tpool->_plus == 0) {
+    pthread_cond_signal(&tpool->_plusready);
+  }
+  pthread_mutex_unlock(&tpool->_pluslock);
+  mjmap_delete(thread->_map);
+  free(thread);
+  return NULL;
+}
+
+/*
+===============================================================================
 mjthreadpool_AddWork
   add worker to thread pool
   return: 0 --- success, -1 --- fail
@@ -41,7 +74,7 @@ bool mjthreadpool_add_task_plus(mjthreadpool tpool, mjProc RT, void* arg) {
     mjthread thread = mjthread_new();
     if (!thread) return false;
     mjthread_set_init(thread, tpool->_INIT, tpool->iarg);
-    mjthread_set_tpool(thread, tpool);
+    mjthread_set_cb(thread, mjthreadpool_once_cb, tpool);
     pthread_mutex_lock(&tpool->_pluslock);
     tpool->_plus++;
     pthread_mutex_unlock(&tpool->_pluslock);
@@ -60,8 +93,6 @@ bool mjthreadpool_run(mjthreadpool tpool) {
   if (!tpool) return false;
   for (int i = 0; i < tpool->_nthread; i++) {
     mjthread_run(tpool->_threads[i]);
-    mjthread_set_tpool(tpool->_threads[i], tpool); 
-    mjlockless_push(tpool->_freelist, tpool->_threads[i]);
   }
   tpool->_running = true;
   return true;
@@ -89,13 +120,15 @@ mjthreadpool mjthreadpool_new(int nthread) {
     free(tpool);
     return NULL;
   }
-  // create mjthread struct
+  // create mjthread, set normal cb
   for (int i = 0; i < tpool->_nthread; i++) {
     tpool->_threads[i] = mjthread_new();
     if (!tpool->_threads[i]) {
       mjthreadpool_delete(tpool);
       return NULL;
     }
+    mjthread_set_cb(tpool->_threads[i], mjthreadpool_normal_cb, tpool);
+    mjlockless_push(tpool->_freelist, tpool->_threads[i]);
   }
   // init plus
   pthread_mutex_init(&tpool->_pluslock, NULL);

@@ -99,6 +99,7 @@ int mjsock_accept_timeout(int sfd, int timeout) {
     int retval = poll(&pfd, 1, timeout);
     // poll error or timeout
     if (retval < 0) {
+      if (errno == EINTR) continue;
       MJLOG_ERR("pool error %s", strerror(errno));
       return retval;
     }

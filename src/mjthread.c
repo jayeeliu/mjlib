@@ -18,17 +18,8 @@ static void* mjthread_once_routine(void* arg) {
   mjthread thread = (mjthread) arg;
   if (thread->_INIT) thread->_INIT(thread);
   if (thread->_RT) thread->_RT(thread);
-  // if in threadpool release
-  if (thread->_tpool) {
-    pthread_mutex_lock(&thread->_tpool->_pluslock);
-    thread->_tpool->_plus--;
-    if (thread->_tpool->_plus == 0) {
-      pthread_cond_signal(&thread->_tpool->_plusready);
-    }
-    pthread_mutex_unlock(&thread->_tpool->_pluslock);
-  }
-  mjmap_delete(thread->_map);
-  free(thread);
+  thread->_working = false; 
+  if (thread->_CB) thread->_CB(thread);
   return NULL;
 }
 
@@ -43,6 +34,7 @@ bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
   thread->_RT = RT;
   thread->arg = arg;
   thread->_type = MJTHREAD_ONCE;
+  thread->_working = true;
   // thread run
   pthread_attr_t attr;
   pthread_attr_init(&attr);
@@ -69,14 +61,14 @@ static void* mjthread_routine(void* arg) {
     }
     pthread_mutex_unlock(&thread->_lock);
     if (thread->_RT) thread->_RT(thread);
-    // should stop, break
-    if (thread->_stop) break;
     // clean for next task
     thread->_RT = NULL;
     thread->arg = NULL;
     thread->_working = false;
-    // if in threadpool, add to freelist
-    if (thread->_tpool) mjlockless_push(thread->_tpool->_freelist, thread);
+    // callback run
+    if (thread->_CB) thread->_CB(thread);
+    // should stop, break
+    if (thread->_stop) break;
   }
   pthread_exit(NULL);
 }
@@ -155,6 +147,8 @@ bool mjthread_delete(mjthread thread) {
     pthread_join(thread->_id, NULL);
     pthread_mutex_destroy(&thread->_lock);
     pthread_cond_destroy(&thread->_ready);
+  } else if (thread->_type == MJTHREAD_ONCE && thread->_working) {
+    pthread_join(thread->_id, NULL);
   }
   mjmap_delete(thread->_map);
   free(thread);

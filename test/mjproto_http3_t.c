@@ -16,7 +16,7 @@ void* main0(void* arg) {
   mjconnb conn = (mjconnb) arg;
   mjconnb_writes(conn, "main0");
   count++;
-  if (count > 0) {
+  if (count > 10000) {
     mjlf server = mjconnb_get_obj(conn, "server");
     mjlf_set_stop(server, true);
   }
