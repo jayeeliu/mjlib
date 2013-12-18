@@ -1,5 +1,5 @@
-#include "mjthread.h"
 #include "mjlog.h"
+#include "mjthread.h"
 #include "mjthreadpool.h"
 #include <stdlib.h>
 
@@ -18,7 +18,6 @@ static void* mjthread_once_routine(void* arg) {
   mjthread thread = (mjthread) arg;
   if (thread->_INIT) thread->_INIT(thread);
   if (thread->_RT) thread->_RT(thread);
-  thread->_working = false; 
   if (thread->_CB) thread->_CB(thread);
   return NULL;
 }
@@ -34,7 +33,6 @@ bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
   thread->_RT = RT;
   thread->arg = arg;
   thread->_type = MJTHREAD_ONCE;
-  thread->_working = true;
   // thread run
   pthread_attr_t attr;
   pthread_attr_init(&attr);
@@ -139,14 +137,14 @@ mjthread_delete
 ===============================================================================
 */
 bool mjthread_delete(mjthread thread) {
-  if (!thread) return false;
+  if (!thread || thread->_stop) return false;
   thread->_stop = true;
   if (thread->_type == MJTHREAD_NORMAL) {
     pthread_cond_broadcast(&thread->_ready);
     pthread_join(thread->_id, NULL);
     pthread_mutex_destroy(&thread->_lock);
     pthread_cond_destroy(&thread->_ready);
-  } else if (thread->_type == MJTHREAD_ONCE && thread->_working) {
+  } else if (thread->_type == MJTHREAD_ONCE) {
     pthread_join(thread->_id, NULL);
   }
   mjmap_delete(thread->_map);

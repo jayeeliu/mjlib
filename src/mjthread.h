@@ -8,22 +8,22 @@
 struct mjthreadpool;
 
 struct mjthread {
-  pthread_t             _id;        
-  pthread_mutex_t       _lock;
-  pthread_cond_t        _ready;
+  pthread_t       _id;        
+  pthread_mutex_t _lock;
+  pthread_cond_t  _ready;
 
-  mjProc                _INIT;    // run once when thread init
-  void*                 iarg;     // Init Routine arg
-  mjProc                _RT;      // routine to be run
-  void*                 arg;      // routine arg
-  mjProc                _CB;      // CallBack Routine
-  void*                 cbarg;    // CallBack Routine arg
+  mjProc          _INIT;    // run once when thread init
+  void*           iarg;     // Init Routine arg
+  mjProc          _RT;      // routine to be run
+  void*           arg;      // routine arg
+  mjProc          _CB;      // CallBack Routine
+  void*           cbarg;    // CallBack Routine arg
 
-  mjmap                 _map;     // arg map for this thread
+  mjmap           _map;     // arg map for this thread
 
-  int                   _type;    // running type
-  bool                  _working; // true if _RT is not null
-  bool                  _stop;    // true if mjthread_delete has been called
+  int             _type;    // running type
+  bool            _working; // true if _RT is not null, used by Normal
+  bool            _stop;    // true if mjthread_delete has been called
 };
 typedef struct mjthread* mjthread;
 
@@ -60,6 +60,11 @@ static inline bool mjthread_set_cb(mjthread thread, mjProc CB, void* cbarg) {
   thread->_CB = CB;
   thread->cbarg = cbarg;
   return true;
+}
+
+static inline bool mjthread_stopped(mjthread thread) {
+  if (!thread) return false;
+  return thread->_stop;
 }
 
 #endif
