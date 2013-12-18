@@ -75,12 +75,11 @@ static void* mjthread_routine(void* arg) {
 
 /*
 ===============================================================================
-mjthread_add_task_cb
-  add Routine to thread
+mjthread_add_task
+  add RT to thread, return false if thread is working
 ===============================================================================
 */
 bool mjthread_add_task(mjthread thread, mjProc RT, void* arg) {
-  // sanity check
   if (!thread || thread->_type != MJTHREAD_NORMAL || !RT) return false;
   // add worker to thread
   pthread_mutex_lock(&thread->_lock);

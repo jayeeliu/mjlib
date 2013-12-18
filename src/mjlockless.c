@@ -15,6 +15,7 @@ void mjlockless_push(mjlockless lockless, void* value) {
 /*
 ===============================================================================
 mjlockless_pop
+  return NULL if 1) list is empty 2) conflict happened
 ===============================================================================
 */
 void* mjlockless_pop(mjlockless lockless) {

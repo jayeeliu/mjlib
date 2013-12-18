@@ -37,13 +37,12 @@ static void* mjthreadpool_once_cb(void* arg) {
 
 /*
 ===============================================================================
-mjthreadpool_AddWork
+mjthreadpool_add_task
   add worker to thread pool
   return: 0 --- success, -1 --- fail
 ===============================================================================
 */ 
 bool mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg) { 
-  // sanity check
   if (!tpool || !tpool->_running || tpool->_stop) {
     MJLOG_ERR("mjthread pool error ");
     return false;
@@ -100,13 +99,12 @@ bool mjthreadpool_run(mjthreadpool tpool) {
 
 /*
 ===============================================================================
-mjthreadpool_New
+mjthreadpool_new
   init new thread pool
   return: NOT NULL--- mjthreadpool struct, NULL --- fail
 ===============================================================================
 */
 mjthreadpool mjthreadpool_new(int nthread) {
-  // alloc threadpool struct
   mjthreadpool tpool = (mjthreadpool) calloc(1, sizeof(struct mjthreadpool) + 
       nthread * sizeof(struct mjthread));
   if (!tpool) {
