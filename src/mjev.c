@@ -24,8 +24,8 @@ bool mjev_add_fevent(mjev ev, int fd, int mask, mjProc RT, void* arg) {
     return false;
   }
   if ((mask & MJEV_READABLE) == 0 && (mask & MJEV_WRITEABLE) == 0) {
-      MJLOG_ERR("only support READ and WRITE: %d", mask);
-      return false; 
+    MJLOG_ERR("only support READ and WRITE: %d", mask);
+    return false; 
   }
   // get mjfevent correspond to fd
   mjfevent fdev = &(ev->_fevent_list[fd]);     
@@ -205,7 +205,6 @@ mjev_Run
 ===============================================================================
 */
 void mjev_run(mjev ev) {
-  // sanity check
   if (!ev) return;
   // epoll_wait timeout, -1 wait forver 
   long long timeWait = -1;

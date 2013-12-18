@@ -141,8 +141,7 @@ mjthreadpool_delete
 ===============================================================================
 */
 bool mjthreadpool_delete(mjthreadpool tpool) {
-  // sanity check 
-  if (!tpool) return false;
+  if (!tpool || tpool->_stop) return false;
   tpool->_stop = true; 
   if (tpool->_running) {
     for (int i = 0; i < tpool->_nthread; i++) {

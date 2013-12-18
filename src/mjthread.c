@@ -29,7 +29,7 @@ mjthread_run_once
 ===============================================================================
 */
 bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
-  if (!thread || thread->_type != MJTHREAD_FREE) return false;
+  if (!thread || thread->_type != MJTHREAD_FREE || thread->_stop) return false;
   thread->_RT = RT;
   thread->arg = arg;
   thread->_type = MJTHREAD_ONCE;
@@ -78,7 +78,9 @@ mjthread_add_task
 ===============================================================================
 */
 bool mjthread_add_task(mjthread thread, mjProc RT, void* arg) {
-  if (!thread || thread->_type != MJTHREAD_NORMAL || !RT) return false;
+  if (!thread || thread->_type != MJTHREAD_NORMAL || !RT || thread->_stop) {
+    return false;
+  }
   // add worker to thread
   pthread_mutex_lock(&thread->_lock);
   if (thread->_working) {
