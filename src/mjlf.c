@@ -81,7 +81,7 @@ void* mjlf_run(mjlf srv) {
 
 /*
 ===============================================================================
-mjlf_New
+mjlf_new
   create mjlf struct, create threadpool and run first leader
 ===============================================================================
 */

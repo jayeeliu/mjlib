@@ -11,7 +11,7 @@ mjproto_txt_init(server routine)
 */
 void* mjproto_txt_init(void* arg) {
   mjlf srv = (mjlf) arg;
-  mjproto_txt_rtlist rlist = srv->iarg;
+  mjproto_txt_rtlist rlist = mjlf_get_iarg(srv);
   if (rlist) mjlf_set_obj(srv, "routine_list", rlist, NULL);
   return NULL;
 }
@@ -87,33 +87,26 @@ mjproto_txt_routine(conn_routine)
 ===============================================================================
 */
 void* mjproto_txt_routine(void* arg) {
-  // sanity check
+  if (!arg) return NULL;
+
 	mjconnb conn = (mjconnb) arg;
-  if (!conn) {
-    MJLOG_ERR("conn is null");
-    return NULL;
-  }
-	// get server
 	mjlf srv = mjconnb_get_obj(conn, "server");
 	if (!srv) {
 		mjconnb_writes(conn, "+ inner error\r\n");
 		MJLOG_ERR("no server found");
 		return NULL;
 	}
+
   // get routine_list
 	mjproto_txt_rtlist rtlist = mjlf_get_obj(srv, "routine_list");
   if (!rtlist) {
     mjconnb_writes(conn, "+ no command list\r\n");
-		MJLOG_ERR("no command list set");
+		MJLOG_ERR("no command list found");
     return NULL;
   } 
-	// alloc mjproto_txt_data
-  struct mjproto_txt_data cdata;
-	cdata.cmd = NULL;
-	cdata.args = NULL;
-	cdata.conn = NULL;
-	cdata.finished = false;
-	// run routine and loop till finished
+
+	// alloc mjproto_txt_data, run routine till finished
+  struct mjproto_txt_data cdata = {0};
 	while (mjproto_txt_run_cmd(conn, &cdata, rtlist) && !cdata.finished);
 	return NULL;
 }

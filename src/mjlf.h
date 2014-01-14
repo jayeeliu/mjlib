@@ -10,7 +10,7 @@ struct mjlf {
   bool          _stop;
   mjthreadpool  _tpool;   // thread pool 
   mjProc        _INIT;    // mjlf server init routine
-  void*         iarg;     // mjlf server init arg
+  void*         _iarg;    // mjlf server init arg
   mjProc        _RT;      // run when new conn come
   mjmap         _map;
 };
@@ -21,6 +21,10 @@ extern void*  mjlf_run(mjlf srv);
 extern mjlf   mjlf_new(int sfd, int max_thread);
 extern bool   mjlf_delete(mjlf srv);
 
+static inline void* mjlf_get_iarg(mjlf srv) {
+  if (!srv) return NULL;
+  return srv->_iarg;
+}
 
 static inline void* mjlf_get_obj(mjlf srv, const char* key) {
   if (!srv || !key) return NULL;
@@ -42,7 +46,7 @@ static inline bool mjlf_set_stop(mjlf srv, bool value) {
 static inline bool mjlf_set_init(mjlf srv, mjProc INIT, void* iarg) {
   if (!srv) return false;
   srv->_INIT = INIT;
-  srv->iarg = iarg;
+  srv->_iarg = iarg;
   return true;
 }
 

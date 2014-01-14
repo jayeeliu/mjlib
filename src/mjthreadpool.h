@@ -29,6 +29,7 @@ extern mjthreadpool mjthreadpool_new(int nthread);
 extern bool         mjthreadpool_delete(mjthreadpool tpool);
 
 static inline void* mjthreadpool_get_iarg(mjthreadpool tpool) {
+  if (!tpool) return NULL;
   return tpool->_iarg;
 }
 

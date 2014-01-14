@@ -34,6 +34,7 @@ extern mjthread mjthread_new();
 extern bool     mjthread_delete(mjthread thread);
 
 static inline void* mjthread_get_iarg(mjthread thread) {
+  if (!thread) return NULL;
   return thread->_iarg;
 }
 
