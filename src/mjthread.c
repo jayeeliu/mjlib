@@ -31,7 +31,7 @@ mjthread_run_once
 bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
   if (!thread || thread->_type != MJTHREAD_FREE || thread->_stop) return false;
   thread->_RT = RT;
-  thread->arg = arg;
+  thread->_arg = arg;
   thread->_type = MJTHREAD_ONCE;
   // thread run
   pthread_attr_t attr;
@@ -58,14 +58,14 @@ static void* mjthread_routine(void* arg) {
       pthread_cond_wait(&thread->_ready, &thread->_lock);
     }
     pthread_mutex_unlock(&thread->_lock);
-    if (thread->_RT) thread->_RT(thread);
-    // clean for next task
-    thread->_RT = NULL;
-    thread->arg = NULL;
-    thread->_working = false;
-    // callback run
-    if (thread->_CB) thread->_CB(thread);
-    // should stop, break
+    if (thread->_RT) {
+      thread->_RT(thread);
+      // clean for next task
+      thread->_RT = NULL;
+      thread->_arg = NULL;
+      thread->_working = false;
+      if (thread->_CB) thread->_CB(thread);
+    }
     if (thread->_stop) break;
   }
   pthread_exit(NULL);
@@ -88,7 +88,7 @@ bool mjthread_add_task(mjthread thread, mjProc RT, void* arg) {
     return false;
   }
   thread->_RT = RT;
-  thread->arg = arg;
+  thread->_arg = arg;
   thread->_working = true;
   pthread_cond_signal(&thread->_ready);
   pthread_mutex_unlock(&thread->_lock);

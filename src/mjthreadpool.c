@@ -10,7 +10,7 @@ mjthreadpool_normal_cb
 */
 static void* mjthreadpool_normal_cb(void* arg) {
   mjthread thread = (mjthread)arg;
-  mjthreadpool tpool = (mjthreadpool)thread->cbarg;
+  mjthreadpool tpool = mjthread_get_cbarg(thread);
   mjlockless_push(tpool->_freelist, thread);
   return NULL;
 }
@@ -23,7 +23,7 @@ mjthreadpool_once_cb
 */
 static void* mjthreadpool_once_cb(void* arg) {
   mjthread thread = (mjthread)arg;
-  mjthreadpool tpool = (mjthreadpool)thread->cbarg;
+  mjthreadpool tpool = mjthread_get_cbarg(thread);
   pthread_mutex_lock(&tpool->_pluslock);
   tpool->_plus--;
   if (tpool->_plus == 0) {

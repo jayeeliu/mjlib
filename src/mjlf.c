@@ -15,7 +15,7 @@ mjlf_routine(thread_routine, arg in thread->arg)
 static void* mjlf_routine(void* arg) {
   // get thread and srv
   mjthread thread = (mjthread) arg;
-  mjlf srv = (mjlf) thread->arg;
+  mjlf srv = mjthread_get_arg(thread);
   // leader run this
   int cfd;
   while (1) {

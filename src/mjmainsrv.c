@@ -52,7 +52,7 @@ mjmainsrv_asy_rt(thread routine)
 static void* mjmainsrv_asy_rt(void* data) {
   // get data from asyncData
   mjthread thread = (mjthread) data;
-  asy_data asy_d = (asy_data) thread->arg;
+  asy_data asy_d = (asy_data) mjthread_get_arg(thread);
   // run Routine
   asy_d->_RT(asy_d->_rarg);
   // notify eventloop
