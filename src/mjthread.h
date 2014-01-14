@@ -5,8 +5,6 @@
 #include "mjmap.h"
 #include <pthread.h>
 
-struct mjthreadpool;
-
 struct mjthread {
   pthread_t       _id;        
   pthread_mutex_t _lock;
@@ -22,7 +20,6 @@ struct mjthread {
   mjmap           _map;     // arg map for this thread
 
   int             _type;    // running type
-  bool            _working; // true if _RT is not null, used by Normal
   bool            _stop;    // true if mjthread_delete has been called
 };
 typedef struct mjthread* mjthread;

@@ -4,23 +4,26 @@
 #include "mjthreadpool.h"
 
 void* Routine(void* arg) {
-    mjthread thread = (mjthread) arg;
+    int* value = mjthread_get_arg(arg);
+
     long a = 1;
     for(int i = 1; i < 20; i++) {
         a = a * i;
     }
-    printf("%d show\n", *(int*)thread->arg);
+    printf("%d show\n", *value);
+    free(value);
     return NULL;
 }
  
 int main()
 {
-    mjthreadpool tpool = mjthreadpool_new(2, NULL, NULL);
+    mjthreadpool tpool = mjthreadpool_new(2);
 
+    mjthreadpool_run(tpool);
     for(int i = 0; i < 100; i++) {
       int* num = (int*) malloc(sizeof(int));
       *num = i;
-      mjthreadpool_add_routine_plus(tpool, Routine, num);
+      mjthreadpool_add_task_plus(tpool, Routine, num);
     }
     mjthreadpool_delete(tpool);
     return 0;

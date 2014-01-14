@@ -1,25 +1,25 @@
 #include "mjlog.h"
 #include "mjthread.h"
-#include "mjthreadpool.h"
 #include <stdlib.h>
 
-#define MJTHREAD_FREE   0
+#define MJTHREAD_NOTRUN   0
 #define MJTHREAD_NORMAL 1
 #define MJTHREAD_ONCE   2
 
 /*
 ===============================================================================
 mjthread_once_routine(thread routine)
-  create thread and run Routine
+  create thread and run Routine, del self when finished
 ===============================================================================
 */
 static void* mjthread_once_routine(void* arg) {
-  // create and detach thread
   mjthread thread = (mjthread) arg;
   if (thread->_INIT) thread->_INIT(thread);
   if (thread->_RT) thread->_RT(thread);
   if (thread->_CB) thread->_CB(thread);
-  return NULL;
+  mjmap_delete(thread->_map);
+  free(thread);
+  pthread_exit(NULL);
 }
 
 /*
@@ -29,7 +29,7 @@ mjthread_run_once
 ===============================================================================
 */
 bool mjthread_run_once(mjthread thread, mjProc RT, void* arg) {
-  if (!thread || thread->_type != MJTHREAD_FREE || thread->_stop) return false;
+  if (!thread || thread->_type != MJTHREAD_NOTRUN || thread->_stop) return false;
   thread->_RT = RT;
   thread->_arg = arg;
   thread->_type = MJTHREAD_ONCE;
@@ -54,7 +54,7 @@ static void* mjthread_routine(void* arg) {
   while (1) {
     // wait for routine and not shutdown
     pthread_mutex_lock(&thread->_lock);
-    while (!thread->_working && !thread->_stop) {
+    while (!thread->_RT && !thread->_stop) {
       pthread_cond_wait(&thread->_ready, &thread->_lock);
     }
     pthread_mutex_unlock(&thread->_lock);
@@ -63,11 +63,15 @@ static void* mjthread_routine(void* arg) {
       // clean for next task
       thread->_RT = NULL;
       thread->_arg = NULL;
-      thread->_working = false;
       if (thread->_CB) thread->_CB(thread);
+    } else if (!thread->_stop) {
+      MJLOG_ERR("thread wake up, not RT or _stop!!!");
     }
     if (thread->_stop) break;
   }
+  pthread_mutex_destroy(&thread->_lock);
+  pthread_cond_destroy(&thread->_ready);
+  thread->_type = MJTHREAD_NOTRUN;
   pthread_exit(NULL);
 }
 
@@ -83,13 +87,12 @@ bool mjthread_add_task(mjthread thread, mjProc RT, void* arg) {
   }
   // add worker to thread
   pthread_mutex_lock(&thread->_lock);
-  if (thread->_working) {
+  if (thread->_RT) {
     pthread_mutex_unlock(&thread->_lock);
     return false;
   }
   thread->_RT = RT;
   thread->_arg = arg;
-  thread->_working = true;
   pthread_cond_signal(&thread->_ready);
   pthread_mutex_unlock(&thread->_lock);
   return true;
@@ -102,12 +105,12 @@ mjthread_run
 ===============================================================================
 */
 bool mjthread_run(mjthread thread) {
-  if (!thread || thread->_type != MJTHREAD_FREE) return false;
+  if (!thread || thread->_type != MJTHREAD_NOTRUN) return false;
   // init fields
   pthread_mutex_init(&thread->_lock, NULL);
   pthread_cond_init(&thread->_ready, NULL);
-  pthread_create(&thread->_id, NULL, mjthread_routine, thread);
   thread->_type = MJTHREAD_NORMAL;
+  pthread_create(&thread->_id, NULL, mjthread_routine, thread);
   return true;
 }
 
@@ -139,16 +142,12 @@ mjthread_delete
 ===============================================================================
 */
 bool mjthread_delete(mjthread thread) {
-  if (!thread || thread->_stop) return false;
+  if (!thread || thread->_stop || thread->_type == MJTHREAD_ONCE) return false;
   thread->_stop = true;
   if (thread->_type == MJTHREAD_NORMAL) {
     pthread_cond_broadcast(&thread->_ready);
     pthread_join(thread->_id, NULL);
-    pthread_mutex_destroy(&thread->_lock);
-    pthread_cond_destroy(&thread->_ready);
-  } else if (thread->_type == MJTHREAD_ONCE) {
-    pthread_join(thread->_id, NULL);
-  }
+  } 
   mjmap_delete(thread->_map);
   free(thread);
   return true;

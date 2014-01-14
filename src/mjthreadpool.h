@@ -5,9 +5,9 @@
 #include "mjlockless.h"
 
 struct mjthreadpool {
-  int             _nthread;
+  int             _nthread;   // thread number
   mjProc          _INIT;      // thread init routine
-  void*           iarg;       // thread init arg
+  void*           _iarg;      // thread init arg
   bool            _stop;      // stop the thread pool
   bool            _running;   // if this threadpool is running 
 
@@ -28,14 +28,14 @@ extern bool         mjthreadpool_run(mjthreadpool tpool);
 extern mjthreadpool mjthreadpool_new(int nthread);
 extern bool         mjthreadpool_delete(mjthreadpool tpool);
 
+static inline void* mjthreadpool_get_iarg(mjthreadpool tpool) {
+  return tpool->_iarg;
+}
 
 static inline bool mjthreadpool_set_init(mjthreadpool tpool, mjProc INIT, void* iarg) {
   if (!tpool) return false;
   tpool->_INIT = INIT;
-  tpool->iarg = iarg;
-  for (int i = 0; i < tpool->_nthread; i++) {
-    mjthread_set_init(tpool->_threads[i], INIT, iarg);
-  }
+  tpool->_iarg = iarg;
   return true;
 }
 
