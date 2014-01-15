@@ -11,7 +11,7 @@ struct mjlf {
   mjthreadpool  _tpool;   // thread pool 
   mjProc        _INIT;    // mjlf server init routine
   void*         _iarg;    // mjlf server init arg
-  mjProc        _RT;      // run when new conn come
+  mjProc        _RT;      // run when new conn come, conn routine
   mjmap         _map;
 };
 typedef struct mjlf* mjlf;
@@ -44,20 +44,20 @@ static inline bool mjlf_set_stop(mjlf srv, bool value) {
 }
 
 static inline bool mjlf_set_init(mjlf srv, mjProc INIT, void* iarg) {
-  if (!srv) return false;
+  if (!srv || !INIT) return false;
   srv->_INIT = INIT;
   srv->_iarg = iarg;
   return true;
 }
 
 static inline bool mjlf_set_routine(mjlf srv, mjProc RT) {
-  if (!srv) return false;
+  if (!srv || !RT) return false;
   srv->_RT = RT;
   return true;
 }
 
 static inline bool mjlf_set_thread_init(mjlf srv, mjProc TINIT, void* targ) {
-  if (!srv || !srv->_tpool) return false;
+  if (!srv || !srv->_tpool || !TINIT) return false;
   mjthreadpool_set_init(srv->_tpool, TINIT, targ);
   return true;
 }

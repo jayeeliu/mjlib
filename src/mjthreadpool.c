@@ -4,44 +4,43 @@
 
 /*
 ===============================================================================
-mjthreadpool_normal_cb
+mjthreadpool_normal_cb, thread routine
   mjthreadpool normal callback, put thread into freelist
 ===============================================================================
 */
 static void* mjthreadpool_normal_cb(void* arg) {
   mjthread thread = (mjthread)arg;
   mjthreadpool tpool = mjthread_get_cbarg(thread);
+
   mjlockless_push(tpool->_freelist, thread);
   return NULL;
 }
 
 /*
 ===============================================================================
-mjthreadpool_once_cb
+mjthreadpool_once_cb, thread routine
   mjthreadpool once callback, decrease plus count
 ===============================================================================
 */
 static void* mjthreadpool_once_cb(void* arg) {
   mjthread thread = (mjthread)arg;
   mjthreadpool tpool = mjthread_get_cbarg(thread);
+
   pthread_mutex_lock(&tpool->_pluslock);
-  tpool->_plus--;
-  if (tpool->_plus == 0) {
-    pthread_cond_signal(&tpool->_plusready);
-  }
+  if (--tpool->_plus == 0) pthread_cond_signal(&tpool->_plusready);
   pthread_mutex_unlock(&tpool->_pluslock);
   return NULL;
 }
 
 /*
 ===============================================================================
-mjthreadpool_add_task
+mjthreadpool_add_task_real
   add worker to thread pool
 ===============================================================================
 */ 
-bool mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg) { 
-  if (!tpool || !tpool->_running || tpool->_stop) return false;
-  // get free thread
+static bool mjthreadpool_add_task_real(mjthreadpool tpool, mjProc RT, 
+    void* arg) { 
+
   mjthread thread = mjlockless_pop(tpool->_freelist); 
   if (!thread) return false;
   if (thread->_RT) MJLOG_ERR("Oops get working thread");
@@ -53,17 +52,13 @@ bool mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg) {
 
 /*
 ================================================================================
-mjthreadpool_add_task_plus
-  call mjthreadpool_AddWork, if failed, call mjThread_RunOnce
+mjthreadpool_add_task
 ================================================================================
 */
-bool mjthreadpool_add_task_plus(mjthreadpool tpool, mjProc RT, void* arg) {
-  if (!tpool || !tpool->_running || tpool->_stop) {
-    MJLOG_ERR("mjthread pool error ");
-    return false;
-  }
-  // call mjthreadpool_AddWork
-  if (!mjthreadpool_add_task(tpool, RT, arg)) {
+bool mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg) {
+  if (!tpool || !tpool->_running || tpool->_stop || !RT) return false;
+
+  if (!mjthreadpool_add_task_real(tpool, RT, arg)) {
     mjthread thread = mjthread_new();
     if (!thread) return false;
     mjthread_set_init(thread, tpool->_INIT, tpool->_iarg);
@@ -84,6 +79,7 @@ mjthreadpool_run
 */
 bool mjthreadpool_run(mjthreadpool tpool) {
   if (!tpool || tpool->_running) return false;
+
   for (int i = 0; i < tpool->_nthread; i++) {
     mjthread_set_init(tpool->_threads[i], tpool->_INIT, tpool->_iarg);
     mjthread_set_cb(tpool->_threads[i], mjthreadpool_normal_cb, tpool);

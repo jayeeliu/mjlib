@@ -90,7 +90,7 @@ bool mjmainsrv_asy(mjtcpsrv srv, mjProc RT, void* rarg, mjProc CB, void* carg) {
   mjev_add_fevent(asy_d->_ev, n_fd[0], MJEV_READABLE, mjmainsrv_asy_fin, asy_d);
   // add routine to threadpool
   mjmainsrv msrv = (mjmainsrv) mjtcpsrv_get_obj(srv, "mainsrv");
-  if (!mjthreadpool_add_task_plus(msrv->_tpool, mjmainsrv_asy_rt, asy_d)) {
+  if (!mjthreadpool_add_task(msrv->_tpool, mjmainsrv_asy_rt, asy_d)) {
     MJLOG_ERR("Oops async run Error");
     // del notify event
     mjev_del_fevent(asy_d->_ev, n_fd[0], MJEV_READABLE);

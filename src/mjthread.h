@@ -10,11 +10,11 @@ struct mjthread {
   pthread_mutex_t _lock;
   pthread_cond_t  _ready;
 
-  mjProc          _INIT;    // run once when thread init
+  mjProc          _INIT;    // run once when thread init, thread routine
   void*           _iarg;    // Init Routine arg
-  mjProc          _RT;      // routine to be run
+  mjProc          _RT;      // routine to be run, thread routine
   void*           _arg;     // routine arg
-  mjProc          _CB;      // CallBack Routine, run when _RT finish
+  mjProc          _CB;      // CallBack Routine, run when _RT finish, thread routine
   void*           _cbarg;   // CallBack Routine arg
 
   mjmap           _map;     // arg map for this thread
@@ -33,17 +33,10 @@ extern bool     mjthread_run_once(mjthread thread, mjProc RT, void* arg);
 extern mjthread mjthread_new();
 extern bool     mjthread_delete(mjthread thread);
 
-static inline void* mjthread_get_iarg(mjthread thread) {
-  if (!thread) return NULL;
-  return thread->_iarg;
-}
 
 static inline void* mjthread_get_arg(mjthread thread) {
+  if (!thread) return NULL;
   return thread->_arg;
-}
-
-static inline void* mjthread_get_cbarg(mjthread thread) {
-  return thread->_cbarg;
 }
 
 static inline void* mjthread_get_obj(mjthread thread, const char* key) {
@@ -57,11 +50,21 @@ static inline bool mjthread_set_obj(mjthread thread, const char* key, void* obj,
   return true;
 }
 
+static inline void* mjthread_get_iarg(mjthread thread) {
+  if (!thread) return NULL;
+  return thread->_iarg;
+}
+
 static inline bool mjthread_set_init(mjthread thread, mjProc INIT, void* iarg) {
   if (!thread) return false;
   thread->_INIT = INIT;
   thread->_iarg = iarg;
   return true;
+}
+
+static inline void* mjthread_get_cbarg(mjthread thread) {
+  if (!thread) return NULL;
+  return thread->_cbarg;
 }
 
 static inline bool mjthread_set_cb(mjthread thread, mjProc CB, void* cbarg) {

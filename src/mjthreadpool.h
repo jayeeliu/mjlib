@@ -20,9 +20,7 @@ struct mjthreadpool {
 };
 typedef struct mjthreadpool* mjthreadpool;
 
-
 extern bool         mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg);
-extern bool         mjthreadpool_add_task_plus(mjthreadpool tpool, mjProc RT, void* arg);
 extern bool         mjthreadpool_run(mjthreadpool tpool);
 
 extern mjthreadpool mjthreadpool_new(int nthread);
@@ -34,7 +32,7 @@ static inline void* mjthreadpool_get_iarg(mjthreadpool tpool) {
 }
 
 static inline bool mjthreadpool_set_init(mjthreadpool tpool, mjProc INIT, void* iarg) {
-  if (!tpool) return false;
+  if (!tpool || !INIT) return false;
   tpool->_INIT = INIT;
   tpool->_iarg = iarg;
   return true;
