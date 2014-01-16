@@ -84,9 +84,8 @@ http_mjlf_init
   init mjlf according to urls
 ===============================================================================
 */
-void* http_mjlf_init(mjlf srv, void* iarg) {
-  struct mjhttpurl* urls = http_init_urls(iarg);
-  mjlf_set_local(srv, "urls", urls, http_free_urls);
+void* http_mjlf_init(mjlf srv, void arg) {
+  mjlf_set_local(srv, "urls", http_init_urls(arg), http_free_urls);
   return NULL;
 }
 

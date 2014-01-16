@@ -3,10 +3,11 @@
 
 #include <stdbool.h>
 #include "mjthreadpool.h"
-#include "mjmap.h"
+#include "mjconnb.h"
 
 struct mjlf;
 typedef void* (*mjlfProc)(struct mjlf*, void*);
+typedef void* (*mjlfTask)(struct mjlf*, mjthread, mjconnb);
 
 struct lfProc {
   mjlfProc  proc;
@@ -18,7 +19,7 @@ struct mjlf {
   bool          _stop;
   mjthreadpool  _tpool;   // thread pool 
   struct lfProc _init;
-  mjProc        _RT;      // run when new conn come, conn routine
+  mjlfTask      _task;    // run when new conn come
   mjmap         _local;
 };
 typedef struct mjlf* mjlf;
@@ -51,9 +52,9 @@ static inline bool mjlf_set_init(mjlf srv, mjlfProc proc, void* arg) {
   return true;
 }
 
-static inline bool mjlf_set_routine(mjlf srv, mjProc RT) {
-  if (!srv || !RT) return false;
-  srv->_RT = RT;
+static inline bool mjlf_set_task(mjlf srv, mjlfTask task) {
+  if (!srv || !task) return false;
+  srv->_task = task;
   return true;
 }
 

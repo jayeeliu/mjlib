@@ -19,23 +19,21 @@ mjplf_txt_runcmd
   run txt protocol command(run txt routine)
 ===============================================================================
 */
-static void mjlf_txt_runcmd(mjconnb conn, mjlf_txt_cmd cmd, 
-    mjlf_txt_cmdlist cmdlist) {
+static void mjlf_txt_runcmd(mjlf_txt_cmd cmd, mjlf_txt_cmdlist cmdlist) {
   // read data
   mjstr data = mjstr_new(80);
   if (!data) {
-		mjconnb_writes(conn, "+ Server Inner Error\r\n");
+		mjconnb_writes(cmd->conn, "+ Server Inner Error\r\n");
     MJLOG_ERR("Data Create Error");
     goto failout0;
   }
-
   // read command
-  int ret = mjconnb_readuntil(conn, "\r\n", data);
+  int ret = mjconnb_readuntil(cmd->conn, "\r\n", data);
   if (ret == -2) {
-    mjconnb_writes(conn, "+ Read Timeout\r\n");
+    mjconnb_writes(cmd->conn, "+ Read Timeout\r\n");
     goto failout1;
   } else if (ret < 0) {
-    mjconnb_writes(conn, "+ Read Error\r\n");
+    mjconnb_writes(cmd->conn, "+ Read Error\r\n");
     goto failout1;
   } else if (ret == 0) {
     MJLOG_ERR("Peer Closed");
@@ -45,26 +43,24 @@ static void mjlf_txt_runcmd(mjconnb conn, mjlf_txt_cmd cmd,
   // split string
   mjslist slist = mjslist_new();
   if (!slist) {
-		mjconnb_writes(conn, "+ Inner Error\r\n");
+		mjconnb_writes(cmd->conn, "+ Inner Error\r\n");
     MJLOG_ERR("mjslist create error");
     goto failout1;
   }
   mjstr_split(data, " ", slist);
   if (slist->len < 1) {
-    mjconnb_writes(conn, "+ Command Error\r\n");
+    mjconnb_writes(cmd->conn, "+ Command Error\r\n");
     goto failout2;
   }
   // get command
   cmd->cmdname = mjslist_get(slist, 0);
   mjstr_strim(cmd->cmdname);
   cmd->args = slist;
-  cmd->conn = conn;
-
   // run routine
   for (int i = 0; cmdlist[i].cmdname != NULL; i++) {
     if (strcasecmp(cmdlist[i].cmdname, cmd->cmdname->data)) continue;
-    if (cmdlist[i].Routine) {
-      (*cmdlist[i].Routine)(cmd);
+    if (cmdlist[i].proc) {
+      (*cmdlist[i].proc)(cmd);
     } else {
       cmd->finished = true;
     }
@@ -72,7 +68,7 @@ static void mjlf_txt_runcmd(mjconnb conn, mjlf_txt_cmd cmd,
     mjstr_delete(data);
     return;
   }  
-  mjconnb_writes(conn, "+ Wrong command\r\n");
+  mjconnb_writes(cmd->conn, "+ Wrong command\r\n");
 failout2:
   mjslist_delete(slist);
 failout1:
@@ -89,14 +85,7 @@ mjlf_txt_routine(conn_routine)
   arg is mjconnb
 ===============================================================================
 */
-static void* mjlf_txt_routine(void* conn) {
-	mjlf srv = mjconnb_get_obj(conn, "server");
-	if (!srv) {
-		mjconnb_writes(conn, "+ Server Inner Error\r\n");
-		MJLOG_ERR("No Server Found");
-		return NULL;
-	}
-
+static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
   // get routine_list
 	mjlf_txt_cmdlist cmdlist = mjlf_get_local(srv, "cmdlist");
   if (!cmdlist) {
@@ -104,11 +93,13 @@ static void* mjlf_txt_routine(void* conn) {
 		MJLOG_ERR("No Command List Found");
     return NULL;
   } 
-
 	// alloc mjlf_txt_cmd, run routine till finished
   struct mjlf_txt_cmd cmd = {0};
+  cmd.srv = srv;
+  cmd.thread = thread;
+  cmd.conn = conn;
 	while (!cmd.finished) {
-    mjlf_txt_runcmd(conn, &cmd, cmdlist);
+    mjlf_txt_runcmd(&cmd, cmdlist);
   }
 	return NULL;
 }
@@ -126,6 +117,6 @@ mjlf mjlf_txt_new(int sfd, int max_thread, mjlf_txt_cmdlist cmdlist) {
     return NULL;
   }
   mjlf_set_init(srv, mjlf_txt_init, cmdlist);
-  mjlf_set_routine(srv, mjlf_txt_routine);
+  mjlf_set_task(srv, mjlf_txt_routine);
   return srv;
 }

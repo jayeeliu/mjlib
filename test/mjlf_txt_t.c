@@ -2,14 +2,12 @@
 #include "mjlf_txt.h"
 #include <stdio.h>
 
-void* test_routine(void* arg) {
-  mjlf_txt_cmd cmd = arg;
+void* test_routine(mjlf_txt_cmd cmd) {
   mjconnb_writes(cmd->conn, "+ OK\r\n");
   return NULL;
 }
 
-void* abc_routine(void* arg) {
-  mjlf_txt_cmd cmd = arg;
+void* abc_routine(mjlf_txt_cmd cmd) {
   mjconnb_writes(cmd->conn, "+ abc is here\r\n");
   return NULL;
 }

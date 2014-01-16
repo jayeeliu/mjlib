@@ -6,10 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void* seg_routine(void* arg) {
-  mjlf_txt_cmd cmd = arg;
-  mjthread thread = mjconnb_get_obj(cmd->conn, "thread");
-  mjseg seg = mjthread_get_obj(thread, "seg");
+void* seg_routine(mjlf_txt_cmd cmd) {
+  mjseg seg = mjthread_get_local(cmd->thread, "seg");
 
   if (cmd->args->len < 2) {
     mjconnb_writes(cmd->conn, "+ seg command error\r\n");
@@ -49,8 +47,8 @@ out1:
   return NULL;
 }
 
-void* thread_init(void* thread) {
-  mjthread_set_obj(thread, "seg", mjthread_get_iarg(thread), NULL);
+void* thread_init(mjthread thread, void* arg) {
+  mjthread_set_local(thread, "seg", arg, NULL);
   return NULL;
 }
 

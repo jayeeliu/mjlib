@@ -33,8 +33,8 @@ static void* mjlf_routine(mjthread thread, void* arg) {
     mjsock_close(cfd);
   }
   // change to worker
-  if (!srv->_RT) {
-    MJLOG_ERR("No Routine Set, Exit!");
+  if (!srv->_task) {
+    MJLOG_ERR("No Task Set, Exit!");
     mjsock_close(cfd);
     return NULL;
   }
@@ -45,10 +45,8 @@ static void* mjlf_routine(mjthread thread, void* arg) {
     mjsock_close(cfd);
     return NULL;
   }
-  mjconnb_set_obj(conn, "server", srv, NULL);
-  mjconnb_set_obj(conn, "thread", thread, NULL);
-  //run server routine(conn routine)
-  srv->_RT(conn);
+  // run task
+  srv->_task(srv, thread, conn);
   mjconnb_delete(conn);
   return NULL; 
 }

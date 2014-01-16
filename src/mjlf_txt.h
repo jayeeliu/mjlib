@@ -7,16 +7,20 @@
 #include "mjlf.h"
 
 struct mjlf_txt_cmd {
-  mjstr   cmdname;
-  mjslist args;
-  mjconnb conn;
-  bool    finished;
+  mjstr     cmdname;
+  mjslist   args;
+  mjlf      srv;
+  mjthread  thread;
+  mjconnb   conn;
+  bool      finished;
 };
 typedef struct mjlf_txt_cmd* mjlf_txt_cmd;
 
+typedef void* (*mjlfTxtProc)(mjlf_txt_cmd);
+
 struct mjlf_txt_cmdlist {
   const char* cmdname;
-  mjProc      Routine;
+  mjlfTxtProc proc;
 };
 typedef struct mjlf_txt_cmdlist* mjlf_txt_cmdlist;
 
