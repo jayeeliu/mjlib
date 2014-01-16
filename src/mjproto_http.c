@@ -84,10 +84,9 @@ http_mjlf_init
   init mjlf according to urls
 ===============================================================================
 */
-void* http_mjlf_init(void* arg) {
-  mjlf srv = (mjlf) arg;
-  struct mjhttpurl* urls = http_init_urls(mjlf_get_iarg(srv));
-  mjlf_set_obj(srv, "urls", urls, http_free_urls);
+void* http_mjlf_init(mjlf srv, void* iarg) {
+  struct mjhttpurl* urls = http_init_urls(iarg);
+  mjlf_set_local(srv, "urls", urls, http_free_urls);
   return NULL;
 }
 
@@ -190,7 +189,7 @@ void* http_mjlf_routine(void* arg) {
   }
   // match proc and run
   mjlf srv = (mjlf) mjconnb_get_obj(conn, "server");
-  struct mjhttpurl* urls = (struct mjhttpurl*) mjlf_get_obj(srv, "urls");
+  struct mjhttpurl* urls = (struct mjhttpurl*) mjlf_get_local(srv, "urls");
   mjProc fun = find_url_func(hdata, urls);
   mjconnb_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
   fun(conn);

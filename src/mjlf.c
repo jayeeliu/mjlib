@@ -12,12 +12,10 @@ mjlf_routine(thread_routine, arg in thread->arg)
   Routine Run
 ===============================================================================
 */
-static void* mjlf_routine(void* arg) {
-  // get thread and srv
-  mjthread thread = (mjthread) arg;
-  mjlf srv = mjthread_get_arg(thread);
-  // leader run this
+static void* mjlf_routine(mjthread thread, void* arg) {
+  mjlf srv = arg;
   int cfd;
+
   while (1) {
     cfd = mjsock_accept_timeout(srv->_sfd, 3000);
     if (cfd <= 0) {
@@ -30,7 +28,7 @@ static void* mjlf_routine(void* arg) {
       return NULL;
     }
     // choose new leader
-    if (mjthreadpool_add_task(srv->_tpool, mjlf_routine, srv)) break;
+    if (mjthreadpool_set_task(srv->_tpool, mjlf_routine, srv)) break;
     MJLOG_ERR("Oops No Leader, Too Bad, Close Connection!!!");
     mjsock_close(cfd);
   }
@@ -63,11 +61,11 @@ mjlf_Run
 */
 void* mjlf_run(mjlf srv) {
   if (!srv) return NULL;
-  if (srv->_INIT) srv->_INIT(srv);
+  if (srv->_init.proc) srv->_init.proc(srv, srv->_init.arg);
   // init new pool
   mjthreadpool_run(srv->_tpool);
   // add new worker 
-  if (!mjthreadpool_add_task(srv->_tpool, mjlf_routine, srv)) {
+  if (!mjthreadpool_set_task(srv->_tpool, mjlf_routine, srv)) {
     MJLOG_ERR("mjthreadpool add routine error");
     mjthreadpool_delete(srv->_tpool);
     return NULL;
@@ -100,8 +98,8 @@ mjlf mjlf_new(int sfd, int nthread) {
     free(srv);
     return NULL;
   }
-  srv->_map = mjmap_new(31);
-  if (!srv->_map) {
+  srv->_local = mjmap_new(31);
+  if (!srv->_local) {
     MJLOG_ERR("mjmap new error");
     mjthreadpool_delete(srv->_tpool);
     free(srv);
@@ -122,7 +120,7 @@ mjlf_delete
 bool mjlf_delete(mjlf srv) {
   if (!srv) return false;
   mjthreadpool_delete(srv->_tpool);
-  mjmap_delete(srv->_map);
+  mjmap_delete(srv->_local);
   free(srv);
   return true;
 }

@@ -6,8 +6,7 @@
 
 struct mjthreadpool {
   int             _nthread;   // thread number
-  mjProc          _INIT;      // thread init routine
-  void*           _iarg;      // thread init arg
+  struct ThrdProc _init;
   bool            _stop;      // stop the thread pool
   bool            _running;   // if this threadpool is running 
 
@@ -20,21 +19,16 @@ struct mjthreadpool {
 };
 typedef struct mjthreadpool* mjthreadpool;
 
-extern bool         mjthreadpool_add_task(mjthreadpool tpool, mjProc RT, void* arg);
+extern bool         mjthreadpool_set_task(mjthreadpool tpool, mjThrdProc proc, void* arg);
 extern bool         mjthreadpool_run(mjthreadpool tpool);
 
 extern mjthreadpool mjthreadpool_new(int nthread);
 extern bool         mjthreadpool_delete(mjthreadpool tpool);
 
-static inline void* mjthreadpool_get_iarg(mjthreadpool tpool) {
-  if (!tpool) return NULL;
-  return tpool->_iarg;
-}
-
-static inline bool mjthreadpool_set_init(mjthreadpool tpool, mjProc INIT, void* iarg) {
-  if (!tpool || !INIT) return false;
-  tpool->_INIT = INIT;
-  tpool->_iarg = iarg;
+static inline bool mjthreadpool_set_init(mjthreadpool tpool, mjThrdProc proc, void* arg) {
+  if (!tpool || !proc) return false;
+  tpool->_init.proc = proc;
+  tpool->_init.arg = arg;
   return true;
 }
 

@@ -8,8 +8,8 @@ mjlf_txt_init(server routine)
   init proto txt.
 ===============================================================================
 */
-static void* mjlf_txt_init(void* srv) {
-  mjlf_set_obj(srv, "cmdlist", mjlf_get_iarg(srv), NULL);
+static void* mjlf_txt_init(mjlf srv, void* arg) {
+  mjlf_set_local(srv, "cmdlist", arg, NULL);
   return NULL;
 }
 
@@ -98,7 +98,7 @@ static void* mjlf_txt_routine(void* conn) {
 	}
 
   // get routine_list
-	mjlf_txt_cmdlist cmdlist = mjlf_get_obj(srv, "cmdlist");
+	mjlf_txt_cmdlist cmdlist = mjlf_get_local(srv, "cmdlist");
   if (!cmdlist) {
     mjconnb_writes(conn, "+ No Command List\r\n");
 		MJLOG_ERR("No Command List Found");

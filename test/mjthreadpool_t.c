@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include "mjthreadpool.h"
 
-void* Routine(void* arg) {
-    int* value = mjthread_get_arg(arg);
+void* Routine(mjthread thread, void* arg) {
+    int* value = arg;
 
     long a = 1;
     for(int i = 1; i < 20; i++) {
@@ -23,7 +23,7 @@ int main()
     for(int i = 0; i < 100; i++) {
       int* num = (int*) malloc(sizeof(int));
       *num = i;
-      mjthreadpool_add_task_plus(tpool, Routine, num);
+      mjthreadpool_set_task(tpool, Routine, num);
     }
     mjthreadpool_delete(tpool);
     return 0;

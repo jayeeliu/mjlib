@@ -49,13 +49,9 @@ mjmainsrv_asy_rt(thread routine)
   aync run routine
 ===============================================================================
 */
-static void* mjmainsrv_asy_rt(void* data) {
-  // get data from asyncData
-  mjthread thread = (mjthread) data;
-  asy_data asy_d = (asy_data) mjthread_get_arg(thread);
-  // run Routine
+static void* mjmainsrv_asy_rt(mjthread thread, void* arg) {
+  asy_data asy_d = arg;
   asy_d->_RT(asy_d->_rarg);
-  // notify eventloop
   write(asy_d->_n_w, "OK", 2);
   return NULL;
 }
@@ -90,7 +86,7 @@ bool mjmainsrv_asy(mjtcpsrv srv, mjProc RT, void* rarg, mjProc CB, void* carg) {
   mjev_add_fevent(asy_d->_ev, n_fd[0], MJEV_READABLE, mjmainsrv_asy_fin, asy_d);
   // add routine to threadpool
   mjmainsrv msrv = (mjmainsrv) mjtcpsrv_get_obj(srv, "mainsrv");
-  if (!mjthreadpool_add_task(msrv->_tpool, mjmainsrv_asy_rt, asy_d)) {
+  if (!mjthreadpool_set_task(msrv->_tpool, mjmainsrv_asy_rt, asy_d)) {
     MJLOG_ERR("Oops async run Error");
     // del notify event
     mjev_del_fevent(asy_d->_ev, n_fd[0], MJEV_READABLE);
@@ -112,9 +108,8 @@ mjmainsrv_srv_run
   wrap function for srvthread_run
 ===============================================================================
 */
-static void* mjmainsrv_is_run(void* arg) {
-  mjthread thread = (mjthread) arg;
-  mjtcpsrv srv = mjthread_get_obj(thread, "tcpserver");
+static void* mjmainsrv_is_run(mjthread thread, void* arg) {
+  mjtcpsrv srv = mjthread_get_local(thread, "tcpserver");
   mjtcpsrv_run(srv);
   return NULL;
 }
@@ -135,8 +130,8 @@ bool mjmainsrv_run(mjmainsrv srv) {
       return false;
     }
     mjthread_run(srv->_is_t[i]);
-    mjthread_set_obj(srv->_is_t[i], "tcpserver", srv->_is[i], mjtcpsrv_delete);
-    mjthread_add_task(srv->_is_t[i], mjmainsrv_is_run, NULL);
+    mjthread_set_local(srv->_is_t[i], "tcpserver", srv->_is[i], mjtcpsrv_delete);
+    mjthread_set_task(srv->_is_t[i], mjmainsrv_is_run, NULL);
   }
   // create threadpool
   srv->_tpool = mjthreadpool_new(srv->_is_num * 2); 

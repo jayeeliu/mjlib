@@ -5,72 +5,61 @@
 #include "mjmap.h"
 #include <pthread.h>
 
+struct mjthread;
+typedef void* (*mjThrdProc)(struct mjthread*, void*);
+
+struct ThrdProc {
+  mjThrdProc  proc;
+  void*       arg;
+};
+
 struct mjthread {
   pthread_t       _id;        
   pthread_mutex_t _lock;
   pthread_cond_t  _ready;
 
-  mjProc          _INIT;    // run once when thread init, thread routine
-  void*           _iarg;    // Init Routine arg
-  mjProc          _RT;      // routine to be run, thread routine
-  void*           _arg;     // routine arg
-  mjProc          _CB;      // CallBack Routine, run when _RT finish, thread routine
-  void*           _cbarg;   // CallBack Routine arg
+  struct ThrdProc _init;
+  struct ThrdProc _task;
+  struct ThrdProc _callback;
 
-  mjmap           _map;     // arg map for this thread
-
-  int             _type;    // running type
-  bool            _stop;    // true if mjthread_delete has been called
+  mjmap           _local;   //  local data
+  int             _type;    //  thread type
+  bool            _stop;    //  true if mjthread_delete has been called
 };
 typedef struct mjthread* mjthread;
 
+
 // used for MJTHREAD_NORMAL
-extern bool     mjthread_add_task(mjthread thread, mjProc RT, void* arg);
+extern bool     mjthread_set_task(mjthread thread, mjThrdProc proc, void* arg);
 extern bool     mjthread_run(mjthread thread);
 // used for MJTHREAD_ONCE
-extern bool     mjthread_run_once(mjthread thread, mjProc RT, void* arg);
+extern bool     mjthread_run_once(mjthread thread, mjThrdProc proc, void* arg);
 
 extern mjthread mjthread_new();
 extern bool     mjthread_delete(mjthread thread);
 
-
-static inline void* mjthread_get_arg(mjthread thread) {
-  if (!thread) return NULL;
-  return thread->_arg;
+static inline void* mjthread_get_local(mjthread thread, const char* key) {
+  if (!thread || !key) return false;
+  return mjmap_get_obj(thread->_local, key);
 }
 
-static inline void* mjthread_get_obj(mjthread thread, const char* key) {
+static inline bool mjthread_set_local(mjthread thread, const char* key, void* obj, mjProc obj_free) {
   if (!thread || !key) return false;
-  return mjmap_get_obj(thread->_map, key);
-}
-
-static inline bool mjthread_set_obj(mjthread thread, const char* key, void* obj, mjProc obj_free) {
-  if (!thread || !key) return false;
-  if (mjmap_set_obj(thread->_map, key, obj, obj_free) < 0) return false;
+  if (mjmap_set_obj(thread->_local, key, obj, obj_free) < 0) return false;
   return true;
 }
 
-static inline void* mjthread_get_iarg(mjthread thread) {
-  if (!thread) return NULL;
-  return thread->_iarg;
-}
-
-static inline bool mjthread_set_init(mjthread thread, mjProc INIT, void* iarg) {
+static inline bool mjthread_set_init(mjthread thread, mjThrdProc proc, void* arg) {
   if (!thread) return false;
-  thread->_INIT = INIT;
-  thread->_iarg = iarg;
+  thread->_init.proc = proc;
+  thread->_init.arg = arg;
   return true;
 }
 
-static inline void* mjthread_get_cbarg(mjthread thread) {
-  if (!thread) return NULL;
-  return thread->_cbarg;
-}
-
-static inline bool mjthread_set_cb(mjthread thread, mjProc CB, void* cbarg) {
+static inline bool mjthread_set_callback(mjthread thread, mjThrdProc proc, void* arg) {
   if (!thread) return false;
-  thread->_CB = CB;
-  thread->_cbarg = cbarg;
+  thread->_callback.proc = proc;
+  thread->_callback.arg = arg;
   return true;
 }
 

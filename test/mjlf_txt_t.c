@@ -8,8 +8,15 @@ void* test_routine(void* arg) {
   return NULL;
 }
 
+void* abc_routine(void* arg) {
+  mjlf_txt_cmd cmd = arg;
+  mjconnb_writes(cmd->conn, "+ abc is here\r\n");
+  return NULL;
+}
+
 struct mjlf_txt_cmdlist cmdlist[] = {
   {"test", test_routine},
+  {"abc", abc_routine},
   {"quit", NULL},
   {NULL, NULL},
 };

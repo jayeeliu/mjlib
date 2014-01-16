@@ -1,5 +1,5 @@
-#ifndef _MJPROTO_TXT_H
-#define _MJPROTO_TXT_H
+#ifndef _MJLF_TXT_H
+#define _MJLF_TXT_H
 
 #include "mjproc.h"
 #include "mjstr.h"
