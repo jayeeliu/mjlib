@@ -84,7 +84,7 @@ http_mjlf_init
   init mjlf according to urls
 ===============================================================================
 */
-void* http_mjlf_init(mjlf srv, void arg) {
+void* http_mjlf_init(mjlf srv, void* arg) {
   mjlf_set_local(srv, "urls", http_init_urls(arg), http_free_urls);
   return NULL;
 }
@@ -95,10 +95,8 @@ http_mjtcpsrv_init
   init mjtcpsrv according to urls
 ===============================================================================
 */
-void* http_mjtcpsrv_init(void* arg) {
-  mjtcpsrv srv = (mjtcpsrv) arg;
-  struct mjhttpurl* urls = http_init_urls(srv->iarg);
-  mjtcpsrv_set_obj(srv, "urls", urls, http_free_urls);
+void* http_mjtcpsrv_init(mjtcpsrv srv, void* arg) {
+  mjtcpsrv_set_local(srv, "urls", http_init_urls(arg), http_free_urls);
   return NULL;
 }
 
@@ -220,7 +218,7 @@ static void *on_header(void *arg) {
   mjhttprsp_add_header(hdata->rsp, "Content-Type", "text/html; charset=UTF-8");
   // match proc and run
   mjtcpsrv srv = (mjtcpsrv) mjconn_get_obj(conn, "server");
-  struct mjhttpurl* urls = (struct mjhttpurl*) mjtcpsrv_get_obj(srv, "urls");
+  struct mjhttpurl* urls = (struct mjhttpurl*) mjtcpsrv_get_local(srv, "urls");
   mjProc fun = find_url_func(hdata, urls);
   mjconn_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
   fun(conn);

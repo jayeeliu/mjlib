@@ -8,7 +8,6 @@ all:
 	cd deps/hiredis; make noopt
 	cd src;	make
 	cd test; make
-	cd example; make
 test:
 	cd test; make
 install:
@@ -18,5 +17,4 @@ clean:
 	cd deps/hiredis; make clean
 	cd src; make clean
 	cd test; make clean
-	cd example; make clean
 	rm -rf build

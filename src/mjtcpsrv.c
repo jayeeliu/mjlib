@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include "mjtcpsrv.h"
 #include "mjconn.h"
 #include "mjsig.h"
@@ -13,14 +14,14 @@ mjtcpsrv_accept_routine(server routine)
 ===============================================================================
 */
 static void* mjtcpsrv_accept_routine(void* arg) {
-  mjtcpsrv srv = (mjtcpsrv) arg;
-  // read new client socket
+  mjtcpsrv srv = arg;
   int cfd;
   if (srv->_type == MJTCPSRV_STANDALONE) { // STANDALONE
     // standalone mode, accept new socket
     cfd = mjsock_accept(srv->_sfd);
     if (cfd < 0) {
-      MJLOG_ERR("accept error");
+      if (errno == EAGAIN || errno == EINTR) return NULL;
+      MJLOG_ERR("accept error %d", errno);
       return NULL; 
     }
   } else { // INNER
@@ -32,8 +33,8 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     }
   }
   // no server routine exit
-  if (!srv->_RT) {
-    MJLOG_ERR("no server Routine found");
+  if (!srv->_task) {
+    MJLOG_ERR("No Server Task Found");
     mjsock_close(cfd);
     return NULL;
   }
@@ -45,22 +46,40 @@ static void* mjtcpsrv_accept_routine(void* arg) {
     return NULL;
   }
   mjconn_set_obj(conn, "server", srv, NULL);
-  srv->_RT(conn);
+  srv->_task(conn);
   return NULL;
+}
+
+bool mjtcpsrv_enable_listen(mjtcpsrv srv) {
+  if (!srv) return false;
+  if (!mjev_add_fevent(srv->_ev, srv->_sfd, MJEV_READABLE, 
+        mjtcpsrv_accept_routine, srv)) {
+    MJLOG_ERR("enable listen error");
+    return false;
+  }
+  return true;
+}
+
+bool mjtcpsrv_disable_listen(mjtcpsrv srv) {
+  if (!srv) return false;
+  if (!mjev_del_fevent(srv->_ev, srv->_sfd, MJEV_READABLE)) {
+    MJLOG_ERR("disable listen error");
+    return false;
+  }
+  return true;
 }
 
 /*
 ===============================================================================
-mjtcpsrv_Run
+mjtcpsrv_run
   run mjtcpsrv
 ===============================================================================
 */
 void* mjtcpsrv_run(void* arg) {
-  // sanity check
-  mjtcpsrv srv = (mjtcpsrv) arg;
+  mjtcpsrv srv = arg;
   if (!srv) return NULL;
-  // run init
-  if (srv->_INIT) srv->_INIT(srv);
+  if (srv->_init.proc) srv->_init.proc(srv, srv->_init.arg);
+  mjtcpsrv_enable_listen(srv);
   // enter loop
   while (!srv->_stop) {
     mjev_run(srv->_ev);
@@ -92,9 +111,8 @@ mjtcpsrv mjtcpsrv_new(int sfd, int type) {
   // set fields
   srv->_sfd   = sfd;
   srv->_type  = type;
-  // set _map
-  srv->_map = mjmap_new(31);
-  if (!srv->_map) {
+  srv->_local = mjmap_new(31);
+  if (!srv->_local) {
     MJLOG_ERR("mjmap_new error");
     goto failout2;
   }
@@ -102,12 +120,6 @@ mjtcpsrv mjtcpsrv_new(int sfd, int type) {
   srv->_ev = mjev_new();
   if (!srv->_ev) {
     MJLOG_ERR("create ev error");
-    goto failout2;
-  }
-  // add read event
-  if ((mjev_add_fevent(srv->_ev, srv->_sfd, MJEV_READABLE, 
-          mjtcpsrv_accept_routine, srv)) < 0) {
-    MJLOG_ERR("mjev add error");
     goto failout3;
   }
   // set signal
@@ -118,7 +130,7 @@ mjtcpsrv mjtcpsrv_new(int sfd, int type) {
   return srv;
 
 failout3:
-  mjev_delete(srv->_ev);
+  mjmap_delete(srv->_local);
 failout2:
   free(srv);
 failout1:
@@ -134,11 +146,11 @@ mjtcpsrv_Delete
 */
 void* mjtcpsrv_delete(void* arg) {
   // sanity check
-  mjtcpsrv srv = (mjtcpsrv) arg;
+  mjtcpsrv srv = arg;
   if (!srv) return NULL;
   // call exit proc
   mjev_delete(srv->_ev);
-  mjmap_delete(srv->_map);
+  mjmap_delete(srv->_local);
   mjsock_close(srv->_sfd);
   free(srv);
   return NULL;

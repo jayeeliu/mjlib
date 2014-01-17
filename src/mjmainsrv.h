@@ -12,7 +12,6 @@
 struct mjmainsrv {
   int           _sfd;
   bool          _stop;
-  
   mjthreadpool  _tpool;           // worker thread pool
   
   unsigned int  _is_num;          // inner server number
@@ -39,18 +38,18 @@ static inline bool mjmainsrv_set_stop(mjmainsrv msrv, bool value) {
   return true;
 }
 
-static inline bool mjmainsrv_set_is_init(mjmainsrv msrv, mjProc ISINIT, void* iiarg) {
+static inline bool mjmainsrv_set_init(mjmainsrv msrv, mjtcpsrvProc proc, void* arg) {
 	if (!msrv) return false;
 	for (int i = 0; i < msrv->_is_num; i++) {
-		mjtcpsrv_set_init(msrv->_is[i], ISINIT, iiarg);
+		mjtcpsrv_set_init(msrv->_is[i], proc, arg);
 	}
 	return true;
 }
 
-static inline bool mjmainsrv_set_is_routine(mjmainsrv msrv, mjProc ISRT) {
+static inline bool mjmainsrv_set_task(mjmainsrv msrv, mjProc task) {
 	if (!msrv) return false;
 	for (int i = 0; i < msrv->_is_num; i++) {
-		mjtcpsrv_set_routine(msrv->_is[i], ISRT);
+		mjtcpsrv_set_task(msrv->_is[i], task);
 	}
 	return true;
 }

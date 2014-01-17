@@ -22,7 +22,4 @@ struct mjhttpurl {
   mjreg   reg;
 };
 
-extern void*  http_mjtcpsrv_init(void* arg);
-extern void*  http_mjtcpsrv_routine(void* arg);
-
 #endif

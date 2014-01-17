@@ -85,7 +85,7 @@ bool mjmainsrv_asy(mjtcpsrv srv, mjProc RT, void* rarg, mjProc CB, void* carg) {
   asy_d->_n_w = n_fd[1];
   mjev_add_fevent(asy_d->_ev, n_fd[0], MJEV_READABLE, mjmainsrv_asy_fin, asy_d);
   // add routine to threadpool
-  mjmainsrv msrv = (mjmainsrv) mjtcpsrv_get_obj(srv, "mainsrv");
+  mjmainsrv msrv = (mjmainsrv) mjtcpsrv_get_local(srv, "mainsrv");
   if (!mjthreadpool_set_task(msrv->_tpool, mjmainsrv_asy_rt, asy_d)) {
     MJLOG_ERR("Oops async run Error");
     // del notify event
@@ -109,8 +109,9 @@ mjmainsrv_srv_run
 ===============================================================================
 */
 static void* mjmainsrv_is_run(mjthread thread, void* arg) {
-  mjtcpsrv srv = mjthread_get_local(thread, "tcpserver");
+  mjtcpsrv srv = arg;
   mjtcpsrv_run(srv);
+  mjtcpsrv_delete(srv);
   return NULL;
 }
 
@@ -129,9 +130,7 @@ bool mjmainsrv_run(mjmainsrv srv) {
       MJLOG_ERR("mjthread create error");
       return false;
     }
-    mjthread_run(srv->_is_t[i]);
-    mjthread_set_local(srv->_is_t[i], "tcpserver", srv->_is[i], mjtcpsrv_delete);
-    mjthread_set_task(srv->_is_t[i], mjmainsrv_is_run, NULL);
+    mjthread_run_once(srv->_is_t[i], mjmainsrv_is_run, srv->_is[i]);
   }
   // create threadpool
   srv->_tpool = mjthreadpool_new(srv->_is_num * 2); 
@@ -188,14 +187,13 @@ mjmainsrv mjmainsrv_new(int sfd) {
       return NULL;
     }
     srv->_is_n[i] = fd[0];
-    // create new srv struct and set main srv
     srv->_is[i] = mjtcpsrv_new(fd[1], MJTCPSRV_INNER);
     if (!srv->_is[i]) {
       MJLOG_ERR("mjtcpsrv create error");
       mjmainsrv_delete(srv);
       return NULL;
     }
-    mjtcpsrv_set_obj(srv->_is[i], "mainsrv", srv, NULL);
+    mjtcpsrv_set_local(srv->_is[i], "mainsrv", srv, NULL);
   }
   return srv;
 }
@@ -210,13 +208,7 @@ bool mjmainsrv_delete(mjmainsrv msrv) {
   if (!msrv) return false;
   // free inner server
   for (int i = 0; i < msrv->_is_num; i++) {
-    // free srv and srv thread
-    if (msrv->_is_t[i]) {
-      mjtcpsrv_set_stop(msrv->_is[i], true);
-      mjthread_delete(msrv->_is_t[i]);
-    } else if (msrv->_is[i]) {
-      mjtcpsrv_delete(msrv->_is[i]);
-    }
+    if (msrv->_is[i]) mjtcpsrv_set_stop(msrv->_is[i], true);
     if (msrv->_is_n[i]) mjsock_close(msrv->_is_n[i]);
   }
   // free worker threadpool

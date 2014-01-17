@@ -218,8 +218,8 @@ void mjev_run(mjev ev) {
   }
   // have pending proc run, no wait
   if (!list_empty(&ev->_phead)) timeWait = 0;
-  // loop at least 3 seconds
-  if (timeWait == -1 || timeWait > 3000) timeWait = 3000;
+  // loop at least 500ms
+  if (timeWait == -1 || timeWait > 500) timeWait = 500;
   // wait for event, or timeout
   struct epoll_event epEvents[MJEV_MAXFD];
   int numevents = epoll_wait(ev->_epfd, epEvents, MJEV_MAXFD, timeWait);
