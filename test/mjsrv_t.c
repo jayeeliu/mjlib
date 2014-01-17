@@ -8,23 +8,23 @@
 #include "mjcomm.h"
 #include "mjlog.h"
 
-void* on_close(void *arg) {
+static void* on_close(void *arg) {
   mjconn conn = arg;
   mjconn_delete(conn);
   return NULL;
 }
 
-void* testRoutine(void *arg) {
+static void* testRoutine(void *arg) {
   return NULL;
 }
 
-void* finishRoutine(void *arg) {
+static void* finishRoutine(void *arg) {
   mjconn conn = arg;
   mjconn_writes(conn, "OK, TCPSERVER READY!!!\n", on_close);
   return NULL;
 }
 
-void* on_write(void *arg) {
+static void* on_write(void *arg) {
   mjconn conn = arg;
   if (conn->_error || conn->_closed || conn->_timeout) {
     mjconn_delete(conn);
@@ -35,7 +35,7 @@ void* on_write(void *arg) {
   return NULL;
 }
 
-void* myhandler(void *arg) {
+static void* myhandler(void *arg) {
   mjconn conn = arg;
   mjconn_readuntil(conn, "\r\n\r\n", on_write);
   return NULL;

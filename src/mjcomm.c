@@ -133,17 +133,6 @@ void remove_pid_file(const char* pid_file) {
 
 /*
 ===============================================================================
-get_cpu_count
-    get online cpu number
-    return: number of online cpus 
-===============================================================================
-*/
-int get_cpu_count() {
-  return sysconf(_SC_NPROCESSORS_ONLN);
-}
-
-/*
-===============================================================================
 set_max_open_file
   set max open files to files_num
 ===============================================================================

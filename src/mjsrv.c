@@ -52,6 +52,11 @@ static void* mjsrv_accept_routine(void* arg) {
   return NULL;
 }
 
+/*
+===============================================================================
+mjsrv_enable_listen
+===============================================================================
+*/
 bool mjsrv_enable_listen(mjsrv srv) {
   if (!srv) return false;
   if (!mjev_add_fevent(srv->_ev, srv->_sfd, MJEV_READABLE, 
@@ -62,6 +67,11 @@ bool mjsrv_enable_listen(mjsrv srv) {
   return true;
 }
 
+/*
+===============================================================================
+mjsrv_disable_listen
+===============================================================================
+*/
 bool mjsrv_disable_listen(mjsrv srv) {
   if (!srv) return false;
   if (!mjev_del_fevent(srv->_ev, srv->_sfd, MJEV_READABLE)) {
@@ -71,10 +81,17 @@ bool mjsrv_disable_listen(mjsrv srv) {
   return true;
 }
 
+/*
+===============================================================================
+mjsrv_async_fin
+===============================================================================
+*/
 static void* mjsrv_async_fin(void* arg) {
   async_data data = arg;
   char buffer[2];
-  read(data->_notify[0], buffer, sizeof(buffer));
+  if (read(data->_notify[0], buffer, sizeof(buffer)) < 0) {
+    MJLOG_ERR("Read Async Fin Response Error");
+  }
 
   mjev_del_fevent(data->_ev, data->_notify[0], MJEV_READABLE);
   close(data->_notify[0]);
@@ -92,7 +109,9 @@ mjsrv_async_routine
 static void* mjsrv_async_routine(mjthread thread, void* arg) {
   async_data data = arg;
   data->_task.proc(data->_task.arg);
-  write(data->_notify[1], "OK", 2);
+  if (write(data->_notify[1], "OK", 2) < 0) {
+    MJLOG_ERR("Write Async Error");
+  }
   return NULL;
 }
 
