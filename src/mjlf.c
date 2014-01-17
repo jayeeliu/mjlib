@@ -17,7 +17,7 @@ static void* mjlf_routine(mjthread thread, void* arg) {
   int cfd;
 
   while (1) {
-    cfd = mjsock_accept_timeout(srv->_sfd, 3000);
+    cfd = mjsock_accept_timeout(srv->_sfd, 1000);
     if (cfd <= 0) {
       if (srv->_stop) return NULL;
       continue;
@@ -34,7 +34,7 @@ static void* mjlf_routine(mjthread thread, void* arg) {
   }
   // change to worker
   if (!srv->_task) {
-    MJLOG_ERR("No Task Set, Exit!");
+    MJLOG_ERR("No Task Set, Exit");
     mjsock_close(cfd);
     return NULL;
   }
@@ -44,6 +44,9 @@ static void* mjlf_routine(mjthread thread, void* arg) {
     MJLOG_ERR("create mjconnb error");
     mjsock_close(cfd);
     return NULL;
+  }
+  if (srv->_rto || srv->_wto) {
+    mjconnb_set_timeout(conn, srv->_rto, srv->_wto);
   }
   // run task
   srv->_task(srv, thread, conn);

@@ -21,12 +21,21 @@ struct mjlf {
   struct lfProc _init;
   mjlfTask      _task;    // run when new conn come
   mjmap         _local;
+  int           _rto;     // read timeout
+  int           _wto;     // write timeout
 };
 typedef struct mjlf* mjlf;
 
 extern void*  mjlf_run(mjlf srv);
 extern mjlf   mjlf_new(int sfd, int max_thread);
 extern bool   mjlf_delete(mjlf srv);
+
+static inline bool mjlf_set_timeout(mjlf srv, int rto, int wto) {
+  if (!srv) return false;
+  srv->_rto = rto;
+  srv->_wto = wto;
+  return true;
+}
 
 static inline void* mjlf_get_local(mjlf srv, const char* key) {
   if (!srv || !key) return NULL;

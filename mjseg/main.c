@@ -53,6 +53,7 @@ void* thread_init(mjthread thread, void* arg) {
 }
 
 struct mjlf_txt_cmdlist cmdlist[] = {
+  {NULL, NULL},
   {"seg", seg_routine},
   {NULL, NULL},
 };
