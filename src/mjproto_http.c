@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
-#include "mjmainsrv.h"
-#include "mjtcpsrv.h"
+#include "mjsrv.h"
 #include "mjlog.h"
 #include "mjconn.h"
 #include "mjconnb.h"
@@ -91,12 +90,12 @@ void* http_mjlf_init(mjlf srv, void* arg) {
 
 /*
 ===============================================================================
-http_mjtcpsrv_init
-  init mjtcpsrv according to urls
+http_mjsrv_init
+  init mjsrv according to urls
 ===============================================================================
 */
-void* http_mjtcpsrv_init(mjtcpsrv srv, void* arg) {
-  mjtcpsrv_set_local(srv, "urls", http_init_urls(arg), http_free_urls);
+void* http_mjsrv_init(mjsrv srv, void* arg) {
+  mjsrv_set_local(srv, "urls", http_init_urls(arg), http_free_urls);
   return NULL;
 }
 
@@ -198,7 +197,7 @@ out:
 /*
 ===============================================================================
 on_header
-  called in http_mjtcpsrv_routine
+  called in http_mjsrv_routine
 ===============================================================================
 */
 static void *on_header(void *arg) {
@@ -217,15 +216,15 @@ static void *on_header(void *arg) {
   }
   mjhttprsp_add_header(hdata->rsp, "Content-Type", "text/html; charset=UTF-8");
   // match proc and run
-  mjtcpsrv srv = (mjtcpsrv) mjconn_get_obj(conn, "server");
-  struct mjhttpurl* urls = (struct mjhttpurl*) mjtcpsrv_get_local(srv, "urls");
+  mjsrv srv = (mjsrv) mjconn_get_obj(conn, "server");
+  struct mjhttpurl* urls = (struct mjhttpurl*) mjsrv_get_local(srv, "urls");
   mjProc fun = find_url_func(hdata, urls);
   mjconn_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
   fun(conn);
   return NULL;
 }
 
-void* http_mjtcpsrv_routine(void* arg) {
+void* http_mjsrv_routine(void* arg) {
   mjconn conn = (mjconn) arg;
   mjconn_readuntil(conn, "\r\n\r\n", on_header);
   return NULL;

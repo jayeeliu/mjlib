@@ -1,36 +1,38 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#include "mjtcpsrv.h"
+#include "mjsrv.h"
 #include "mjconn.h"
 #include "mjsig.h"
 #include "mjsock.h"
 #include "mjlog.h"
 
+struct asyncProc {
+  mjProc  proc;
+  void*   arg;
+};
+
+struct async_data {
+  int               _notify[2];   // notify pipe, 0 for read 1 for write
+  mjev              _ev;
+  struct asyncProc  _task;
+  struct asyncProc  _callback;
+};
+typedef struct async_data* async_data;
+
 /*
 ===============================================================================
-mjtcpsrv_accept_routine(server routine)
+mjsrv_accept_routine(server routine)
   accept routine
 ===============================================================================
 */
-static void* mjtcpsrv_accept_routine(void* arg) {
-  mjtcpsrv srv = arg;
-  int cfd;
-  if (srv->_type == MJTCPSRV_STANDALONE) { // STANDALONE
-    // standalone mode, accept new socket
-    cfd = mjsock_accept(srv->_sfd);
-    if (cfd < 0) {
-      if (errno == EAGAIN || errno == EINTR) return NULL;
-      MJLOG_ERR("accept error %d", errno);
-      return NULL; 
-    }
-  } else { // INNER
-    // innner mode, read new socket
-    int ret = read(srv->_sfd, &cfd, sizeof(int));
-    if (ret < 0 || cfd < 0) {
-      MJLOG_ERR("Too Bad, read socket error");
-      return NULL;
-    }
+static void* mjsrv_accept_routine(void* arg) {
+  mjsrv srv = arg;
+  int cfd = mjsock_accept(srv->_sfd);
+  if (cfd < 0) {
+    if (errno == EAGAIN || errno == EINTR) return NULL;
+     MJLOG_ERR("accept error %d", errno);
+    return NULL; 
   }
   // no server routine exit
   if (!srv->_task) {
@@ -50,17 +52,17 @@ static void* mjtcpsrv_accept_routine(void* arg) {
   return NULL;
 }
 
-bool mjtcpsrv_enable_listen(mjtcpsrv srv) {
+bool mjsrv_enable_listen(mjsrv srv) {
   if (!srv) return false;
   if (!mjev_add_fevent(srv->_ev, srv->_sfd, MJEV_READABLE, 
-        mjtcpsrv_accept_routine, srv)) {
+        mjsrv_accept_routine, srv)) {
     MJLOG_ERR("enable listen error");
     return false;
   }
   return true;
 }
 
-bool mjtcpsrv_disable_listen(mjtcpsrv srv) {
+bool mjsrv_disable_listen(mjsrv srv) {
   if (!srv) return false;
   if (!mjev_del_fevent(srv->_ev, srv->_sfd, MJEV_READABLE)) {
     MJLOG_ERR("disable listen error");
@@ -69,48 +71,114 @@ bool mjtcpsrv_disable_listen(mjtcpsrv srv) {
   return true;
 }
 
+static void* mjsrv_async_fin(void* arg) {
+  async_data data = arg;
+  char buffer[2];
+  read(data->_notify[0], buffer, sizeof(buffer));
+
+  mjev_del_fevent(data->_ev, data->_notify[0], MJEV_READABLE);
+  close(data->_notify[0]);
+  close(data->_notify[1]);
+  data->_callback.proc(data->_callback.arg);
+  free(data);
+  return NULL;
+}
+
 /*
 ===============================================================================
-mjtcpsrv_run
-  run mjtcpsrv
+mjsrv_async_routine
 ===============================================================================
 */
-void* mjtcpsrv_run(void* arg) {
-  mjtcpsrv srv = arg;
+static void* mjsrv_async_routine(mjthread thread, void* arg) {
+  async_data data = arg;
+  data->_task.proc(data->_task.arg);
+  write(data->_notify[1], "OK", 2);
+  return NULL;
+}
+
+/*
+===============================================================================
+mjsrv_async
+===============================================================================
+*/
+bool mjsrv_async(mjsrv srv, mjProc proc, void* arg, 
+    mjProc cbproc, void* cbarg) {
+  if (!srv->_tpool) return false;
+  async_data data = (async_data) calloc(1, sizeof(struct async_data));
+  if (!data) {
+    MJLOG_ERR("async_data alloc error");
+    return false;
+  }
+
+  if (pipe(data->_notify)) {
+    MJLOG_ERR("pipe error");
+    free(data);
+    return false;
+  }
+  data->_ev = srv->_ev;
+  data->_task.proc = proc;
+  data->_task.arg = arg;
+  data->_callback.proc = cbproc;
+  data->_callback.arg = cbarg;
+
+  mjev_add_fevent(data->_ev, data->_notify[0], MJEV_READABLE, 
+      mjsrv_async_fin, data);
+  if (!mjthreadpool_set_task(srv->_tpool, mjsrv_async_routine, data)) {
+    MJLOG_ERR("Oops async run error");
+    mjev_del_fevent(data->_ev, data->_notify[0], MJEV_READABLE);
+    close(data->_notify[0]);
+    close(data->_notify[1]);
+    free(data);
+    return false;
+  }
+  return true;
+}
+
+bool mjsrv_set_tpool(mjsrv srv, int threadNum) {
+  if (!srv) return false;
+  srv->_tpool = mjthreadpool_new(threadNum);
+  if (!srv->_tpool) {
+    MJLOG_ERR("mjthreadpool_new error");
+    return false;
+  }
+  return true;
+}
+
+/*
+===============================================================================
+mjsrv_run
+  run mjsrv
+===============================================================================
+*/
+bool mjsrv_run(mjsrv srv) {
   if (!srv) return NULL;
   if (srv->_init.proc) srv->_init.proc(srv, srv->_init.arg);
-  mjtcpsrv_enable_listen(srv);
+  if (srv->_tpool) mjthreadpool_run(srv->_tpool);
+  mjsrv_enable_listen(srv);
   // enter loop
   while (!srv->_stop) {
     mjev_run(srv->_ev);
-    if (srv->_type == MJTCPSRV_STANDALONE) mjsig_process_queue();
+    mjsig_process_queue();
   }
   return NULL;
 }
 
 /*
 ===============================================================================
-mjtcpsrv_new
-  alloc mjtcpsrv struct
+mjsrv_new
+  alloc mjsrv struct
 ===============================================================================
 */
-mjtcpsrv mjtcpsrv_new(int sfd, int type) {
-  // alloc mjtcpsrv struct
-  mjtcpsrv srv = (mjtcpsrv) calloc(1, sizeof(struct mjtcpsrv));  
+mjsrv mjsrv_new(int sfd) {
+  // alloc mjsrv struct
+  mjsrv srv = (mjsrv) calloc(1, sizeof(struct mjsrv));  
   if (!srv) {
     MJLOG_ERR("create server error");
     goto failout1;
   }
-  // check type
-  if (type != MJTCPSRV_STANDALONE && type != MJTCPSRV_INNER) {
-    MJLOG_ERR("server type error");
-    goto failout2;
-  }
-  // set sfd nonblock
   mjsock_set_blocking(sfd, 0);
   // set fields
   srv->_sfd   = sfd;
-  srv->_type  = type;
   srv->_local = mjmap_new(31);
   if (!srv->_local) {
     MJLOG_ERR("mjmap_new error");
@@ -123,10 +191,8 @@ mjtcpsrv mjtcpsrv_new(int sfd, int type) {
     goto failout3;
   }
   // set signal
-  if (type == MJTCPSRV_STANDALONE) {
-    mjsig_init();
-    mjsig_register(SIGPIPE, SIG_IGN);
-  }
+  mjsig_init();
+  mjsig_register(SIGPIPE, SIG_IGN);
   return srv;
 
 failout3:
@@ -140,18 +206,16 @@ failout1:
 
 /*
 ===============================================================================
-mjtcpsrv_Delete
-  delete mjtcpsrv2 struct
+mjsrv_delete
 ===============================================================================
 */
-void* mjtcpsrv_delete(void* arg) {
-  // sanity check
-  mjtcpsrv srv = arg;
-  if (!srv) return NULL;
+bool mjsrv_delete(mjsrv srv) {
+  if (!srv) return false;
   // call exit proc
   mjev_delete(srv->_ev);
+  mjthreadpool_delete(srv->_tpool);
   mjmap_delete(srv->_local);
   mjsock_close(srv->_sfd);
   free(srv);
-  return NULL;
+  return true;
 }

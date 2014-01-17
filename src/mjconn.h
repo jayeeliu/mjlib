@@ -91,11 +91,11 @@ static inline bool mjconn_set_cto(mjconn conn, unsigned int cto) {
 }
 
 // set timeout
-static inline bool mjconn_set_to(mjconn conn, unsigned int rto, 
-    unsigned int wto) {
+static inline bool mjconn_set_to(mjconn conn, unsigned int rto, unsigned int wto) {
   if (!conn) return false;
   conn->_rto = rto;
   conn->_wto = wto;
   return true;
 }
+
 #endif

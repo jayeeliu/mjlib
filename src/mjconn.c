@@ -55,9 +55,7 @@ static void* mjconn_revent_cb(void* arg) {
   for (;;) {
     int ret = read(conn->_fd, buf, BUF_SIZE);
     if (ret == -1) {          
-      // interrupt by signal continue
       if (errno == EINTR) continue;
-      // nonblock, no data, break
       if (errno == EAGAIN) break;
       // error happends
       conn->_error = true;
@@ -126,9 +124,8 @@ mjconn_add_revent
 ===============================================================================
 */
 static bool mjconn_add_revent(mjconn conn) {
-  // add readevent
-  if (mjev_add_fevent(conn->_ev, conn->_fd, MJEV_READABLE, mjconn_revent_cb, 
-      conn) < 0) {
+  if (mjev_add_fevent(conn->_ev, conn->_fd, MJEV_READABLE, 
+        mjconn_revent_cb, conn) < 0) {
     MJLOG_ERR("mjev_add error");
     goto failout;
   }
@@ -306,7 +303,7 @@ mjconn_TimeoutCallBack
 ===============================================================================
 */
 static void* mjconn_wto_cb(void* arg) {
-  mjconn conn = (mjconn) arg;
+  mjconn conn = arg;
   conn->_timeout = true;
   mjconn_del_wevent(conn);
   return NULL;
@@ -560,16 +557,11 @@ mjconn_new
 ===============================================================================
 */
 mjconn mjconn_new(mjev ev, int fd) {
-  // event loop must not be null
-  if (!ev) {
-    MJLOG_ERR("ev is null");
-    return NULL;   
-  }
+  if (!ev) return NULL;   
   if (fd > MAX_FD) {
     MJLOG_ERR("fd is too large");
     return NULL;
   }
-  // set fd to nonblock 
   mjsock_set_blocking(fd, 0);
   // alloc mjconn struct 
   mjconn conn = &_conn[fd];

@@ -4,7 +4,7 @@
 #include <sys/mman.h>
 #include "mjsock.h"
 #include "mjconn.h"
-#include "mjtcpsrv.h"
+#include "mjsrv.h"
 #include "mjcomm.h"
 #include "mjlog.h"
 
@@ -14,13 +14,24 @@ void* on_close(void *arg) {
   return NULL;
 }
 
+void* testRoutine(void *arg) {
+  return NULL;
+}
+
+void* finishRoutine(void *arg) {
+  mjconn conn = arg;
+  mjconn_writes(conn, "OK, TCPSERVER READY!!!\n", on_close);
+  return NULL;
+}
+
 void* on_write(void *arg) {
   mjconn conn = arg;
   if (conn->_error || conn->_closed || conn->_timeout) {
     mjconn_delete(conn);
     return NULL;
   }
-  mjconn_writes(conn, "OK, TCPSERVER READY!!!\n", on_close);
+  mjsrv srv = mjconn_get_obj(conn, "server");
+  mjsrv_async(srv, testRoutine, NULL, finishRoutine, conn);
   return NULL;
 }
 
@@ -36,14 +47,14 @@ int main() {
     printf("Error create server socket\n");
     return 1;
   }
-  mjtcpsrv server = mjtcpsrv_new(sfd, MJTCPSRV_STANDALONE); 
+  mjsrv server = mjsrv_new(sfd); 
   if (!server) {
     printf("Error create tcpserver\n");
     return 1;
   }
-  //mjtcpsrv_set_mutex(server, mutex);
-  mjtcpsrv_set_task(server, myhandler);
-  mjtcpsrv_run(server);
-  mjtcpsrv_delete(server); 
+  mjsrv_set_tpool(server, 4);
+  mjsrv_set_task(server, myhandler);
+  mjsrv_run(server);
+  mjsrv_delete(server); 
   return 0;
 }
