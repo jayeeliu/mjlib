@@ -8,7 +8,7 @@
 
 struct mjconnb {
   int         _fd;      // fd to control
-  mjstr       _rbuf;   	// read read buffer 
+  mjstr       _rbuf;    // read read buffer 
   
   int         _rtype;   // read type
   const char* _delim;   // the delim when readtype is READUNTIL 

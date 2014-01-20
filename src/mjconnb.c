@@ -115,7 +115,7 @@ int mjconnb_readbytes(mjconnb conn, mjstr data, int len) {
     return -1;
   }
   conn->_rtype  = MJCONNB_READBYTES;    
-  conn->_rbytes    = len;
+  conn->_rbytes = len;
   return mjconnb_read_to_buf(conn, data);
 }
 

@@ -40,6 +40,6 @@ struct mjlf_txt_ctl {
 };
 typedef struct mjlf_txt_ctl* mjlf_txt_ctl;
 
-extern mjlf mjlf_txt_new(int sfd, int threadNum, mjlf_txt_ctl cmdctl);
+extern mjlf mjlf_txt_new(int sfd, int threadNum, mjlf_txt_ctl ctl);
 
 #endif

@@ -87,9 +87,9 @@ mjlf_txt_routine
 ===============================================================================
 */
 static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
-	mjlf_txt_ctl ctl = mjlf_get_local(srv, "ctl");
+  mjlf_txt_ctl ctl = mjlf_get_local(srv, "ctl");
   if (!ctl) {
-		MJLOG_ERR("Command Ctl Not Found");
+    MJLOG_ERR("Command Ctl Not Found");
     return NULL;
   } 
   // creaet command struct
@@ -110,12 +110,12 @@ static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
     }
   }
   // enter cmd loop
-	while (!cmd.finished) {
+  while (!cmd.finished) {
     mjlf_txt_runctl(&cmd, ctl);
   }
   mjslist_delete(cmd.args);
   mjstr_delete(cmd.line);
-	return NULL;
+  return NULL;
 }
 
 /*
