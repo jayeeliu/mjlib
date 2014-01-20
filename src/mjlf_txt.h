@@ -6,6 +6,8 @@
 #include "mjconnb.h"
 #include "mjlf.h"
 
+#define MJLF_TXT_NOLIMIT -1
+
 struct mjlf_txt_cmd {
   mjstr     cmdname;
   mjslist   args;       // args split line
@@ -14,15 +16,18 @@ struct mjlf_txt_cmd {
   mjconnb   conn;
   mjstr     line;       // read line buf
   bool      finished;
-  void*     private;    // private data
+  void*     private;
 };
 typedef struct mjlf_txt_cmd* mjlf_txt_cmd;
 
 typedef void* (*mjlftxtProc)(mjlf_txt_cmd);
 
 struct mjlf_txt_cmdlist {
-  const char* cmdname;
-  mjlftxtProc proc;
+  const char* cmdname;        // command name
+  int minArg;                 // min command args
+  int maxArg;                 // max command args
+  mjlftxtProc proc;           // command proc
+  mjlftxtProc errproc;        // run when args error
 };
 typedef struct mjlf_txt_cmdlist* mjlf_txt_cmdlist; // 0 for hello message
 

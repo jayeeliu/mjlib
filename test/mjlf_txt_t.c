@@ -12,6 +12,11 @@ void* test_routine(mjlf_txt_cmd cmd) {
   return NULL;
 }
 
+void* test_err_routine(mjlf_txt_cmd cmd) {
+  mjconnb_writes(cmd->conn, "+ Test Cmd Error\r\n");
+  return NULL;
+}
+
 void* abc_routine(mjlf_txt_cmd cmd) {
   mjconnb_writes(cmd->conn, "+ abc is here\r\n");
   return NULL;
@@ -30,11 +35,11 @@ void* timeout_routine(mjlf_txt_cmd cmd) {
 }
 
 struct mjlf_txt_cmdlist cmdlist[] = {
-  {"test", test_routine},
-  {"abc", abc_routine},
-  {"shut", shut_routine},
-  {"quit", NULL},
-  {NULL, NULL},
+  {"test", 1, 1, test_routine, test_err_routine},
+  {"abc", 2, 3, abc_routine, NULL},
+  {"shut", 0, 0, shut_routine, NULL},
+  {"quit", 0, 0, NULL, NULL},
+  {NULL, 0, 0, NULL, NULL},
 };
 
 struct mjlf_txt_ctl ctl = {
@@ -57,7 +62,6 @@ int main() {
     printf("mjlf_txt_new error");
     return 0;
   }
-  mjlf_set_timeout(srv, 3000, 3000);
   mjlf_run(srv);
   mjlf_delete(srv);
   return 0;

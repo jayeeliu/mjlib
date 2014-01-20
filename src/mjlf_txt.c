@@ -22,7 +22,6 @@ mjplf_txt_runcmd
 static void mjlf_txt_runctl(mjlf_txt_cmd cmd, mjlf_txt_ctl ctl) {
   mjstr_clean(cmd->line);
   mjslist_clean(cmd->args);
-
   // read command
   int ret = mjconnb_readuntil(cmd->conn, "\r\n", cmd->line);
   if (ret == -2) {
@@ -43,26 +42,42 @@ static void mjlf_txt_runctl(mjlf_txt_cmd cmd, mjlf_txt_ctl ctl) {
     cmd->finished = true;
     return;
   }
-
+  // get command
   mjstr_split(cmd->line, " ", cmd->args);
   if (cmd->args->len < 1) {
     if (ctl->_cmdErr) ctl->_cmdErr(cmd);
     return;
   }
-
   cmd->cmdname = mjslist_get(cmd->args, 0);
   mjstr_strim(cmd->cmdname);
   // run routine
   for (int i = 0; ctl->_cmdlist[i].cmdname != NULL; i++) {
     if (strcasecmp(ctl->_cmdlist[i].cmdname, cmd->cmdname->data)) continue;
+    // args error
+    if ((ctl->_cmdlist[i].minArg != MJLF_TXT_NOLIMIT && ctl->_cmdlist[i].minArg > cmd->args->len - 1) ||
+        (ctl->_cmdlist[i].maxArg != MJLF_TXT_NOLIMIT && ctl->_cmdlist[i].maxArg < cmd->args->len - 1)) {
+      if (ctl->_cmdlist[i].errproc) {
+        ctl->_cmdlist[i].errproc(cmd);
+      } else if (ctl->_cmdErr) {
+        ctl->_cmdErr(cmd);
+      } else {
+        cmd->finished = true;
+      }
+      return;
+    }
+    // run proc
     if (ctl->_cmdlist[i].proc) {
-      (*(ctl->_cmdlist[i].proc))(cmd);
+      ctl->_cmdlist[i].proc(cmd);
     } else {
       cmd->finished = true;
     }
     return;
   }  
-  if (ctl->_cmdErr) ctl->_cmdErr(cmd);
+  if (ctl->_cmdErr) {
+    ctl->_cmdErr(cmd);
+  } else {
+    cmd->finished = true;
+  }
   return;
 }
 
@@ -77,7 +92,6 @@ static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
 		MJLOG_ERR("Command Ctl Not Found");
     return NULL;
   } 
-
   // creaet command struct
   struct mjlf_txt_cmd cmd = {0};
   cmd.srv = srv;
@@ -85,7 +99,6 @@ static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
   cmd.conn = conn;
   if (ctl->_connAccept) ctl->_connAccept(&cmd);
   if (cmd.finished) return NULL;
-
   // alloc buffer
   cmd.args = mjslist_new();
   cmd.line = mjstr_new(80);
@@ -96,11 +109,10 @@ static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
       cmd.finished = true;
     }
   }
-
+  // enter cmd loop
 	while (!cmd.finished) {
     mjlf_txt_runctl(&cmd, ctl);
   }
-
   mjslist_delete(cmd.args);
   mjstr_delete(cmd.line);
 	return NULL;
