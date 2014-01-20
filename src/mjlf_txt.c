@@ -24,35 +24,36 @@ static void mjlf_txt_runctl(mjlf_txt_cmd cmd, mjlf_txt_ctl ctl) {
   mjslist_clean(cmd->args);
   // read command
   int ret = mjconnb_readuntil(cmd->conn, "\r\n", cmd->line);
-  if (ret == -2) {
-    if (ctl->_readTimeout) {
-      ctl->_readTimeout(cmd);
-    } else { // default action for timeout
+  if (ret <= 0) {
+    mjlftxtProc errHandle = NULL;
+    if (ret == -2) {
+      errHandle = ctl->_readTimeout;
+    } else if (ret < 0) {
+      errHandle = ctl->_innerErr;
+    }
+    // run errHandle
+    if (errHandle) {
+      errHandle(cmd);
+    } else {
       cmd->finished = true;
     }
-    return;
-  } else if (ret < 0) {
-    if (ctl->_innerErr) {
-      ctl->_innerErr(cmd);
-    } else { // default action for inner error
-      cmd->finished = true;
-    }
-    return;
-  } else if (ret == 0) {
-    cmd->finished = true;
     return;
   }
   // get command
   mjstr_split(cmd->line, " ", cmd->args);
   if (cmd->args->len < 1) {
-    if (ctl->_cmdErr) ctl->_cmdErr(cmd);
+    if (ctl->_cmdErr) {
+      ctl->_cmdErr(cmd);
+    } else {
+      cmd->finished = true;
+    }
     return;
   }
   cmd->cmdname = mjslist_get(cmd->args, 0);
   mjstr_strim(cmd->cmdname);
   // run routine
-  for (int i = 0; ctl->_cmdlist[i].cmdname != NULL; i++) {
-    if (strcasecmp(ctl->_cmdlist[i].cmdname, cmd->cmdname->data)) continue;
+  for (int i = 0; ctl->_cmdlist[i].name != NULL; i++) {
+    if (strcasecmp(ctl->_cmdlist[i].name, cmd->cmdname->data)) continue;
     // args error
     if ((ctl->_cmdlist[i].minArg != MJLF_TXT_NOLIMIT && ctl->_cmdlist[i].minArg > cmd->args->len - 1) ||
         (ctl->_cmdlist[i].maxArg != MJLF_TXT_NOLIMIT && ctl->_cmdlist[i].maxArg < cmd->args->len - 1)) {
@@ -66,13 +67,14 @@ static void mjlf_txt_runctl(mjlf_txt_cmd cmd, mjlf_txt_ctl ctl) {
       return;
     }
     // run proc
-    if (ctl->_cmdlist[i].proc) {
-      ctl->_cmdlist[i].proc(cmd);
+    if (ctl->_cmdlist[i].cmdproc) {
+      ctl->_cmdlist[i].cmdproc(cmd);
     } else {
       cmd->finished = true;
     }
     return;
-  }  
+  }
+  // no command found
   if (ctl->_cmdErr) {
     ctl->_cmdErr(cmd);
   } else {
@@ -88,15 +90,11 @@ mjlf_txt_routine
 */
 static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
   mjlf_txt_ctl ctl = mjlf_get_local(srv, "ctl");
-  if (!ctl) {
-    MJLOG_ERR("Command Ctl Not Found");
-    return NULL;
-  } 
   // creaet command struct
   struct mjlf_txt_cmd cmd = {0};
-  cmd.srv = srv;
-  cmd.thread = thread;
-  cmd.conn = conn;
+  cmd.srv     = srv;
+  cmd.thread  = thread;
+  cmd.conn    = conn;
   if (ctl->_connAccept) ctl->_connAccept(&cmd);
   if (cmd.finished) return NULL;
   // alloc buffer

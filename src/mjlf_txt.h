@@ -23,13 +23,13 @@ typedef struct mjlf_txt_cmd* mjlf_txt_cmd;
 typedef void* (*mjlftxtProc)(mjlf_txt_cmd);
 
 struct mjlf_txt_cmdlist {
-  const char* cmdname;        // command name
-  int minArg;                 // min command args
-  int maxArg;                 // max command args
-  mjlftxtProc proc;           // command proc
-  mjlftxtProc errproc;        // run when args error
+  const char* name;     // command name
+  int         minArg;   // min command args
+  int         maxArg;   // max command args
+  mjlftxtProc cmdproc;  // command proc
+  mjlftxtProc errproc;  // run when args error
 };
-typedef struct mjlf_txt_cmdlist* mjlf_txt_cmdlist; // 0 for hello message
+typedef struct mjlf_txt_cmdlist* mjlf_txt_cmdlist;
 
 struct mjlf_txt_ctl {
   mjlftxtProc       _connAccept;
