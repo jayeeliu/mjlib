@@ -44,4 +44,9 @@ extern bool   mjev2_del_timer(mjev2 ev2, mjevt evt);
 extern mjev2  mjev2_new();
 extern bool   mjev2_delete(mjev2 ev2);
 
+static inline void* mjevt_get_data(mjevt evt) {
+  if (!evt) return NULL;
+  return evt->_data;
+}
+
 #endif
