@@ -6,7 +6,7 @@
 struct mjlf_pb_cmd {
   mjlf      srv;
   mjthread  thread;
-  mjconnb   conn;
+  mjconb   conn;
   mjstr     line;       // read line buffer;
   bool      finished;
   void*     private;

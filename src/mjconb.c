@@ -7,20 +7,20 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <poll.h>
-#include "mjconnb.h"
+#include "mjconb.h"
 #include "mjlog.h"
 #include "mjsock.h"
 
-#define MJCONNB_NONE      0
-#define MJCONNB_READ      1
-#define MJCONNB_READBYTES 2 
-#define MJCONNB_READUNTIL 3
+#define MJCONB_NONE      0
+#define MJCONB_READ      1
+#define MJCONB_READBYTES 2 
+#define MJCONB_READUNTIL 3
 
 #define BUF_SIZE      4096
 
 /*
 ===============================================================================
-mjconnb_ReadToBuf
+mjconb_ReadToBuf
   read data to buffer
   return  -3 --- too bad, should not be this
       -2 --- readtimeout, get some data
@@ -29,26 +29,26 @@ mjconnb_ReadToBuf
       other --- get data
 ===============================================================================
 */
-static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
+static int mjconb_read_to_buf(mjconb conn, mjstr data) {
   int ret = -3;
   char buf[BUF_SIZE];
   // read data first in a loop
   for (;;) {
     // buffer has enough data, copy and return
-    if (conn->_rtype == MJCONNB_READBYTES) {
+    if (conn->_rtype == MJCONB_READBYTES) {
       if (conn->_rbytes <= conn->_rbuf->len) { 
         mjstr_copyb(data, conn->_rbuf->data, conn->_rbytes);
         mjstr_consume(conn->_rbuf, conn->_rbytes);
         return data->len;
       }
-    } else if (conn->_rtype == MJCONNB_READUNTIL) {
+    } else if (conn->_rtype == MJCONB_READUNTIL) {
       int pos = mjstr_search(conn->_rbuf, conn->_delim);
       if (pos != -1) {
         mjstr_copyb(data, conn->_rbuf->data, pos);
         mjstr_consume(conn->_rbuf, pos + strlen(conn->_delim));
         return data->len + strlen(conn->_delim);
       }
-    } else if (conn->_rtype == MJCONNB_READ) {
+    } else if (conn->_rtype == MJCONB_READ) {
       if (conn->_rbuf && conn->_rbuf->len > 0) {
         mjstr_copyb(data, conn->_rbuf->data, 
             conn->_rbuf->len);
@@ -88,87 +88,84 @@ static int mjconnb_read_to_buf(mjconnb conn, mjstr data) {
 
 /*
 ===============================================================================
-mjconnb_Read
+mjconb_read
   read data normal
 ===============================================================================
 */
-int mjconnb_read(mjconnb conn, mjstr data) {
-  // sanity check
-  if (!conn || !data || conn->_closed || conn->_error) {
+int mjconb_read(mjconb conn, mjstr buf) {
+  if (!conn || !buf || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
-  conn->_rtype = MJCONNB_READ;
-  return mjconnb_read_to_buf(conn, data);
+  conn->_rtype = MJCONB_READ;
+  return mjconb_read_to_buf(conn, buf);
 }
 
 /* 
 ===============================================================================
-mjconnb_ReadBytes
+mjconb_readbytes
   read len size bytes 
 ===============================================================================
 */
-int mjconnb_readbytes(mjconnb conn, mjstr data, int len) {
-  // sanity check
-  if (!conn || !data || len <= 0 || conn->_closed || conn->_error) {
+int mjconb_readbytes(mjconb conn, mjstr buf, unsigned int len) {
+  if (!conn || !buf || len <= 0 || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
-  conn->_rtype  = MJCONNB_READBYTES;    
+  conn->_rtype  = MJCONB_READBYTES;    
   conn->_rbytes = len;
-  return mjconnb_read_to_buf(conn, data);
+  return mjconb_read_to_buf(conn, buf);
 }
 
 /* 
 ===============================================================================
-mjconnb_ReadUntil
+mjconb_readuntil
   read data until delim 
 ===============================================================================
 */
-int mjconnb_readuntil(mjconnb conn, const char* delim, mjstr data) {
-  // sanity check
-  if (!conn || !data || !delim || conn->_closed || conn->_error) {
+int mjconb_readuntil(mjconb conn, const char* delim, mjstr buf) {
+  if (!conn || !buf || !delim || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
-  conn->_rtype  = MJCONNB_READUNTIL;
-  conn->_delim     = delim;
-  return mjconnb_read_to_buf(conn, data);
+  conn->_rtype  = MJCONB_READUNTIL;
+  conn->_delim  = delim;
+  return mjconb_read_to_buf(conn, buf);
 }
 
 /*
 ===============================================================================
-mjconnb_Write
+mjconb_write
   write data to conn
 ===============================================================================
 */
-int mjconnb_write(mjconnb conn, mjstr data) {
-  if (!conn || !data || !data->len || conn->_closed || conn->_error) {
+int mjconb_write(mjconb conn, mjstr buf) {
+  if (!conn || !buf || !buf->len || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
-  return mjconnb_writeb(conn, data->data, data->len);
+  return mjconb_writeb(conn, buf->data, buf->len);
 }
 
 /*
 ===============================================================================
-mjconnb_WriteB
+mjconb_WriteB
   write data to conn
   return: -1 --- write error
       -2 --- write timeout
       other --- write data
 ===============================================================================
 */
-int mjconnb_writeb(mjconnb conn, char *buf , int length) {
-  if (!conn || !buf || !length || conn->_closed || conn->_error) {
+int mjconb_writeb(mjconb conn, char *buf , unsigned int len) {
+  if (!conn || !buf || !len || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
   int total_write = 0;
-  while (total_write < length) {
-    int ret = write(conn->_fd, buf + total_write, length);
+  while (total_write < len) {
+    int ret = write(conn->_fd, buf + total_write, len);
     if (ret == -1) {
-      MJLOG_ERR("mjconnb Write Error");
+      MJLOG_ERR("mjconb Write Error");
       if (errno == EAGAIN || errno == EWOULDBLOCK) ret = -2;
       conn->_error = true;
       return ret;
@@ -183,25 +180,25 @@ int mjconnb_writeb(mjconnb conn, char *buf , int length) {
 
 /*
 ===============================================================================
-mjconnb_WriteS
-  write string call mjconnb_WriteB
+mjconb_WriteS
+  write string call mjconb_WriteB
 ===============================================================================
 */
-int mjconnb_writes(mjconnb conn, char *buf) {
+int mjconb_writes(mjconb conn, char *buf) {
   if (!conn || !buf || conn->_closed || conn->_error) {
     MJLOG_ERR("sanity check error");
     return -1;
   }
-  return mjconnb_writeb(conn, buf, strlen(buf));
+  return mjconb_writeb(conn, buf, strlen(buf));
 }
 
 /*
 ===============================================================================
-mjconnb_get_obj
+mjconb_get_obj
   get object from conn
 ===============================================================================
 */
-void* mjconnb_get_obj(mjconnb conn, const char* key) {
+void* mjconb_get_obj(mjconb conn, const char* key) {
   if (!conn || !key) {
     MJLOG_ERR("conn or key is null");
     return NULL;
@@ -215,8 +212,7 @@ mjconn_set_obj
   mjconn set object
 ===============================================================================
 */
-bool mjconnb_set_obj(mjconnb conn, const char* key, void* obj,
-    mjProc obj_free) {
+bool mjconb_set_obj(mjconb conn, const char* key, void* obj, mjProc obj_free) {
   if (!conn || !key) {
     MJLOG_ERR("conn or key is null");
     return false;
@@ -227,26 +223,21 @@ bool mjconnb_set_obj(mjconnb conn, const char* key, void* obj,
 
 /*
 ===============================================================================
-mjconnb_SetTimeout
-  set mjconnb read and write timeout
-  return    -1 -- set error
-        0  -- success
+mjconb_set_timeout
+  set mjconb read and write timeout
 ===============================================================================
 */
-bool mjconnb_set_timeout(mjconnb conn, unsigned int rto, unsigned int wto) {
-  // sanity check
+bool mjconb_set_timeout(mjconb conn, unsigned int rto, unsigned int wto) {
   if (!conn) {
     MJLOG_ERR("conn is null");
     return false;
   }
-  //set read timeout  
   if (rto) {
     struct timeval tv;
     tv.tv_sec   = rto / 1000;
     tv.tv_usec  = (rto % 1000) * 1000;
-    // set recv timeout
     if (setsockopt(conn->_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-      MJLOG_ERR("setsockopt error");
+      MJLOG_ERR("setsockopt SO_RCVTIMEO error");
       return false;
     }
   }
@@ -254,40 +245,36 @@ bool mjconnb_set_timeout(mjconnb conn, unsigned int rto, unsigned int wto) {
     struct timeval tv;
     tv.tv_sec   = wto / 1000;
     tv.tv_usec  = (wto % 1000) * 1000;
-    // set send timeout
     if (setsockopt(conn->_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-      MJLOG_ERR("setsockopt error");
+      MJLOG_ERR("setsockopt SO_SNDTIMEO error");
       return false;
     }
   }
   return true;
 }
 
-// conn buffer
 #define MAX_FD        60000
-static struct mjconnb _conn[MAX_FD];
+static struct mjconb  _conn[MAX_FD];
 
 /*
 ===============================================================================
-mjconnb_New
-  input socket fd, output mjconnb struct
+mjconb_new
+  input socket fd, output mjconb struct
   return NULL -- fail, other -- success
 ===============================================================================
 */
-mjconnb mjconnb_new(int fd) {
-  // sanity check
+mjconb mjconb_new(int fd) {
   if (fd >= MAX_FD) {
-    MJLOG_ERR("fd is too large");
+    MJLOG_ERR("fd too large");
     return NULL;
   }
-  // set fd to block
   if (!mjsock_set_blocking(fd, 1)) {
     MJLOG_ERR("mjsock_set_blocking error");
     return NULL;
   }
-  // get mjconnb struct
-  mjconnb conn  = &_conn[fd];
-  conn->_fd     = fd;      
+  // get mjconb struct
+  mjconb conn = &_conn[fd];
+  conn->_fd   = fd;      
   // create read_buf
   if (!conn->_rbuf) {
     // create read buffer
@@ -299,29 +286,28 @@ mjconnb mjconnb_new(int fd) {
   }
   mjstr_clean(conn->_rbuf);
   // init read
-  conn->_rtype  = MJCONNB_NONE;
+  conn->_rtype  = MJCONB_NONE;
   conn->_delim  = NULL;
   conn->_rbytes = -1;
+  conn->_timeout = conn->_error = conn->_closed = false;
   // init mjmap
   conn->_map = mjmap_new(31);
   if (!conn->_map) {
     MJLOG_ERR("mjmap_new error");
     return NULL;
   }
-  // init flag
-  conn->_timeout = conn->_error = conn->_closed = false;
   return conn;
 }
 
 /*
 ===============================================================================
-mjconnb_connect_ready
-  Used by mjconnb_Connect for connect timeout
+mjconb_connect_ready
+  Used by mjconb_Connect for connect timeout
   return  0 -- connect timeout or poll failed
           1 -- connect ok
 ===============================================================================
 */
-static int mjconnb_connect_ready(int fd, unsigned int timeout) {
+static int mjconb_connect_ready(int fd, unsigned int timeout) {
   // set poolfd
   struct pollfd wfd[1];
   wfd[0].fd     = fd; 
@@ -346,12 +332,12 @@ static int mjconnb_connect_ready(int fd, unsigned int timeout) {
 
 /*
 ===============================================================================
-mjconnb_Connect
+mjconb_Connect
   conn to addr and port
   return NULL -- fail, other -- success
 ===============================================================================
 */
-mjconnb mjconnb_connect(const char *addr, int port, unsigned int timeout) {
+mjconb mjconb_connect(const char *addr, int port, unsigned int timeout) {
   // gen port
   char _port[6];
   snprintf(_port, 6, "%d", port);
@@ -388,27 +374,25 @@ mjconnb mjconnb_connect(const char *addr, int port, unsigned int timeout) {
         continue;
       }
       // now, errno == EINPROGRESS
-      if (!mjconnb_connect_ready(fd, timeout)) {
+      if (!mjconb_connect_ready(fd, timeout)) {
         MJLOG_ERR("conn timeout");
         close(fd);
         continue;
       }
     } 
-    // connect ok return mjconnb
-    return mjconnb_new(fd);
+    // connect ok return mjconb
+    return mjconb_new(fd);
   }
   return NULL;
 }
 
 /*
 ===============================================================================
-mjconnb_Delete
+mjconb_delete
   delete conn struct
-  no return
 ===============================================================================
 */
-bool mjconnb_delete(mjconnb conn) {
-  // sanity check
+bool mjconb_delete(mjconb conn) {
   if (!conn) return false;
   mjmap_delete(conn->_map);
   mjsock_close(conn->_fd);

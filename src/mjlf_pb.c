@@ -9,7 +9,7 @@ static void* mjlf_pb_init(mjlf srv, void* arg) {
 
 static bool mjlf_pb_readbytes(mjlf_pb_cmd cmd, mjlf_pb_ctl ctl, int llen) {
   mjstr_clean(cmd->line);
-  int ret = mjconnb_readbytes(cmd->conn, cmd->line, llen);
+  int ret = mjconb_readbytes(cmd->conn, cmd->line, llen);
   if (ret == -2) {
     if (ctl->_readTimeout) {
       ctl->_readTimeout(cmd);
@@ -51,7 +51,7 @@ static void mjlf_pb_runctl(mjlf_pb_cmd cmd, mjlf_pb_ctl ctl) {
   return;
 }
 
-static void* mjlf_pb_routine(mjlf srv, mjthread thread, mjconnb conn) {
+static void* mjlf_pb_routine(mjlf srv, mjthread thread, mjconb conn) {
   mjlf_pb_ctl ctl = mjlf_get_local(srv, "ctl");
   if (!ctl) {
     MJLOG_ERR("Ctl Not Found");

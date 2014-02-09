@@ -4,7 +4,7 @@
 #include "mjsrv.h"
 #include "mjlog.h"
 #include "mjconn.h"
-#include "mjconnb.h"
+#include "mjconb.h"
 #include "mjlf.h"
 #include "mjproto_http.h"
 
@@ -165,14 +165,14 @@ http_mjlf_routine
 ===============================================================================
 */
 void* http_mjlf_routine(void* arg) {
-  mjconnb conn = (mjconnb) arg;
+  mjconb conn = (mjconb) arg;
   // alloc data for readuntil
   mjstr data = mjstr_new(128);
   if (!data) {
     MJLOG_ERR("mjstr alloc error");
     return NULL;
   }
-  int ret = mjconnb_readuntil(conn, "\r\n\r\n", data);
+  int ret = mjconb_readuntil(conn, "\r\n\r\n", data);
   if (ret <= 0) {
     MJLOG_ERR("read http header failed");
     goto out;
@@ -184,10 +184,10 @@ void* http_mjlf_routine(void* arg) {
     goto out;
   }
   // match proc and run
-  mjlf srv = (mjlf) mjconnb_get_obj(conn, "server");
+  mjlf srv = (mjlf) mjconb_get_obj(conn, "server");
   struct mjhttpurl* urls = (struct mjhttpurl*) mjlf_get_local(srv, "urls");
   mjProc fun = find_url_func(hdata, urls);
-  mjconnb_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
+  mjconb_set_obj(conn, "httpdata", hdata, mjhttpdata_delete);
   fun(conn);
 out:
   mjstr_delete(data);

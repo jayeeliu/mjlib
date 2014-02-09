@@ -1,4 +1,4 @@
-#include "mjconnb.h"
+#include "mjconb.h"
 #include "mjlog.h"
 #include "mjlf.h"
 #include "mjsock.h"
@@ -39,18 +39,18 @@ static void* mjlf_routine(mjthread thread, void* arg) {
     return NULL;
   }
   // create new conn 
-  mjconnb conn = mjconnb_new(cfd);
+  mjconb conn = mjconb_new(cfd);
   if (!conn) {
-    MJLOG_ERR("create mjconnb error");
+    MJLOG_ERR("create mjconb error");
     mjsock_close(cfd);
     return NULL;
   }
   if (srv->_rto || srv->_wto) {
-    mjconnb_set_timeout(conn, srv->_rto, srv->_wto);
+    mjconb_set_timeout(conn, srv->_rto, srv->_wto);
   }
   // run task
   srv->_task(srv, thread, conn);
-  mjconnb_delete(conn);
+  mjconb_delete(conn);
   return NULL; 
 }
 

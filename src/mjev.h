@@ -11,7 +11,6 @@
 #define MJEV_READABLE   1
 #define MJEV_WRITEABLE  2
 
-// file event struct
 #define MJEV_MAXFD          60000
 
 struct mjfevent {

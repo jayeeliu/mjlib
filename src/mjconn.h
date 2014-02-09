@@ -83,14 +83,12 @@ static inline bool mjconn_set_obj(mjconn conn, const char* key, void* obj,
   return true;
 }
 
-// set connect timeout
 static inline bool mjconn_set_cto(mjconn conn, unsigned int cto) {
   if (!conn) return false;
   conn->_cto = cto;
   return true;
 }
 
-// set timeout
 static inline bool mjconn_set_to(mjconn conn, unsigned int rto, unsigned int wto) {
   if (!conn) return false;
   conn->_rto = rto;

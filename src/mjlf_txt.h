@@ -3,7 +3,7 @@
 
 #include "mjproc.h"
 #include "mjstr.h"
-#include "mjconnb.h"
+#include "mjconb.h"
 #include "mjlf.h"
 
 #define MJLF_TXT_NOLIMIT -1
@@ -13,7 +13,7 @@ struct mjlf_txt_cmd {
   mjslist   args;       // args split line
   mjlf      srv;
   mjthread  thread;
-  mjconnb   conn;
+  mjconb   conn;
   mjstr     line;       // read line buf
   bool      finished;
   void*     private;

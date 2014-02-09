@@ -3,11 +3,11 @@
 
 #include <stdbool.h>
 #include "mjthreadpool.h"
-#include "mjconnb.h"
+#include "mjconb.h"
 
 struct mjlf;
 typedef void* (*mjlfProc)(struct mjlf*, void*);
-typedef void* (*mjlfTask)(struct mjlf*, mjthread, mjconnb);
+typedef void* (*mjlfTask)(struct mjlf*, mjthread, mjconb);
 
 struct lfProc {
   mjlfProc  proc;

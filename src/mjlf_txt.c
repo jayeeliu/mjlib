@@ -23,7 +23,7 @@ static void mjlf_txt_runctl(mjlf_txt_cmd cmd, mjlf_txt_ctl ctl) {
   mjstr_clean(cmd->line);
   mjslist_clean(cmd->args);
   // read command
-  int ret = mjconnb_readuntil(cmd->conn, "\r\n", cmd->line);
+  int ret = mjconb_readuntil(cmd->conn, "\r\n", cmd->line);
   if (ret <= 0) {
     mjlftxtProc errHandle = NULL;
     if (ret == -2) {
@@ -88,7 +88,7 @@ static void mjlf_txt_runctl(mjlf_txt_cmd cmd, mjlf_txt_ctl ctl) {
 mjlf_txt_routine
 ===============================================================================
 */
-static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconnb conn) {
+static void* mjlf_txt_routine(mjlf srv, mjthread thread, mjconb conn) {
   mjlf_txt_ctl ctl = mjlf_get_local(srv, "ctl");
   // creaet command struct
   struct mjlf_txt_cmd cmd = {0};
