@@ -320,11 +320,15 @@ static inline void list_splice_tail_init(struct list_head *list,
 
 #define prefetch(x) __builtin_prefetch(x)
 
+#ifndef offsetof
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#endif
 
+#ifndef container_of
 #define container_of(ptr, type, member) ({			        \
 	const typeof(((type *)0)->member) * __mptr = (ptr);	    \
 	(type *)((char *)__mptr - offsetof(type, member)); })
+#endif
 
 /**
  *  list_entry - get the struct for this entry
