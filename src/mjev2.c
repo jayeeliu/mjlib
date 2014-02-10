@@ -100,9 +100,9 @@ bool mjev2_del_timer(mjev2 ev2, mjtevt tevt) {
 mjev2_event_timeout
 ===============================================================================
 */
-static void mjev2_event_timeout(mjev2 ev2, mjtevt tevt) {
+static void mjev2_event_timeout(mjev2 ev2, mjtevt tevt, void* data) {
   // set timeout flag
-  mjevt evt = tevt->_data;
+  mjevt evt = data;
   if (tevt == &evt->_rtevt) {
     evt->_readTimeout = true;
   } else {
@@ -213,9 +213,19 @@ bool mjev2_check_event(mjev2 ev2) {
     struct epoll_event* e = &epEvents[i];
     int fd = e->data.fd;
     mjevt evt = &ev2->_events[fd];
-    if (e->events & EPOLLIN) evt->_readReady = true;
-    if (e->events & EPOLLOUT) evt->_writeReady = true;
-    if (e->events & EPOLLERR) evt->_error = true;
+    if (e->events & EPOLLIN) {
+      evt->_readReady = true;
+      mjev2_del_timerlist(ev2, &evt->_rtevt);
+    }
+    if (e->events & EPOLLOUT) {
+      evt->_writeReady = true;
+      mjev2_del_timerlist(ev2, &evt->_wtevt);
+    }
+    if (e->events & EPOLLERR) {
+      evt->_error = true;
+      mjev2_del_timerlist(ev2, &evt->_rtevt);
+      mjev2_del_timerlist(ev2, &evt->_wtevt);
+    }
     if (list_empty(&evt->_rnode)) list_add_tail(&evt->_rnode, &ev2->_rhead);
   }
   return true;
@@ -234,7 +244,7 @@ bool mjev2_run_timer(mjev2 ev2) {
   long long curr_time = get_current_time();
   while (tevt && tevt->_expire <= curr_time) {
     mjev2_del_timerlist(ev2, tevt);
-    if (tevt->_Handle) tevt->_Handle(ev2, tevt);
+    if (tevt->_Handle) tevt->_Handle(ev2, tevt, tevt->_data);
     tevt = mjev2_get_min_timer(ev2);
   }
   return true;
@@ -247,16 +257,21 @@ mjev2_run_event
 */
 bool mjev2_run_event(mjev2 ev2) {
   if (!ev2) return false;
-  mjevt evt, tmp, saved;
+  mjevt evt, tmp;
   list_for_each_entry_safe(evt, tmp, &ev2->_rhead, _rnode) {
     list_del_init(&evt->_rnode);
 
-    saved = evt;
-    if (evt && (evt->_readTimeout || evt->_readReady) && evt->_ReadHandle) {
-      evt = evt->_ReadHandle(ev2, evt);
+    int rFired = 0;
+    if ((evt->_readTimeout || evt->_readReady || evt->_error) && 
+        (evt->_mask & MJEV2_READ) && evt->_ReadHandle) {
+      evt->_ReadHandle(ev2, evt, evt->_data);
+      rFired = 1;
     }
-    if (evt && (evt->_writeTimeout || evt->_writeReady) && evt->_WriteHandle) {
-      evt = evt->_WriteHandle(ev2, evt);
+    if ((evt->_writeTimeout || evt->_writeReady || evt->_error) && 
+        (evt->_mask & MJEV2_WRITE) && evt->_WriteHandle) {
+      if (rFired == 0 || evt->_ReadHandle != evt->_WriteHandle) {
+        evt->_WriteHandle(ev2, evt, evt->_data);
+      }
     }
   }
   return true;

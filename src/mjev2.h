@@ -15,8 +15,8 @@ struct mjevt;
 struct mjtevt;
 struct mjev2;
 
-typedef void (*mjevtProc)(struct mjev2*, struct mjevt*);
-typedef void (*mjtevtProc)(struct mjev2*, struct mjtevt*);
+typedef void (*mjevtProc)(struct mjev2*, struct mjevt*, void*);
+typedef void (*mjtevtProc)(struct mjev2*, struct mjtevt*, void*);
 
 struct mjtevt {
   long long       _expire;
@@ -52,6 +52,8 @@ typedef struct mjev2* mjev2;
 
 extern bool   mjev2_add_event(mjev2 ev2, int fd, int mask, mjevtProc Handle, void* data, long long ms);
 extern bool   mjev2_del_event(mjev2 ev2, int fd, int mask);
+extern bool   mjev2_read_ready(mjev2 ev2, mjevt evt);
+extern bool   mjev2_write_ready(mjev2 ev2, mjevt evt);
 extern mjtevt mjev2_add_timer(mjev2 ev2, long long ms, mjtevtProc Handle, void* data);
 extern bool   mjev2_mod_timer(mjev2 ev2, mjtevt tevt, long long ms, mjtevtProc Handle, void* data);
 extern bool   mjev2_del_timer(mjev2 ev2, mjtevt tevt);
@@ -60,11 +62,6 @@ extern bool   mjev2_run_timer(mjev2 ev2);
 extern bool   mjev2_run_event(mjev2 ev2);
 extern mjev2  mjev2_new();
 extern bool   mjev2_delete(mjev2 ev2);
-
-static inline void* mjevt_get_data(mjevt evt) {
-  if (!evt) return NULL;
-  return evt->_data;
-}
 
 static inline bool mjevt_read_timeout(mjevt evt) {
   if (!evt) return false;
