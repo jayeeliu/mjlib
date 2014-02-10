@@ -109,9 +109,7 @@ static void mjev2_event_timeout(mjev2 ev2, mjtevt tevt) {
     evt->_writeTimeout = true;
   }
   // insert to running queue
-  if (list_empty(&evt->_rnode)) {
-    list_add_tail(&evt->_rnode, &ev2->_rhead);
-  }
+  if (list_empty(&evt->_rnode)) list_add_tail(&evt->_rnode, &ev2->_rhead);
 }
 
 /*
@@ -203,21 +201,22 @@ mjev2_check_event
 */
 bool mjev2_check_event(mjev2 ev2) {
   if (!ev2) return false;
-  long long timeWait = -1;
-  long long curr_time;
-
-  mjtevt tevt = mjev2_get_min_timer(ev2);
-  if (tevt) {
-    curr_time = get_current_time();
-    timeWait = (tevt->_expire < curr_time) ? 0 : tevt->_expire - curr_time;
-  }
-  if (timeWait == -1 || timeWait > 500) timeWait = 500;
   struct epoll_event epEvents[MJEV2_MAXFD];
-  int numevents = epoll_wait(ev2->_epfd, epEvents, MJEV2_MAXFD, timeWait);
+  int numevents = epoll_wait(ev2->_epfd, epEvents, MJEV2_MAXFD, 300);
   if (numevents < 0) {
     if (errno == EINTR) return false;
     MJLOG_ERR("epoll_wait error. errno: %d, msg: %s", errno, strerror(errno));
     return false;
+  }
+  // check and set status
+  for (int i = 0; i < numevents; i++) {
+    struct epoll_event* e = &epEvents[i];
+    int fd = e->data.fd;
+    mjevt evt = &ev2->_events[fd];
+    if (e->events & EPOLLIN) evt->_readReady = true;
+    if (e->events & EPOLLOUT) evt->_writeReady = true;
+    if (e->events & EPOLLERR) evt->_error = true;
+    if (list_empty(&evt->_rnode)) list_add_tail(&evt->_rnode, &ev2->_rhead);
   }
   return true;
 }
@@ -229,9 +228,10 @@ mjev2_run_timer
 */
 bool mjev2_run_timer(mjev2 ev2) {
   if (!ev2) return false;
-  // run timer handle
-  long long curr_time = get_current_time();
   mjtevt tevt = mjev2_get_min_timer(ev2);
+  if (!tevt) return true;
+
+  long long curr_time = get_current_time();
   while (tevt && tevt->_expire <= curr_time) {
     mjev2_del_timerlist(ev2, tevt);
     if (tevt->_Handle) tevt->_Handle(ev2, tevt);
@@ -247,9 +247,17 @@ mjev2_run_event
 */
 bool mjev2_run_event(mjev2 ev2) {
   if (!ev2) return false;
-  mjevt entry, tmp;
-  list_for_each_entry_safe(entry, tmp, &ev2->_rhead, _rnode) {
-    list_del(&entry->_rnode);
+  mjevt evt, tmp, saved;
+  list_for_each_entry_safe(evt, tmp, &ev2->_rhead, _rnode) {
+    list_del_init(&evt->_rnode);
+
+    saved = evt;
+    if (evt && (evt->_readTimeout || evt->_readReady) && evt->_ReadHandle) {
+      evt = evt->_ReadHandle(ev2, evt);
+    }
+    if (evt && (evt->_writeTimeout || evt->_writeReady) && evt->_WriteHandle) {
+      evt = evt->_WriteHandle(ev2, evt);
+    }
   }
   return true;
 }

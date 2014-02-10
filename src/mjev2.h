@@ -33,6 +33,7 @@ struct mjevt {
   void*             _data;
   struct mjtevt     _rtevt;           // read timer
   struct mjtevt     _wtevt;           // write timer
+  bool              _error;
   bool              _readReady;       // fd read ready
   bool              _writeReady;      // fd write ready
   bool              _readTimeout;     // read timeout
