@@ -9,31 +9,30 @@
 mjev2_insert_timer_event
 ===============================================================================
 */
-static bool mjev2_insert_timer_event(mjev2 ev2, mjevt evt) {
+static void mjev2_insert_timer(mjev2 ev2, mjtevt tevt) {
   struct rb_node **new = &(ev2->_troot.rb_node), *parent = NULL;
   while (*new) {
-    mjevt curr = rb_entry(*new, struct mjevt, _tnode);
+    mjtevt curr = rb_entry(*new, struct mjtevt, _tnode);
     parent = *new;
-    if (evt->_expire < curr->_expire) {
+    if (tevt->_expire < curr->_expire) {
       new = &((*new)->rb_left);
     } else {
       new = &((*new)->rb_right);
     }
   }
-  rb_link_node(&evt->_tnode, parent, new);
-  rb_insert_color(&evt->_tnode, &ev2->_troot);
-  return true;
+  rb_link_node(&tevt->_tnode, parent, new);
+  rb_insert_color(&tevt->_tnode, &ev2->_troot);
 }
 
 /*
 ===============================================================================
-mjev2_getmin_timer_event
+mjev2_getmin_timer
 ===============================================================================
 */
-static mjevt mjev2_getmin_timer_event(mjev2 ev2) {
+static mjtevt mjev2_getmin_timer(mjev2 ev2) {
   struct rb_node *node = rb_first(&ev2->_troot);
   if (!node) return NULL;
-  return rb_entry(node, struct mjevt, _tnode);
+  return rb_entry(node, struct mjtevt, _tnode);
 }
 
 /*
@@ -41,17 +40,31 @@ static mjevt mjev2_getmin_timer_event(mjev2 ev2) {
 mjev2_add_timer
 ===============================================================================
 */
-mjevt mjev2_add_timer(mjev2 ev2, long long ms, mjevtProc Handle, void* data) {
-  if (!ev2) return NULL;
-  mjevt evt = calloc(1, sizeof(struct mjevt));
-  evt->_fd            = -1;  
-  evt->_TimeoutHandle = Handle; 
-  evt->_data          = data;
-  evt->_expire        = ms;
-  INIT_LIST_HEAD(&evt->_pnode);
-  rb_init_node(&evt->_tnode);
-  mjev2_insert_timer_event(ev2, evt);
-  return evt;
+mjtevt mjev2_add_timer(mjev2 ev2, long long ms, mjtevtProc Handle, 
+    void* data) {
+  if (!ev2 || ms < 0) return NULL;
+  mjtevt tevt = calloc(1, sizeof(struct mjtevt));
+  if (!tevt) return NULL; 
+  tevt->_expire = get_current_time() + ms;
+  tevt->_Handle = Handle;
+  tevt->_data   = data;
+  rb_init_node(&tevt->_tnode);
+  mjev2_insert_timer(ev2, tevt);
+  return tevt;
+}
+
+bool mjev2_mod_timer(mjev2 ev2, mjtevt tevt, long long ms, mjtevtProc Handle,
+    void* data) {
+  if (!ev2 || !tevt || ms < 0) return false;
+  tevt->_expire = get_current_time() + ms;
+  tevt->_Handle = Handle;
+  tevt->_data   = data;
+  if (!RB_EMPTY_NODE(&tevt->_tnode)) {
+    rb_erase(&tevt->_tnode, &ev2->_troot);
+  }
+  rb_init_node(&tevt->_tnode);
+  mjev2_insert_timer(ev2, tevt);
+  return true;
 }
 
 /*
@@ -59,9 +72,12 @@ mjevt mjev2_add_timer(mjev2 ev2, long long ms, mjevtProc Handle, void* data) {
 mjev2_del_timer
 ===============================================================================
 */
-bool mjev2_del_timer(mjev2 ev2, mjevt evt) {
-  if (!ev2 || !evt || evt->_fd != -1) return false;
-  rb_erase(&evt->_tnode, &ev2->_troot);
+bool mjev2_del_timer(mjev2 ev2, mjtevt tevt) {
+  if (!ev2 || !tevt) return false;
+  if (!RB_EMPTY_NODE(&tevt->_tnode)) {
+    rb_erase(&tevt->_tnode, &ev2->_troot);
+  }
+  free(tevt);
   return true;
 }
 
@@ -72,14 +88,14 @@ mjev2_check
 */
 bool mjev2_check(mjev2 ev2) {
   if (!ev2) return false;
+  mjtevt tevt = mjev2_getmin_timer(ev2);
+  if (!tevt) return false;
   long long curr_time = get_current_time();
-  mjevt evt = mjev2_getmin_timer_event(ev2);
-  while (evt && evt->_expire <= curr_time) {
-    mjev2_del_timer(ev2, evt);
-    evt->_timeout = true;
-    list_add_tail(&evt->_pnode, &ev2->_phead);
-    evt = mjev2_getmin_timer_event(ev2);
-  }
+  long long timeWait = -1;
+  timeWait = (tevt->_expire < curr_time) ? 0 : tevt->_expire - curr_time;
+  if (timeWait == -1 || timeWait > 500) timeWait = 500;
+  struct epoll_event epEvents[MJEV2_MAXFD];
+  epoll_wait(ev2->_epfd, epEvents, MJEV2_MAXFD, timeWait);
   return true;
 }
 
@@ -90,12 +106,19 @@ mjev2_run
 */
 bool mjev2_run(mjev2 ev2) {
   if (!ev2) return false;
+  // run timer handle
+  long long curr_time = get_current_time();
+  mjtevt tevt = mjev2_getmin_timer(ev2);
+  while (tevt && tevt->_expire <= curr_time) {
+    rb_erase(&tevt->_tnode, &ev2->_troot);
+    rb_init_node(&tevt->_tnode);
+    if (tevt->_Handle) tevt->_Handle(ev2, tevt);
+    tevt = mjev2_getmin_timer(ev2);
+  }
+  // run handle
   mjevt entry, tmp;
-  list_for_each_entry_safe(entry, tmp, &ev2->_phead, _pnode) {
-    list_del(&entry->_pnode);
-    if (entry->_timeout && entry->_TimeoutHandle) {
-      entry->_TimeoutHandle(entry);
-    }
+  list_for_each_entry_safe(entry, tmp, &ev2->_rhead, _rnode) {
+    list_del(&entry->_rnode);
   }
   return true;
 }
@@ -118,8 +141,7 @@ mjev2 mjev2_new() {
     return NULL;
   }
 
-  INIT_LIST_HEAD(&ev2->_phead);
-  INIT_LIST_HEAD(&ev2->_fhead);
+  INIT_LIST_HEAD(&ev2->_rhead);
   ev2->_troot = RB_ROOT;
   return ev2;
 }
