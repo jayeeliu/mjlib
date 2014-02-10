@@ -29,8 +29,9 @@ typedef struct mjtevt* mjtevt;
 struct mjevt {
   int               _mask;            // which mask is set, read write or time
   mjevtProc         _ReadHandle;
+  void*             _rArg;
   mjevtProc         _WriteHandle;
-  void*             _data;
+  void*             _wArg;
   struct mjtevt     _rtevt;           // read timer
   struct mjtevt     _wtevt;           // write timer
   bool              _error;
@@ -50,10 +51,27 @@ struct mjev2 {
 };
 typedef struct mjev2* mjev2;
 
-extern bool   mjev2_add_event(mjev2 ev2, int fd, int mask, mjevtProc Handle, void* data, long long ms);
-extern bool   mjev2_del_event(mjev2 ev2, int fd, int mask);
-extern bool   mjev2_read_ready(mjev2 ev2, mjevt evt);
-extern bool   mjev2_write_ready(mjev2 ev2, mjevt evt);
+static inline mjevt mjevt_get(mjev2 ev2, int fd) {
+  if (!ev2 || fd < 0 || fd > MJEV2_MAXFD) return NULL;
+  return &ev2->_events[fd];
+}
+
+static inline bool mjevt_set_handle(mjevt evt, int mask, mjevtProc Handle, void* data) {
+  if (!evt) return false;
+  if (mask & MJEV2_READ) {
+    evt->_ReadHandle = Handle;
+    evt->_data = data;
+  }
+  if (mask & MJEV2_WRITE) {
+    evt->_WriteHandle = Handle;
+    evt->_data = data;
+  }
+}
+
+extern bool   mjevt_ready(mjev2 ev2, mjevt evt, int mask);
+
+extern bool   mjev2_add_event(mjev2 ev2, mjevt evt, int mask, long long ms);
+extern bool   mjev2_del_event(mjev2 ev2, mjevt evt, int mask);
 extern mjtevt mjev2_add_timer(mjev2 ev2, long long ms, mjtevtProc Handle, void* data);
 extern bool   mjev2_mod_timer(mjev2 ev2, mjtevt tevt, long long ms, mjtevtProc Handle, void* data);
 extern bool   mjev2_del_timer(mjev2 ev2, mjtevt tevt);
