@@ -12,18 +12,15 @@
 #define MJCONB_PANIC   -3
 
 struct mjconb {
-  int         _fd;      // fd to control
-  mjstr       _rbuf;    // read read buffer 
-  
-  int         _rtype;   // read type
-  const char* _delim;   // the delim when readtype is READUNTIL 
-  int         _rbytes;  // read data size when readtype is READBYTES 
-  
-  mjmap       _map;     // arg map
-
-  bool        _closed;  // peer closed
-  bool        _error;   // peer error  
-  bool        _timeout; // peer timeout
+  mjmap       _map;       // arg map
+  mjstr       _rbuf;      // read read buffer 
+  const char* _delim;     // the delim when readtype is READUNTIL 
+  int         _fd;        // fd to control
+  int         _rbytes;    // read data size when readtype is READBYTES 
+  unsigned    _rtype:2;   // read type
+  unsigned    _closed:1;  // peer closed
+  unsigned    _error:1;   // peer error  
+  unsigned    _timeout:1; // peer timeout
 };  
 typedef struct mjconb* mjconb;
 

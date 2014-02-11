@@ -19,7 +19,7 @@ typedef void (*mjevtProc)(struct mjev2*, struct mjevt*, void*);
 typedef void (*mjtevtProc)(struct mjev2*, struct mjtevt*, void*);
 
 struct mjtevt {
-  long long       _expire;
+  long            _expire;
   mjtevtProc      _Handle;
   void*           _data;
   struct rb_node  _tnode;           // timer event node
@@ -27,13 +27,9 @@ struct mjtevt {
 typedef struct mjtevt* mjtevt;
 
 struct mjevt {
-  int               _mask;            // which mask is set, read write or time
-  mjevtProc         _ReadHandle;
-  void*             _rArg;
-  mjevtProc         _WriteHandle;
-  void*             _wArg;
+  mjevtProc         _Handle;
+  void*             _arg;
   struct mjtevt     _rtevt;           // read timer
-  struct mjtevt     _wtevt;           // write timer
   bool              _error;
   bool              _readReady;       // fd read ready
   bool              _writeReady;      // fd write ready
