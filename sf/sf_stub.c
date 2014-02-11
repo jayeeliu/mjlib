@@ -1,15 +1,32 @@
 #include "sf_stub.h"
 #include "sf_module.h"
 #include <stdio.h>
+#include <stdlib.h>
 
-static void stub_init() {
+static void*
+stub_work(sf_object_t* obj) {
+  printf("stub work here\n");
+  sf_object_destory(obj);
+  return NULL;
+}
+
+static void 
+stub_init() {
   printf("stub init here\n");
+}
+
+static void
+stub_start() {
+  sf_object_t* obj = sf_object_create();
+  if (!obj) return;
+  obj->handler = stub_work;
+  sf_object_enqueue(obj);
 }
 
 sf_module_t stub_module = {
   stub_init,
   NULL,
-  NULL,
+  stub_start,
   NULL,
 };
 

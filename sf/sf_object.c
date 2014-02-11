@@ -1,4 +1,5 @@
 #include "sf_object.h"
+#include <stdlib.h>
 #include <pthread.h>
 
 static LIST_HEAD(task_queue);
@@ -9,12 +10,25 @@ static unsigned worker_n;
 static unsigned worker_sleep_n;
 
 void 
-sf_task_enqueu(sf_object_t *obj) {
+sf_object_enqueue(sf_object_t *obj) {
   if (!list_empty(&obj->node)) return;
   pthread_mutex_lock(&task_queue_mutex);
   list_add_tail(&obj->node, &task_queue);
   pthread_mutex_unlock(&task_queue_mutex);
   if (worker_sleep_n > 0) pthread_cond_signal(&task_queue_cond);
+}
+
+sf_object_t*
+sf_object_create() {
+  sf_object_t *obj = calloc(1, sizeof(sf_object_t));
+  if (!obj) return NULL;
+  INIT_LIST_HEAD(&obj->node);
+  return obj;
+}
+
+void
+sf_object_destory(sf_object_t* obj) {
+  free(obj);
 }
 
 static void*
