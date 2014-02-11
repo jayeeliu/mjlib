@@ -1,16 +1,12 @@
-OBJS=sf_str.o
+OBJS=sf_str.o sf_module.o sf_rbtree.o sf_main.o
 
 .c.o:
 	gcc -pg -g -fPIC -std=gnu99 -pthread -Wall -Wpadded -c $< -o $@
 
-%_t:%_t.c $(OBJS)
-	gcc -pg -g -std=gnu99 $(OBJS) $< -o $@
 
 all:$(OBJS)
-
-test:sf_str_t
+	gcc -pg -g -std=gnu99 -lpthread $(OBJS) -o sf
 
 clean:
 	rm -rf $(OBJS)
-	rm -rf gmon.out
-	rm -rf *_t
+	rm -rf sf
