@@ -74,7 +74,7 @@ void sf_str_strim(sf_str str) {
   sf_str_rstrim(str);
 }
 
-extern bool     sf_slist_addb(sf_slist slist, char* str, unsigned len);
+extern bool sf_slist_addb(sf_slist slist, char* str, unsigned len);
 
 static inline
 sf_slist sf_slist_new() {
@@ -89,6 +89,7 @@ bool sf_slist_del(sf_slist slist) {
   free(slist);
   return true;
 }
+
 static inline 
 bool sf_slist_add(sf_slist slist, sf_str str) {
   if (!slist || !str) return false;

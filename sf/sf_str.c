@@ -177,13 +177,15 @@ bool sf_str_split(sf_str str, const char* key, sf_slist slist) {
     // split one by one
     char* point = strstr(str->data + start, key);
     if (!point) break;
-    // add to string
+    // add to string ignore null
     if (point != str->data + start) {
       sf_slist_addb(slist, str->data + start, point - str->data - start);
     }
     start = point - str->data + strlen(key);
   }
-  sf_slist_addb(slist, str->data + start, str->len - start);  
+  if (str->len != start) {
+    sf_slist_addb(slist, str->data + start, str->len - start);  
+  }
   return true;
 }
 
