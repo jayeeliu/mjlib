@@ -14,6 +14,6 @@ extern sf_object_t*
 sf_object_create();
 
 extern void
-sf_object_destory();
+sf_object_destory(sf_object_t*);
 
 #endif

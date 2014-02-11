@@ -15,7 +15,7 @@ sf_worker_enqueue(sf_object_t *obj) {
   pthread_mutex_lock(&task_queue_mutex);
   list_add_tail(&obj->node, &task_queue);
   pthread_mutex_unlock(&task_queue_mutex);
-  if (worker_sleep_n > 0) pthread_cond_signal(&task_queue_cond);
+  pthread_cond_broadcast(&task_queue_cond);
 }
 
 static void*
@@ -31,7 +31,7 @@ worker_routine(void* arg) {
       worker_sleep_n--;
     }
     obj = list_first_entry(&task_queue, sf_object_t, node);
-    list_del(&obj->node);
+    list_del_init(&obj->node);
     pthread_mutex_unlock(&task_queue_mutex);
 
     if (obj->handler) obj->handler(obj);

@@ -29,6 +29,7 @@ stub_init() {
 
 static void
 stub_start() {
+  /*
   sf_object_t* obj1 = sf_timer_create();
   if (!obj1) return;
   obj1->handler = stub_work1;
@@ -38,6 +39,7 @@ stub_start() {
   if(!obj2) return;
   obj2->handler = stub_work2;
   sf_timer_enable(obj2, 2000);
+  */
 }
 
 sf_module_t stub_module = {
