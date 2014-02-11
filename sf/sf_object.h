@@ -16,10 +16,4 @@ sf_object_create();
 extern void
 sf_object_destory();
 
-extern void 
-sf_object_enqueue(sf_object_t*);
-
-extern void
-sf_create_worker();
-
 #endif

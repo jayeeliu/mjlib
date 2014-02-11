@@ -1,5 +1,7 @@
 #include "sf_stub.h"
 #include "sf_module.h"
+#include "sf_object.h"
+#include "sf_worker.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,7 +22,7 @@ stub_start() {
   sf_object_t* obj = sf_object_create();
   if (!obj) return;
   obj->handler = stub_work;
-  sf_object_enqueue(obj);
+  sf_worker_enqueue(obj);
 }
 
 sf_module_t stub_module = {

@@ -4,8 +4,6 @@
 
 int main() {
   sf_modules_init();
-  sf_create_worker();
-  sf_create_worker();
   sf_modules_start();
   while (1) {
     sleep(3);

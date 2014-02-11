@@ -1,7 +1,7 @@
 #ifndef __SF_MODULE_H
 #define __SF_MODULE_H
 
-#include "sf_object.h"
+#include "sf_list.h"
 
 struct sf_module_s {
   void              (*init)();
