@@ -1,6 +1,8 @@
 #ifndef	__SF_LIST_H
 #define __SF_LIST_H
 
+#include <stddef.h>
+
 #ifndef NULL
 #define NULL 0
 #endif
