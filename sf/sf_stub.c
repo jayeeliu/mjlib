@@ -8,14 +8,22 @@
 
 struct sf_stub_s {
   sf_object_HEAD
-  sf_object_t*  timer1;
-  sf_object_t*  timer2;
+  sf_timer_t*  timer1;
+  sf_timer_t*  timer2;
 };
 typedef struct sf_stub_s sf_stub_t;
 
 static void
 stub_work(sf_object_t* obj) {
-  printf("stub work here\n");
+  sf_stub_t* stub = (sf_stub_t*)obj;
+  if (stub->timer1->timeout) {
+    printf("timer1 timeout\n");
+    sf_timer_enable(stub->timer1, 1000);
+  }
+  if (stub->timer2->timeout) {
+    printf("timer2 timeout\n");
+    sf_timer_enable(stub->timer2, 2000);
+  }
 }
 
 static void
@@ -33,7 +41,7 @@ stub_start() {
   sf_timer_enable(obj->timer1, 1000);
 
   obj->timer2 = sf_timer_create((sf_object_t*)obj);
-  if(!obj->timer2) return;
+  if (!obj->timer2) return;
   sf_timer_enable(obj->timer2, 2000);
 }
 

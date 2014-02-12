@@ -26,7 +26,7 @@ sf_timer_do(sf_timer_t* timer) {
 sf_timer_create
 ===============================================================================
 */
-sf_object_t*
+sf_timer_t*
 sf_timer_create(sf_object_t* parent) {
   sf_timer_t* timer = calloc(1, sizeof(sf_timer_t));
   if (!timer) {
@@ -36,7 +36,7 @@ sf_timer_create(sf_object_t* parent) {
   sf_object_INIT(timer, parent);
   RB_CLEAR_NODE(&timer->node);
   INIT_LIST_HEAD(&timer->ready_node);
-  return (sf_object_t*)timer;
+  return timer;
 }
 
 /*
@@ -45,8 +45,8 @@ sf_timer_destory
 ===============================================================================
 */
 void
-sf_timer_destory(sf_object_t* obj) {
-  free(obj);
+sf_timer_destory(sf_timer_t* timer) {
+  free(timer);
 }
 
 /*
@@ -55,8 +55,7 @@ sf_timer_enable
 ===============================================================================
 */
 void
-sf_timer_enable(sf_object_t* obj, unsigned long ms) {
-  sf_timer_t* timer = (sf_timer_t*)obj;
+sf_timer_enable(sf_timer_t* timer, unsigned long ms) {
   if (!RB_EMPTY_NODE(&timer->node)) return;
 
   timer->expire   = get_current_time() + ms;
@@ -84,8 +83,7 @@ sf_timer_disable
 ===============================================================================
 */
 void
-sf_timer_disable(sf_object_t* obj) {
-  sf_timer_t* timer = (sf_timer_t*)obj;
+sf_timer_disable(sf_timer_t* timer) {
   if (RB_EMPTY_NODE(&timer->node)) return;
 
   pthread_mutex_lock(&timer_list_mutex);

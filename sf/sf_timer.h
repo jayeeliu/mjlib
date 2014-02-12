@@ -14,16 +14,16 @@ struct sf_timer_s {
 };
 typedef struct sf_timer_s sf_timer_t;
 
-extern sf_object_t*
+extern sf_timer_t*
 sf_timer_create(sf_object_t* parent);
 
 extern void
-sf_timer_destory(sf_object_t* obj);
+sf_timer_destory(sf_timer_t* timer);
 
 extern void
-sf_timer_enable(sf_object_t* obj, unsigned long ms);
+sf_timer_enable(sf_timer_t* timer, unsigned long ms);
 
 extern void
-sf_timer_disbale(sf_object_t* obj);
+sf_timer_disbale(sf_timer_t* timer);
 
 #endif
