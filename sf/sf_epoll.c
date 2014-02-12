@@ -10,12 +10,17 @@
 static int epfd;
 static struct epoll_event epEvents[MAXFD];
 
+/*
+===============================================================================
+epoll_init
+===============================================================================
+*/
 static void
 epoll_init() {
   epfd = epoll_create(1024);
 }
 
-static void*
+static void
 epoll_worker(sf_object_t* obj) {
   static int delay = 0;
   if (delay > 300) delay = 300;
@@ -23,21 +28,22 @@ epoll_worker(sf_object_t* obj) {
   if (events_n < 0) {
     //TODO:
   } else if (events_n == 0) {
-    delay += 5;
+    if (delay > 20) {
+      delay *= 2;
+    } else {
+      delay += 5;
+    }
   } else {
     delay = 0;
   }
-  printf("epoll ok: %lu\n", get_current_time());
-
-  sf_worker_enqueue(obj);
-  return NULL;
+  sf_worker_do(obj);
 }
 
 static void 
 epoll_start() {
-  sf_object_t* obj = sf_object_create();
+  sf_object_t* obj = sf_object_create(NULL);
   obj->handler = epoll_worker;
-  sf_worker_enqueue(obj);
+  sf_worker_do(obj);
 }
 
 sf_module_t epoll_module = {

@@ -4,6 +4,6 @@
 #include "sf_object.h"
 
 extern void
-sf_worker_enqueue(sf_object_t*);
+sf_worker_do(sf_object_t*);
 
 #endif

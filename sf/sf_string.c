@@ -1,13 +1,13 @@
-#include "sf_str.h"
+#include "sf_string.h"
 
 /*
 ===============================================================================
-sf_str_ready
-  alloc enough size for sf_str
+sf_string_ready
+  alloc enough size for sf_string
 ===============================================================================
 */
-static 
-bool sf_str_ready(sf_str str, unsigned need_size) {
+static bool 
+sf_string_ready(sf_string_t* str, unsigned need_size) {
   // 1. have enough size, return true
   if (need_size <= str->_size - (str->data - str->_start)) return true;
   // 2. no need to realloc
@@ -33,24 +33,25 @@ bool sf_str_ready(sf_str str, unsigned need_size) {
 
 /*
 ===============================================================================
-sf_str_readyplus
-  call sf_str_ready
+sf_string_readyplus
+  call sf_string_ready
 ===============================================================================
 */
-static inline 
-bool sf_str_readyplus(sf_str str, unsigned need_size_plus) {
-  return sf_str_ready(str, str->len + need_size_plus);
+static inline bool 
+sf_string_readyplus(sf_string_t* str, unsigned need_size_plus) {
+  return sf_string_ready(str, str->len + need_size_plus);
 }
 
 /*
 ===============================================================================
-sf_str_catb
-  cat binary string to sf_str
+sf_string_catb
+  cat binary string to sf_string
 ===============================================================================
 */
-bool sf_str_catb(sf_str dst, const char* src, unsigned len) {
+bool 
+sf_string_catb(sf_string_t* dst, const char* src, unsigned len) {
   if (!dst || !src) return false;
-  if (!sf_str_readyplus(dst, len + 1)) return false;
+  if (!sf_string_readyplus(dst, len + 1)) return false;
   // copy string
   memcpy(dst->data + dst->len, src, len);            
   dst->len            += len;
@@ -60,13 +61,14 @@ bool sf_str_catb(sf_str dst, const char* src, unsigned len) {
 
 /*
 ===============================================================================
-sf_str_copyb
-  copy binary string to sf_str
+sf_string_copyb
+  copy binary string to sf_string
 ===============================================================================
 */
-bool sf_str_copyb(sf_str dst, const char* src, unsigned len) {
+bool 
+sf_string_copyb(sf_string_t* dst, const char* src, unsigned len) {
   if (!dst || !src) return false;
-  if (!sf_str_ready(dst, len + 1)) return false;
+  if (!sf_string_ready(dst, len + 1)) return false;
   memcpy(dst->_start, src, len);
   dst->len            = len;          
   dst->data           = dst->_start;
@@ -76,15 +78,16 @@ bool sf_str_copyb(sf_str dst, const char* src, unsigned len) {
 
 /*
 ===============================================================================
-sf_str_consume
+sf_string_consume
   consume len string from left
 ===============================================================================
 */
-int sf_str_consume(sf_str str, unsigned len) {
+int 
+sf_string_consume(sf_string_t* str, unsigned len) {
   if (!str || !len) return 0;
   if (len >= str->len) {
     int ret = str->len;
-    sf_str_clean(str);
+    sf_string_clean(str);
     return ret; 
   }
   str->data           += len;
@@ -95,11 +98,12 @@ int sf_str_consume(sf_str str, unsigned len) {
 
 /*
 ===============================================================================
-sf_str_rconsume
+sf_string_rconsume
   consume str from right
 ===============================================================================
 */
-int sf_str_rconsume(sf_str str, unsigned len) {
+int 
+sf_string_rconsume(sf_string_t* str, unsigned len) {
   if (!str || !len) return 0;
   if (str->len < len) {
     str->data = str->_start;
@@ -113,13 +117,14 @@ int sf_str_rconsume(sf_str str, unsigned len) {
 
 /*
 ===============================================================================
-sf_str_search
+sf_string_search
     search string in x
     return startpositon in x
             -1 for no found or error
 ===============================================================================
 */
-int sf_str_search(sf_str str, const char* key) {
+int 
+sf_string_search(sf_string_t* str, const char* key) {
   if (!str || !str->len || !key) return -1;
   char* point = strstr(str->data, key);
   if (!point) return -1;
@@ -128,11 +133,12 @@ int sf_str_search(sf_str str, const char* key) {
 
 /*
 ===============================================================================
-sf_str_lstrim
+sf_string_lstrim
   strim string from left
 ===============================================================================
 */
-void sf_str_lstrim(sf_str str) {
+void 
+sf_string_lstrim(sf_string_t* str) {
   if (!str) return;
   int pos;
   for (pos = 0; pos < str->len; pos++) {
@@ -140,16 +146,17 @@ void sf_str_lstrim(sf_str str) {
         str->data[pos] == '\r' || str->data[pos] == '\n') continue;
     break;
   }
-  sf_str_consume(str, pos);
+  sf_string_consume(str, pos);
 }
 
 /*
 ===============================================================================
-sf_str_rstrim
+sf_string_rstrim
   strim string from right
 ===============================================================================
 */
-void sf_str_rstrim(sf_str str) {
+void 
+sf_string_rstrim(sf_string_t* str) {
   if (!str) return;
   int pos;
   for (pos = str->len - 1; pos >= 0; pos--) {
@@ -163,14 +170,16 @@ void sf_str_rstrim(sf_str str) {
 
 /*
 ===============================================================================
-sf_str_split
-    split sf_str into sf_slist
-    return: true --- success; false --- failed;
+sf_string_split
+    split sf_string into sf_slist_t
 ===============================================================================
 */
-bool sf_str_split(sf_str str, const char* key, sf_slist slist) {
-  if (!str || !key || !slist) return false;
-  sf_slist_clean(slist);
+sf_slist_t*
+sf_string_split(sf_string_t* str, const char* key) {
+  if (!str || !key) return NULL;
+
+  sf_slist_t* slist = sf_slist_new();
+  if (!slist) return NULL;
   // split from left to right
   int start = 0;
   while (start < str->len) {
@@ -179,23 +188,24 @@ bool sf_str_split(sf_str str, const char* key, sf_slist slist) {
     if (!point) break;
     // add to string ignore null
     if (point != str->data + start) {
-      sf_slist_addb(slist, str->data + start, point - str->data - start);
+      sf_slist_appendb(slist, str->data + start, point - str->data - start);
     }
     start = point - str->data + strlen(key);
   }
   if (str->len != start) {
-    sf_slist_addb(slist, str->data + start, str->len - start);  
+    sf_slist_appendb(slist, str->data + start, str->len - start);  
   }
-  return true;
+  return slist;
 }
 
 /*
 ===============================================================================
-sf_str_cmp
-  compare two sf_str
+sf_string_cmp
+  compare two sf_string
 ===============================================================================
 */
-int sf_str_cmp(sf_str str1, sf_str str2) {
+int 
+sf_string_cmp(sf_string_t* str1, sf_string_t* str2) {
   if (!str1 && !str2) return 0;
   if (!str1 && str2) return -1;
   if (str1 && !str2) return 1;
@@ -211,40 +221,43 @@ int sf_str_cmp(sf_str str1, sf_str str2) {
 
 /*
 ===============================================================================
-sf_str_tolower
-  change sf_str to lower
+sf_string_tolower
+  change sf_string to lower
 ===============================================================================
 */
-bool sf_str_tolower(sf_str str) {
+bool 
+sf_string_tolower(sf_string_t* str) {
   if (!str) return false;
-  for (int i = 0; i < str->len; i++) {
-    if (str->data[i] >= 'A' && str->data[i] <= 'Z') str->data[i] += 32;
+  for (int i=0; i<str->len; i++) {
+    if (str->data[i]>='A' && str->data[i]<='Z') str->data[i] += 32;
   }
   return true;
 }
 
 /*
 ===============================================================================
-sf_str_toupper
-  change sf_str to capitable
+sf_string_toupper
+  change sf_string to capitable
 ===============================================================================
 */
-bool sf_str_toupper(sf_str str) {
+bool 
+sf_string_toupper(sf_string_t* str) {
   if (!str) return false;
-  for (int i = 0; i < str->len; i++) {
-    if (str->data[i] >= 'a' && str->data[i] <= 'z') str->data[i] -= 32;
+  for (int i=0; i <str->len; i++) {
+    if (str->data[i]>='a' && str->data[i]<='z') str->data[i] -= 32;
   }
   return true;
 }
 
 /*
 ===============================================================================
-sf_str_New 
-    create new sf_str
+sf_string_new
+    create new sf_string
 ===============================================================================
 */
-sf_str sf_str_new(unsigned int default_size) {
-  sf_str str = calloc(1, sizeof(struct sf_str) + default_size * sizeof(char));
+sf_string_t* 
+sf_string_new(unsigned int default_size) {
+  sf_string_t* str = calloc(1, sizeof(sf_string_t)+default_size*sizeof(char));
   if (!str) return NULL;
   str->_start = str->_buf;
   str->data   = str->_start;
@@ -254,11 +267,12 @@ sf_str sf_str_new(unsigned int default_size) {
 
 /*
 ===============================================================================
-sf_str_del
-    free sf_str
+sf_string_del
+    free sf_string
 ===============================================================================
 */
-bool sf_str_del(sf_str str) {
+bool 
+sf_string_del(sf_string_t* str) {
   if (!str) return false;
   if (str->_start != str->_buf) free(str->_start);
   free(str);
@@ -271,14 +285,15 @@ sf_slist_ready
   sf_slist ready
 ===============================================================================
 */
-static 
-bool sf_slist_ready(sf_slist slist, unsigned need_size) {
+static bool 
+sf_slist_ready(sf_slist_t* slist, unsigned need_size) {
   // have enough space
   unsigned size = slist->_size;
   if (need_size <= size) return true;
   // realloc space
   slist->_size = 30 + need_size + (need_size >> 3);
-  sf_str* new_data = realloc(slist->data, slist->_size * sizeof(sf_str));
+  sf_string_t** new_data;
+  new_data = realloc(slist->data, slist->_size*sizeof(sf_string_t*));
   if (!new_data) {
     slist->_size = size;
     return false;
@@ -295,26 +310,27 @@ sf_slist_readyplus
   call sf_slist
 ===============================================================================
 */
-static inline 
-bool sf_slist_readyplus(sf_slist slist, unsigned n) {
+static inline bool 
+sf_slist_readyplus(sf_slist_t* slist, unsigned n) {
   return sf_slist_ready(slist, slist->len + n);
 }
  
 /*
 ===============================================================================
-sf_slist_addb
+sf_slist_appendb
   add new string in strList
 ===============================================================================
 */
-bool sf_slist_addb(sf_slist slist, char* str, unsigned len) {
+bool 
+sf_slist_appendb(sf_slist_t* slist, char* str, unsigned len) {
   if (!slist || !str) return false;
   if (!sf_slist_readyplus(slist, 1)) return false;
   // copy string
   if (!slist->data[slist->len]) {
-    slist->data[slist->len] = sf_str_new(80);
+    slist->data[slist->len] = sf_string_new(80);
     if (!slist->data[slist->len]) return false;
   }
-  sf_str_copyb(slist->data[slist->len], str, len);
+  sf_string_copyb(slist->data[slist->len], str, len);
   slist->len++;
   return true;
 }

@@ -1,6 +1,9 @@
 #include "sf_worker.h"
 #include "sf_module.h"
+#include "sf_util.h"
 #include <pthread.h>
+
+#define MAX_WORKER  32
 
 static LIST_HEAD(task_queue);
 static pthread_mutex_t task_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -9,11 +12,16 @@ static pthread_cond_t task_queue_cond = PTHREAD_COND_INITIALIZER;
 static unsigned worker_n;
 static unsigned worker_sleep_n;
 
+/*
+===============================================================================
+sf_worker_do
+===============================================================================
+*/
 void 
-sf_worker_enqueue(sf_object_t *obj) {
-  if (!list_empty(&obj->node)) return;
+sf_worker_do(sf_object_t *obj) {
+  if (!obj || !list_empty(&obj->worker_node)) return;
   pthread_mutex_lock(&task_queue_mutex);
-  list_add_tail(&obj->node, &task_queue);
+  list_add_tail(&obj->worker_node, &task_queue);
   pthread_mutex_unlock(&task_queue_mutex);
   pthread_cond_broadcast(&task_queue_cond);
 }
@@ -30,8 +38,8 @@ worker_routine(void* arg) {
       pthread_cond_wait(&task_queue_cond, &task_queue_mutex);
       worker_sleep_n--;
     }
-    obj = list_first_entry(&task_queue, sf_object_t, node);
-    list_del_init(&obj->node);
+    obj = list_first_entry(&task_queue, sf_object_t, worker_node);
+    list_del_init(&obj->worker_node);
     pthread_mutex_unlock(&task_queue_mutex);
 
     if (obj->handler) obj->handler(obj);
@@ -40,21 +48,32 @@ worker_routine(void* arg) {
   return NULL;
 }
 
+/*
+===============================================================================
+create_worker
+===============================================================================
+*/
 static void
 create_worker() {
   pthread_t thread;
   pthread_create(&thread, NULL, worker_routine, NULL);
 }
 
+/*
+===============================================================================
+worker_start
+===============================================================================
+*/
 static void 
 worker_start() {
-  create_worker();
-  create_worker();
-  create_worker();
-  create_worker();
+  int num = get_cpu_count(); 
+  if (num > MAX_WORKER) num = MAX_WORKER; 
+  for (int i=0; i<num; i++) {
+    create_worker();
+  }
 }
 
-sf_module_t worker_module = {
+static sf_module_t worker_module = {
   NULL,
   NULL,
   worker_start,
