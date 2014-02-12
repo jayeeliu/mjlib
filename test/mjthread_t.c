@@ -1,77 +1,27 @@
 #include <stdio.h>
 #include <unistd.h>
+#include "mjthread.h"
 
-#include <mjsock.h>
-#include <mjthread.h>
-#include <mjev.h>
-#include <mjconn.h>
-
-#define WORKER_NUM 2
-
-struct LoopServer {
-    mjEV        ev;
-    int         nfd[2];
-    mjThread    thread;
-};
-typedef struct LoopServer* LoopServer;
-
-void* on_close( void* arg )
-{
-    mjConn conn = ( mjConn ) arg;
-    mjConn_Delete( conn );
-    return NULL;
+static void* Routine(mjthread thread, void* arg) {
+  static int count = 0;
+  printf("count: %4d\n", count++);
+  return NULL;
 }
 
-void* on_read( void* arg )
-{
-    mjConn conn = ( mjConn ) arg;
-    mjConn_WriteS( conn, "read OK!", on_close );
-    return NULL;
+static void* CBRoutine(mjthread thread, void* arg) {
+  printf("cb routine run\n");
+  return NULL;
 }
 
-void* AcceptHandler( void* arg )
-{
-    LoopServer server = ( LoopServer ) arg;
-    int cfd;
-    read( server->nfd[0], &cfd, sizeof( int ) );
-    mjConn conn = mjConn_New( server->ev, cfd );
-    mjConn_ReadUntil( conn, "\r\n\r\n", on_read );
-    return NULL;
-}
+int main() {
+  mjthread thread = mjthread_new();
+  mjthread_run(thread);
+  for (int i = 0; i < 1000; i++) {
+    mjthread_set_task(thread, Routine, NULL);
+    mjthread_set_callback(thread, CBRoutine, NULL);
+  } 
+  sleep(3);
+  mjthread_delete(thread);
 
-void* MyWorker( void* arg )
-{
-    LoopServer server = ( LoopServer ) arg;
-   
-    while ( 1 ) { 
-        mjEV_Run( server->ev );
-    }
-    return NULL;
-}
-
-int main()
-{
-    struct LoopServer server[WORKER_NUM];
-
-    for ( int i = 0; i < WORKER_NUM; ++i ) {
-        server[i].ev = mjEV_New();
-        pipe( server[i].nfd );
-        mjEV_Add( server[i].ev, server[i].nfd[0], MJEV_READABLE, AcceptHandler, &server[i] );
-        server[i].thread = mjthread_new(NULL, NULL, NULL, NULL);
-        mjThread_AddWork( server[i].thread, MyWorker, &server[i], NULL, NULL );
-    }
-
-    int sfd = mjSock_TcpServer( 7879 );
-    int balance = 0;
-    while ( 1 ) {
-        int cfd = mjSock_Accept( sfd );
-        write( server[balance].nfd[1], &cfd, sizeof( int ) );
-        balance = ( balance + 1 ) % WORKER_NUM;
-    }
-
-    for ( int i = 0; i < WORKER_NUM; ++i ) {
-        mjthread_delete( server[i].thread );
-    }
-
-    return 0;
+  return 0;
 }

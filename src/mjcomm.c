@@ -29,7 +29,7 @@ int daemonize() {
   case 0:
     break;
   default:
-    _exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
   }
 
   if (setsid() == -1) {
@@ -67,18 +67,6 @@ int daemonize() {
     close(fd);
   }
   return 0;
-}
-
-/*
-===============================================================================
-GetCurrentTime
-    get current time
-===============================================================================
-*/
-long long get_current_time() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
 /*
@@ -141,17 +129,6 @@ void remove_pid_file(const char* pid_file) {
   if (unlink(pid_file)) {
     MJLOG_ERR ("unlike pid file %s error", pid_file);
   }
-}
-
-/*
-===============================================================================
-get_cpu_count
-    get online cpu number
-    return: number of online cpus 
-===============================================================================
-*/
-int get_cpu_count() {
-  return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 /*

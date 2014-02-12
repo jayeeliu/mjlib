@@ -9,7 +9,7 @@ struct mjreg {
 };
 typedef struct mjreg* mjreg;
 
-extern bool   mjreg_search(mjreg reg, char* string, mjstrlist result);
+extern bool   mjreg_search(mjreg reg, char* string, mjslist result);
 extern mjreg  mjreg_new(const char* regex);
 extern bool   mjreg_delete(mjreg reg);
 

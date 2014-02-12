@@ -9,8 +9,8 @@
 #include "mjlog.h"
 #include "mjsql.h"
 
-#define MYSQL_CONN_TIMEOUT      3
-#define MYSQL_CHARSET_NAME      "utf8"
+#define MYSQL_CONN_TIMEOUT  3
+#define MYSQL_CHARSET_NAME  "utf8"
 
 struct mjsql_data {
   MYSQL*      msp;
@@ -40,7 +40,7 @@ bool mjsql_conn(mjsql handle, int retry) {
     handle->data->msp = NULL;
   }
   // init mysql database */
-   MYSQL* msp = mysql_init(NULL);
+  MYSQL* msp = mysql_init(NULL);
   if (!msp) {
     MJLOG_ERR("mysql init error");
     return false;
@@ -77,14 +77,13 @@ bool mjsql_conn(mjsql handle, int retry) {
   }
   // try to connect db
   while (retry >= 0) {
-     if (mysql_real_connect(msp, handle->db_host, handle->db_user, 
-          handle->db_pass, handle->db_name, handle->db_port, NULL,
-          CLIENT_INTERACTIVE | CLIENT_MULTI_STATEMENTS)) {
+    if (mysql_real_connect(msp, handle->db_host, handle->db_user, 
+        handle->db_pass, handle->db_name, handle->db_port, NULL,
+        CLIENT_INTERACTIVE | CLIENT_MULTI_STATEMENTS)) {
       handle->data->msp = msp;
-       return true;
+      return true;
     }
     retry--;
-    // connect failed 
     MJLOG_ERR("Failed to connect: [%s][%d] %s", handle->db_host, 
         handle->db_port, mysql_error(msp));
   }
@@ -102,7 +101,6 @@ mjsql_query
 ===============================================================================
 */
 int mjsql_query(mjsql handle, const char* sql_str, int sql_len) {
-  /* sanity check */
   if (!handle || !sql_str) {
     MJLOG_ERR("handle or sql_str is null");
     return -1;
@@ -128,11 +126,11 @@ int mjsql_query(mjsql handle, const char* sql_str, int sql_len) {
       return 0; // success
     }
     // Here!!! some error happens
-     MJLOG_ERR("mysql query error:[%s][%s][%d][%d]:[%s]", sql_str, 
-        handle->db_host, handle->db_port, retval, 
-        mysql_error(handle->data->msp));
+    MJLOG_ERR("mysql query error:[%s][%s][%d][%d]:[%s]", sql_str, 
+      handle->db_host, handle->db_port, retval, 
+      mysql_error(handle->data->msp));
     // get error code
-     int err = mysql_errno(handle->data->msp);
+    int err = mysql_errno(handle->data->msp);
     if (err >= ER_ERROR_FIRST && err <= ER_ERROR_LAST) {
       // SQL syntax error
       if (err == ER_SYNTAX_ERROR) MJLOG_ERR("SQL syntax error.");
@@ -142,19 +140,18 @@ int mjsql_query(mjsql handle, const char* sql_str, int sql_len) {
       MJLOG_INFO("Try to reconnect to mysql ...");
       // connect database retry 1
       if (!mjsql_conn(handle, 1)) {
-         MJLOG_ERR("Fatal error: MySQL can not be reconnected!.");
+        MJLOG_ERR("Fatal error: MySQL can not be reconnected!.");
         break;
       }
-       MJLOG_INFO("MySQL reconnected ok!.");
+      MJLOG_INFO("MySQL reconnected ok!.");
       continue;  
     }
     //  unknow error
-     MJLOG_EMERG("Mysql Unknow error. mysql failed.");
-     break;
+    MJLOG_EMERG("Mysql Unknow error. mysql failed.");
+    break;
   }
-   return -1;
+  return -1;
 }
-
 
 /*
 ===============================================================================
@@ -248,6 +245,11 @@ int mjsql_get_rows_num(mjsql handle) {
   return handle->data->num_rows;
 }
 
+bool mjsql_set_autocommit(mjsql handle, bool mode) {
+  if (!handle) return false;
+  return mysql_autocommit(handle->data->msp, mode);
+}
+
 /*
 ===============================================================================
 mjsql_real_escape_string
@@ -292,7 +294,6 @@ mjsql_new
 */
 mjsql mjsql_new(const char* db_host, const char* db_user, const char* db_pass, 
     const char* db_name, unsigned int db_port) {
-  // sanity check
   if (!db_host || !db_user || !db_pass || !db_name) {
     MJLOG_ERR("sanity check error");
     return NULL;
@@ -302,7 +303,13 @@ mjsql mjsql_new(const char* db_host, const char* db_user, const char* db_pass,
   if (!handle) {
     MJLOG_ERR("mjsql alloc error");
     return NULL;
-   }
+  }
+  // store parameter
+  strncpy(handle->db_host, db_host, MAX_NAME_LEN);
+  strncpy(handle->db_user, db_user, MAX_NAME_LEN);
+  strncpy(handle->db_pass, db_pass, MAX_NAME_LEN);
+  strncpy(handle->db_name, db_name, MAX_NAME_LEN);
+  handle->db_port = db_port;
   // not connect
   handle->data = (mjsql_data) calloc(1, sizeof(struct mjsql_data));
   if (!handle->data) {
@@ -310,19 +317,12 @@ mjsql mjsql_new(const char* db_host, const char* db_user, const char* db_pass,
     free(handle);
     return NULL;
   }
-   handle->data->msp         = NULL;    
-  handle->data->result       = NULL;
+  handle->data->msp         = NULL;    
+  handle->data->result      = NULL;
   handle->data->row         = NULL;
-  handle->data->num_fields   = -1;
-  // store parameter
-  strncpy(handle->db_host, db_host, MAX_NAME_LEN);
-  strncpy(handle->db_user, db_user, MAX_NAME_LEN);
-  strncpy(handle->db_pass, db_pass, MAX_NAME_LEN);
-  strncpy(handle->db_name, db_name, MAX_NAME_LEN);
-  handle->db_port = db_port;
+  handle->data->num_fields  = -1;
   // try to connect
   if (!mjsql_conn(handle, 0)) MJLOG_ERR("mjsql connect error");
-  // return handle
   return handle;
 }
 
@@ -333,10 +333,7 @@ mjsql_delete
 ===============================================================================
 */
 bool mjsql_delete(mjsql handle) {
-  if (!handle) {
-    MJLOG_ERR("handle is null");
-    return false;
-   }
+  if (!handle) return false;
   if (handle->data->result) mysql_free_result(handle->data->result); 
   if (handle->data->msp) mysql_close(handle->data->msp);
   free(handle->data);

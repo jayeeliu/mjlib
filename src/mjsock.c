@@ -1,29 +1,21 @@
+#include "mjsock.h"
+#include "mjlog.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
+#include <poll.h>
 
-#include "mjsock.h"
-#include "mjlog.h"
-
-#define DEFAULT_BACKLOG	4096
-
-int mjsock_tcp_socket() {
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
-  return fd;
-}
+#define DEFAULT_BACKLOG	10240
 
 /*
 ===============================================================================
-mjSock_TcpServer
-    create tcpserver 
+mjsock_tcp_server
+    create tcpserver and listen 
 ===============================================================================
 */
 int mjsock_tcp_server(int port) {
@@ -76,13 +68,51 @@ int mjsock_tcp_server(int port) {
   return sfd;
 }
 
-/* listen socket accept */
+/*
+===============================================================================
+mjsock_accpet
+  mjsock accept client
+===============================================================================
+*/
 int mjsock_accept(int sfd) {
   struct sockaddr_in caddr;
   socklen_t caddr_len = 0;
-
   bzero(&caddr, sizeof(caddr));
-  return accept(sfd, (struct sockaddr *)&caddr, &caddr_len);
+  return accept(sfd, (struct sockaddr*)&caddr, &caddr_len);
+}
+
+/*
+===============================================================================
+mjsock_accept_timeout
+===============================================================================
+*/
+int mjsock_accept_timeout(int sfd, int timeout) {
+  // init address
+  struct sockaddr_in caddr;
+  socklen_t caddr_len = 0;
+  bzero(&caddr, sizeof(caddr));
+  // init poll struct
+  struct pollfd pfd;
+  for (;;) {
+    pfd.fd = sfd;
+    pfd.events = POLLIN;
+    int retval = poll(&pfd, 1, timeout);
+    // poll error or timeout
+    if (retval < 0) {
+      if (errno == EINTR) continue;
+      MJLOG_ERR("pool error %s", strerror(errno));
+      return retval;
+    }
+    if (retval == 0) return 0;
+    // poll success accept
+    int cfd = accept(sfd, (struct sockaddr*)&caddr, &caddr_len);
+    if (cfd < 0) {
+      if (errno == EINTR) continue;
+      if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
+    }
+    return cfd;
+  }
+
 }
 
 /*
@@ -113,7 +143,11 @@ bool mjsock_set_blocking(int fd, int blocking) {
   return true;
 }
 
-
-int mjsock_close(int sfd) {
-  return close(sfd);
+bool mjsock_is_nonblocking(int fd) {
+  int flags;
+  if ((flags = fcntl(fd, F_GETFL, 0)) < 0) {
+    MJLOG_ERR("fcntl F_GETFL error fd--%d  msg--%s", fd, strerror(errno));
+    return false;
+  }
+  return flags & O_NONBLOCK;
 }

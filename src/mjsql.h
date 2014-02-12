@@ -9,10 +9,10 @@ struct mjsql_data;
 
 struct mjsql {
   struct mjsql_data*  data;
-  char                db_host[MAX_NAME_LEN + 1];  // host name
-  char                db_user[MAX_NAME_LEN + 1];  // user name 
-  char                db_pass[MAX_NAME_LEN + 1];  // password 
-  char                db_name[MAX_NAME_LEN + 1];  // db name 
+  char                db_host[MAX_NAME_LEN+1];  // host name
+  char                db_user[MAX_NAME_LEN+1];  // user name 
+  char                db_pass[MAX_NAME_LEN+1];  // password 
+  char                db_name[MAX_NAME_LEN+1];  // db name 
   unsigned int        db_port;                    // port 
 };
 typedef struct mjsql* mjsql;
@@ -28,6 +28,8 @@ extern int        mjsql_get_rows_num(mjsql handle);
 
 extern bool       mjsql_next_row(mjsql handle);
 extern char*      mjsql_fetch_row_field(mjsql handle, unsigned int field_num);
+
+extern bool       mjsql_set_autocommit(mjsql handle, bool mode);
 
 extern mjsql      mjsql_new(const char* db_host, const char* db_user, 
                       const char* db_pass, const char* db_name, unsigned int db_port);  

@@ -8,8 +8,8 @@
 #define MAX_IP_LEN 128
 
 struct mjredis {
-  char _ip[MAX_IP_LEN];
-  int _port;
+  char          _ip[MAX_IP_LEN];
+  int           _port;
   redisContext* _context;
 };
 typedef struct mjredis* mjredis;

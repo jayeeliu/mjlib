@@ -16,10 +16,10 @@ int mjio_read(mjio io, mjstr data, int len) {
   // sanity check
   if (!io || !data || len <= 0) return 0;
   // rbuf has data return
-  if (io->_read_buf && io->_read_buf->length > 0) {
+  if (io->_read_buf && io->_read_buf->len > 0) {
     mjstr_copy(data, io->_read_buf);
-    mjstr_consume(io->_read_buf, io->_read_buf->length);
-    return data->length;
+    mjstr_consume(io->_read_buf, io->_read_buf->len);
+    return data->len;
   }
   // io rbuf is empty
   if (len > BUF_LEN) len = BUF_LEN;
@@ -54,7 +54,7 @@ int mjio_readline(mjio io, mjstr data) {
     if (pos != -1) {
       mjstr_copyb(data, io->_read_buf->data, pos + 1);
       mjstr_consume(io->_read_buf, pos + 1);
-      return data->length;
+      return data->len;
     }
     // get data from file
     ret = read(io->_fd, buf, BUF_LEN);
@@ -70,7 +70,7 @@ int mjio_readline(mjio io, mjstr data) {
   }
 	// here, error happends
   mjstr_copy(data, io->_read_buf);
-  mjstr_consume(io->_read_buf, io->_read_buf->length);
+  mjstr_consume(io->_read_buf, io->_read_buf->len);
   return ret;
 }
 
