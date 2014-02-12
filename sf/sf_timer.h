@@ -10,7 +10,6 @@ struct sf_timer_s {
   struct rb_node    node;
   struct list_head  ready_node;
   unsigned          timeout:1;
-  unsigned long     pad:63;
 };
 typedef struct sf_timer_s sf_timer_t;
 
