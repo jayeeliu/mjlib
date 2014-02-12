@@ -41,9 +41,9 @@ epoll_worker(sf_object_t* obj) {
 
 static void 
 epoll_start() {
-  sf_object_t* obj = sf_object_create(NULL);
-  obj->handler = epoll_worker;
-  sf_worker_do(obj);
+//  sf_object_t* obj = sf_object_create(NULL);
+//  obj->handler = epoll_worker;
+//  sf_worker_do(obj);
 }
 
 sf_module_t epoll_module = {

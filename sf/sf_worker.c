@@ -5,9 +5,9 @@
 
 #define MAX_WORKER  32
 
-static LIST_HEAD(task_queue);
-static pthread_mutex_t task_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t task_queue_cond = PTHREAD_COND_INITIALIZER;
+static LIST_HEAD(worker_queue);
+static pthread_mutex_t worker_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t worker_queue_cond = PTHREAD_COND_INITIALIZER;
 
 static unsigned worker_n;
 static unsigned worker_sleep_n;
@@ -20,27 +20,32 @@ sf_worker_do
 void 
 sf_worker_do(sf_object_t *obj) {
   if (!obj || !list_empty(&obj->worker_node)) return;
-  pthread_mutex_lock(&task_queue_mutex);
-  list_add_tail(&obj->worker_node, &task_queue);
-  pthread_mutex_unlock(&task_queue_mutex);
-  pthread_cond_broadcast(&task_queue_cond);
+  pthread_mutex_lock(&worker_queue_mutex);
+  list_add_tail(&obj->worker_node, &worker_queue);
+  pthread_mutex_unlock(&worker_queue_mutex);
+  pthread_cond_broadcast(&worker_queue_cond);
 }
 
+/*
+===============================================================================
+worker_routine
+===============================================================================
+*/
 static void*
 worker_routine(void* arg) {
   worker_n++;
 
   sf_object_t* obj;
   while (1) {
-    pthread_mutex_lock(&task_queue_mutex);
-    while (list_empty(&task_queue)) {
+    pthread_mutex_lock(&worker_queue_mutex);
+    while (list_empty(&worker_queue)) {
       worker_sleep_n++;
-      pthread_cond_wait(&task_queue_cond, &task_queue_mutex);
+      pthread_cond_wait(&worker_queue_cond, &worker_queue_mutex);
       worker_sleep_n--;
     }
-    obj = list_first_entry(&task_queue, sf_object_t, worker_node);
+    obj = list_first_entry(&worker_queue, sf_object_t, worker_node);
     list_del_init(&obj->worker_node);
-    pthread_mutex_unlock(&task_queue_mutex);
+    pthread_mutex_unlock(&worker_queue_mutex);
 
     if (obj->handler) obj->handler(obj);
   }

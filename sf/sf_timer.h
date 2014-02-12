@@ -5,10 +5,10 @@
 #include "sf_rbtree.h"
 
 struct sf_timer_s {
+  sf_object_HEAD
   unsigned long     expire;
   struct rb_node    node;
   struct list_head  ready_node;
-  sf_object_t*      owner;
   unsigned          timeout:1;
   unsigned long     pad:63;
 };
